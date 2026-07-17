@@ -1,0 +1,122 @@
+<p-dialog
+  [header]="'Policy::PolicyContract:TerminateContractTitle' | translate"
+  [(visible)]="visible"
+  (visibleChange)="onVisibleChange($event)"
+  (onShow)="loadPolicies()"
+  [modal]="true"
+  [style]="{ width: '900px' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  (onHide)="cancel()"
+>
+  <div class="flex flex-col gap-4">
+    <div class="grid grid-cols-12 gap-4" *ngIf="policies.length > 0">
+      <div class="col-span-12 md:col-span-6">
+        <label class="block mb-2 font-medium">{{ 'Policy::Policy:TerminationReason' | translate }}</label>
+        <p-select
+          [(ngModel)]="terminationReasonId"
+          [options]="reasonOptions"
+          optionLabel="label"
+          optionValue="value"
+          [placeholder]="'Policy::Policy:SelectTerminationReason' | translate"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-6">
+        <label class="block mb-2 font-medium">{{ 'Policy::PolicyContract:TerminationDate' | translate }}</label>
+        <p-datePicker
+          [(ngModel)]="terminationDate"
+          [showTime]="false"
+          dateFormat="dd/mm/yy"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+
+    <p class="text-red-600 font-medium">
+      {{ 'Policy::PolicyContract:TerminateContractWarning' | translate }}
+    </p>
+
+    <div *ngIf="loadingPolicies" class="flex justify-center py-8">
+      <i class="pi pi-spin pi-spinner text-4xl text-gray-400"></i>
+    </div>
+
+    <p-table
+      *ngIf="!loadingPolicies && policies.length > 0"
+      [value]="policies"
+      [scrollable]="true"
+      scrollHeight="400px"
+      styleClass="p-datatable-sm p-datatable-gridlines"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 50px">{{ 'Policy::Policy:No' | translate }}</th>
+          <th style="min-width: 120px">{{ 'Policy::Policy:PolicyNo' | translate }}</th>
+          <th style="min-width: 120px">{{ 'Policy::Policy:CertificateNo' | translate }}</th>
+          <th style="min-width: 180px">{{ 'Policy::Policy:ProductName' | translate }}</th>
+          <th style="min-width: 130px">{{ 'Policy::Policy:OrgEffectDate' | translate }}</th>
+          <th style="min-width: 130px">{{ 'Policy::Policy:OrgExpireDate' | translate }}</th>
+          <th style="min-width: 120px" class="text-right">{{ 'Policy::Policy:PremiumTotal' | translate }}</th>
+          <th style="min-width: 120px" class="text-right">{{ 'Policy::Policy:RefundAmount' | translate }}</th>
+          <th style="min-width: 140px">{{ 'Policy::Policy:ActualRefundAmount' | translate }}</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-policy let-rowIndex="rowIndex">
+        <tr>
+          <td>{{ rowIndex + 1 }}</td>
+          <td>{{ policy.policyNo || '-' }}</td>
+          <td>{{ policy.certificateNo || '-' }}</td>
+          <td>{{ policy.products || '-' }}</td>
+          <td>{{ policy.effectDate || '-' }}</td>
+          <td>{{ policy.expireDate || '-' }}</td>
+          <td class="text-right">{{ formatCurrency(policy.premiumTotal) }}</td>
+          <td class="text-right">{{ formatCurrency(policy.refundAmount) }}</td>
+          <td>
+            <p-inputNumber
+              [(ngModel)]="policy.actualRefundAmount"
+              (ngModelChange)="onActualRefundChange(policy, $event)"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="0"
+              mode="decimal"
+              locale="vi-VN"
+              inputStyleClass="w-full"
+              styleClass="w-full"
+            />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="9" class="text-center py-8 text-gray-500">
+            {{ 'Policy::Policy:NoPolicies' | translate }}
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <div *ngIf="!loadingPolicies && policies.length === 0" class="text-center py-8 text-gray-500">
+      {{ 'Policy::Policy:NoPolicies' | translate }}
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="'Policy::Policy:Cancel' | translate"
+      severity="secondary"
+      (onClick)="cancel()"
+      [disabled]="loading"
+    />
+    <p-button
+      [label]="'Policy::Policy:Execute' | translate"
+      severity="warn"
+      icon="pi pi-check"
+      (onClick)="submit()"
+      [loading]="loading"
+      [disabled]="loadingPolicies || policies.length === 0"
+    />
+  </ng-template>
+</p-dialog>
+
+<p-toast />

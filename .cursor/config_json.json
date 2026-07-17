@@ -1,0 +1,58 @@
+{
+  "projectType": "abp-angular-ddd",
+  "rules": {
+    "respectArchitecture": true,
+    "requireLayerSpecification": true,
+    "preventCrossModuleChanges": true,
+    "preventProxyEdit": true,
+    "requireDiffForLargeChanges": true,
+    "smallIncrementalChanges": true
+  },
+  "structure": {
+    "backend": [
+      "Domain",
+      "Domain.Shared",
+      "Application",
+      "Application.Contracts",
+      "EntityFrameworkCore",
+      "HttpApi"
+    ],
+    "frontend": {
+      "core": true,
+      "shared": true,
+      "features": true,
+      "proxy": "generated-only"
+    }
+  },
+  "prompts": {
+    "backend": "You are editing an ABP Framework (Open Source) modular DDD backend. Follow ABP conventions strictly. Specify module + layer explicitly. Avoid modifying other layers.",
+    "frontend": "You are editing an Angular (standalone components) ABP-based frontend. Use proxy services only. No hardcoded URLs. Keep components dumb, logic in services.",
+    "refactor": "Show diff only. Do not break module boundaries."
+  },
+  "naming": {
+    "dtoSuffix": "Dto",
+    "serviceSuffix": "AppService",
+    "angular": {
+      "component": ".component.ts",
+      "service": ".service.ts",
+      "state": ".state.ts",
+      "folderCase": "kebab-case"
+    }
+  },
+  "restricted": [
+    "modify-abp-template-files",
+    "add-business-logic-to-application",
+    "hardcode-api-urls",
+    "duplicate-services-when-proxy-exists",
+    "merge-domain-and-infrastructure",
+    "rewrite-solution-structure"
+  ],
+  "checklistBeforeApply": [
+    "doesNotBreakDDD",
+    "keepsNamingConventions",
+    "noUnrelatedFilesChanged",
+    "noDuplicatedCode",
+    "correctFolderPlacement",
+    "followsModuleBoundaries"
+  ]
+}

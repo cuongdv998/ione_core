@@ -1,0 +1,85 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="onVisibleChange($event)"
+  [header]="'Claim::AssignOnsiteAssessment' | translate"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="false"
+>
+  <div class="grid grid-cols-12 gap-4 p-2">
+    <div class="col-span-12 md:col-span-6">
+      <label for="assessmentDeptId" class="block mb-2 font-medium">
+        {{ 'Claim::AssessmentDepartment' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="assessmentDeptId"
+        [(ngModel)]="assigneeOrganizationId"
+        [options]="departmentOptions"
+        [placeholder]="'Claim::SelectDepartment' | translate"
+        [showClear]="true"
+        [filter]="true"
+        [loading]="loadingDepartments"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+        (onChange)="onDepartmentChange()"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-6">
+      <label for="assessorId" class="block mb-2 font-medium">
+        {{ 'Claim::Assessor' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="assessorId"
+        [(ngModel)]="assigneeId"
+        [options]="employeeOptions"
+        [placeholder]="'Claim::SelectEmployee' | translate"
+        [showClear]="true"
+        [filter]="true"
+        [loading]="loadingEmployees"
+        [disabled]="!assigneeOrganizationId"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-6">
+      <label for="assessmentStartDate" class="block mb-2 font-medium">
+        {{ 'Claim::AssessmentStartDate' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-datepicker
+        id="assessmentStartDate"
+        [(ngModel)]="startDate"
+        [showIcon]="true"
+        [showTime]="true"
+        dateFormat="dd/mm/yy"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-6">
+      <label for="assessmentEndDate" class="block mb-2 font-medium">
+        {{ 'Claim::ExpectedCompletionDate' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-datepicker
+        id="assessmentEndDate"
+        [(ngModel)]="endDate"
+        [showIcon]="true"
+        [showTime]="true"
+        dateFormat="dd/mm/yy"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button [label]="'Claim::Cancel' | translate" severity="secondary" (onClick)="confirmClose()" [disabled]="saving" />
+    <p-button [label]="'Claim::AssignOnsiteAssessmentButton' | translate" (onClick)="submit()" [loading]="saving" />
+  </ng-template>
+</p-dialog>
+<p-confirmDialog />
+<p-toast />

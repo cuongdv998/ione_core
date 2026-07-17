@@ -1,0 +1,414 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Tìm theo Code -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="code" class="block mb-2 font-medium">{{ 'Master::ResObjectTypeItem:Code' | translate }}</label>
+          <input
+            pInputText
+            id="code"
+            [(ngModel)]="searchForm.code"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Tìm theo Name -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="name" class="block mb-2 font-medium">{{ 'Master::ResObjectTypeItem:Name' | translate }}</label>
+          <input
+            pInputText
+            id="name"
+            [(ngModel)]="searchForm.name"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Filter theo Status -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="status" class="block mb-2 font-medium">{{ 'Master::ResObjectTypeItem:Status' | translate }}</label>
+          <p-select
+            id="status"
+            [(ngModel)]="searchForm.status"
+            [options]="statusOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Filter theo Object Type -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="objectTypeId" class="block mb-2 font-medium">{{ 'Master::ResObjectTypeItem:ObjectTypeId' | translate }}</label>
+          <p-select
+            id="objectTypeId"
+            [(ngModel)]="searchForm.objectTypeId"
+            [options]="objectTypes"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+            [filter]="true"
+          />
+        </div>
+
+        <!-- Filter theo Object Item Type -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="objectItemType" class="block mb-2 font-medium">{{ 'Master::ResObjectTypeItem:ObjectItemType' | translate }}</label>
+          <p-select
+            id="objectItemType"
+            [(ngModel)]="searchForm.objectItemType"
+            [options]="objectItemTypes"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+            [filter]="true"
+          />
+        </div>
+
+        <!-- Filter theo UOM -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="uomId" class="block mb-2 font-medium">{{ 'Master::ResObjectTypeItem:UomId' | translate }}</label>
+          <p-select
+            id="uomId"
+            [(ngModel)]="searchForm.uomId"
+            [options]="uoms"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+            [filter]="true"
+          />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button
+            [label]="'AbpAuditLogging::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button
+            [label]="'AbpAuditLogging::Search' | translate"
+            icon="pi pi-search"
+            (onClick)="search()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Master::ResObjectTypeItem:DownloadTemplate' | translate"
+            icon="pi pi-download"
+            severity="secondary"
+            (onClick)="downloadTemplate()"
+            [loading]="loading"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Master::ResObjectTypeItem:ImportExcel' | translate"
+            icon="pi pi-upload"
+            severity="info"
+            (onClick)="openImportDialog()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Master::ResObjectTypeItem:New' | translate"
+            icon="pi pi-plus"
+            (onClick)="openCreateDialog()"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table
+        [columns]="columns"
+        [data]="resObjectTypeItems"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        size="small"
+        [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadData($event)"
+      />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create/Edit/View -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Master::ResObjectTypeItem:New' : dialogMode === 'edit' ? 'Master::ResObjectTypeItem:Edit' : 'Master::ResObjectTypeItem:View') | translate"
+  [modal]="true"
+  [style]="{ width: '700px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ 'max-height': '650px', 'overflow-y': 'auto' }"
+>
+  <ng-container *ngIf="dialogVisible">
+  <div class="flex flex-col gap-4 p-4">
+    <!-- Code field -->
+    <div>
+      <label for="formCode" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectTypeItem:Code' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formCode"
+        [(ngModel)]="formData.code"
+        [disabled]="dialogMode === 'edit' || dialogMode === 'view'"
+        class="w-full"
+        (input)="onCodeInput($event)"
+        maxlength="50"
+      />
+      <small class="text-gray-500" *ngIf="dialogMode !== 'view'">{{ 'Master::ResObjectTypeItem:CodeInvalid' | translate }}</small>
+      <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+        {{ 'Master::ResObjectTypeItem:CodeCannotBeChanged' | translate }}
+      </small>
+    </div>
+
+    <!-- Object Type field -->
+    <div>
+      <label for="formObjectTypeId" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectTypeItem:ObjectTypeId' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formObjectTypeId"
+        [(ngModel)]="formData.objectTypeId"
+        [options]="objectTypes"
+        [placeholder]="'Master::ResObjectTypeItem:ObjectTypeId' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+        [filter]="true"
+        [disabled]="dialogMode === 'view'"
+      />
+    </div>
+
+    <!-- Object Item Type field -->
+    <div>
+      <label for="formObjectItemType" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectTypeItem:ObjectItemType' | translate }}
+      </label>
+      <p-select
+        id="formObjectItemType"
+        [(ngModel)]="formData.objectItemType"
+        [options]="objectItemTypes"
+        [placeholder]="'Master::ResObjectTypeItem:ObjectItemType' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+        [filter]="true"
+        [showClear]="true"
+        [disabled]="dialogMode === 'view'"
+      />
+    </div>
+
+    <!-- Name field -->
+    <div>
+      <label for="formName" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectTypeItem:Name' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formName"
+        [(ngModel)]="formData.name"
+        class="w-full"
+        maxlength="250"
+        [disabled]="dialogMode === 'view'"
+      />
+    </div>
+
+    <!-- UOM field -->
+    <div>
+      <label for="formUomId" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectTypeItem:UomId' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formUomId"
+        [(ngModel)]="formData.uomId"
+        [options]="uoms"
+        [placeholder]="'Master::ResObjectTypeItem:UomId' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+        [filter]="true"
+        [disabled]="dialogMode === 'view'"
+      />
+    </div>
+
+    <!-- Description field -->
+    <div>
+      <label for="formDescription" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectTypeItem:Description' | translate }}
+      </label>
+      <textarea
+        pTextarea
+        id="formDescription"
+        [(ngModel)]="formData.description"
+        class="w-full"
+        [rows]="3"
+        maxlength="500"
+        [disabled]="dialogMode === 'view'"
+      ></textarea>
+    </div>
+
+    <!-- Status field -->
+    <div>
+      <label for="formStatus" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectTypeItem:Status' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formStatus"
+        [(ngModel)]="formData.status"
+        [options]="statusOptions"
+        [placeholder]="'Master::ResObjectTypeItem:Status' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+        [disabled]="dialogMode === 'view'"
+      />
+    </div>
+  </div>
+  </ng-container>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="(dialogMode === 'view' ? 'Master::Close' : 'Master::Cancel') | translate"
+        severity="secondary"
+        (onClick)="dialogVisible = false"
+        [disabled]="loading"
+      />
+      <p-button
+        *ngIf="dialogMode !== 'view'"
+        [label]="'Master::Save' | translate"
+        (onClick)="save()"
+        [loading]="loading"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Messages -->
+<p-toast />
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog />
+
+<!-- Import Excel Dialog -->
+<p-dialog
+  [(visible)]="importDialogVisible"
+  [header]="'Master::ResObjectTypeItem:ImportExcel' | translate"
+  [modal]="true"
+  [style]="{ width: '700px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="flex flex-col gap-4 p-4">
+    <div>
+      <p class="mb-2">{{ 'Master::ResObjectTypeItem:ImportExcelInstructions' | translate }}</p>
+      <ul class="list-disc list-inside text-sm text-gray-600 mb-4">
+        <li>{{ 'Master::ResObjectTypeItem:ImportExcelInstruction1' | translate }}</li>
+        <li>{{ 'Master::ResObjectTypeItem:ImportExcelInstruction2' | translate }}</li>
+        <li>{{ 'Master::ResObjectTypeItem:ImportExcelInstruction3' | translate }}</li>
+      </ul>
+    </div>
+
+    <div>
+      <label class="block mb-2 font-medium">{{ 'Master::ResObjectTypeItem:SelectExcelFile' | translate }}</label>
+      <p-fileUpload
+        mode="basic"
+        [accept]="'.xlsx,.xls'"
+        [maxFileSize]="10485760"
+        [auto]="false"
+        chooseLabel="{{ 'Master::ResObjectTypeItem:ChooseFile' | translate }}"
+        [disabled]="importing"
+        (onSelect)="onFileSelect($event)"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- Import Result -->
+    <div *ngIf="importResult" class="mt-4">
+      <p class="font-semibold mb-2">{{ 'Master::ResObjectTypeItem:ImportResult' | translate }}</p>
+      <div class="grid grid-cols-3 gap-4 mb-4">
+        <div class="p-3 bg-gray-100 rounded">
+          <div class="text-sm text-gray-600">{{ 'Master::ResObjectTypeItem:TotalRows' | translate }}</div>
+          <div class="text-lg font-semibold">{{ importResult.totalRows }}</div>
+        </div>
+        <div class="p-3 bg-green-100 rounded">
+          <div class="text-sm text-green-600">{{ 'Master::ResObjectTypeItem:SuccessCount' | translate }}</div>
+          <div class="text-lg font-semibold text-green-700">{{ importResult.successCount }}</div>
+        </div>
+        <div class="p-3 bg-red-100 rounded">
+          <div class="text-sm text-red-600">{{ 'Master::ResObjectTypeItem:ErrorCount' | translate }}</div>
+          <div class="text-lg font-semibold text-red-700">{{ importResult.errorCount }}</div>
+        </div>
+      </div>
+
+      <!-- Error Details -->
+      <div *ngIf="importResult.errors && importResult.errors.length > 0" class="mt-4">
+        <p class="font-semibold mb-2 text-red-600">{{ 'Master::ResObjectTypeItem:ImportErrors' | translate }}</p>
+        <div class="max-h-60 overflow-y-auto border rounded">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-100 sticky top-0">
+              <tr>
+                <th class="p-2 text-left border">{{ 'Master::ResObjectTypeItem:RowNumber' | translate }}</th>
+                <th class="p-2 text-left border">{{ 'Master::ResObjectTypeItem:Field' | translate }}</th>
+                <th class="p-2 text-left border">{{ 'Master::ResObjectTypeItem:Error' | translate }}</th>
+                <th class="p-2 text-left border">{{ 'Master::ResObjectTypeItem:Value' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let error of importResult.errors" class="border-b">
+                <td class="p-2 border">{{ error.rowNumber }}</td>
+                <td class="p-2 border">{{ error.field }}</td>
+                <td class="p-2 border text-red-600">{{ translateErrorMessage(error.message, error) }}</td>
+                <td class="p-2 border">{{ error.value || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Master::Close' | translate"
+        severity="secondary"
+        (onClick)="importDialogVisible = false"
+        [disabled]="importing"
+      />
+    </div>
+  </ng-template>
+</p-dialog>

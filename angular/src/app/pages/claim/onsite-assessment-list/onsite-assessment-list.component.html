@@ -1,0 +1,396 @@
+<div class="grid grid-cols-12 gap-4">
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12">
+          <div class="flex flex-nowrap items-center gap-2">
+            <div class="quick-search-shell flex-1 min-w-0 border border-surface-300 rounded-md flex items-stretch overflow-hidden">
+              <span *ngIf="quickSearchSelectedType" class="font-semibold text-surface-700 whitespace-nowrap self-center shrink-0 pl-2 py-2">
+                {{ quickSearchPrefixLabel }}:
+              </span>
+              <div class="flex-1 min-w-0 flex">
+                <p-autoComplete
+                  [(ngModel)]="quickSearchKeyword"
+                  [suggestions]="quickSearchSuggestions"
+                  (completeMethod)="onQuickSearchComplete($event)"
+                  (focus)="onQuickSearchFocus()"
+                  (onSelect)="onQuickSearchSuggestionSelect($event)"
+                  (ngModelChange)="onQuickSearchKeywordChange($event)"
+                  [placeholder]="'Nhập biển số / số khung / số máy / mã hồ sơ'"
+                  [optionLabel]="'keyword'"
+                  [minLength]="1"
+                  [completeOnFocus]="true"
+                  [forceSelection]="false"
+                  styleClass="w-full flex-1 min-w-0 quick-search-complete"
+                  [inputStyleClass]="'w-full border-0 shadow-none rounded-none'"
+                  appendTo="body"
+                >
+                  <ng-template let-item pTemplate="item">
+                    <span class="font-semibold">{{ item.prefix }}</span>: {{ item.keyword }}
+                  </ng-template>
+                </p-autoComplete>
+              </div>
+            </div>
+            <p-button
+              icon="pi pi-search"
+              [text]="true"
+              [rounded]="true"
+              styleClass="shrink-0"
+              (onClick)="search()"
+              [pTooltip]="'AbpAuditLogging::Search' | translate"
+              tooltipPosition="top"
+            />
+            <p-button
+              icon="pi pi-sliders-h"
+              [text]="true"
+              [rounded]="true"
+              styleClass="shrink-0"
+              (onClick)="toggleAdvancedSearch()"
+              [pTooltip]="showAdvancedSearch ? 'Thu gọn bộ lọc' : 'Tìm kiếm nâng cao'"
+              tooltipPosition="top"
+            />
+          </div>
+        </div>
+
+        <ng-container *ngIf="showAdvancedSearch">
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="lobId" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Claim::Claim:LobName' | translate }}</label>
+          <p-select
+            id="lobId"
+            [(ngModel)]="searchForm.lobId"
+            [options]="lobOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            [loading]="loadingLobs"
+            [filter]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="insurerId" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Claim::Claim:InsurerName' | translate }}</label>
+          <p-select
+            id="insurerId"
+            [(ngModel)]="searchForm.insurerId"
+            [options]="insurerOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            [loading]="loadingInsurers"
+            [filter]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="processClaimType" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Claim::Claim:ProcessClaimType' | translate }}</label>
+          <p-select
+            id="processClaimType"
+            [(ngModel)]="searchForm.processClaimType"
+            [options]="processClaimTypeOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="processDeptId" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Claim::Claim:ProcessDeptId' | translate }}</label>
+          <p-select
+            id="processDeptId"
+            [(ngModel)]="searchForm.processDeptId"
+            [options]="departmentOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            [loading]="loadingDepartments"
+            [filter]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="notifierPhone" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Claim::Claim:NotifierPhone' | translate }}</label>
+          <input pInputText id="notifierPhone" [(ngModel)]="searchForm.notifierPhone" class="w-full" />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="openEmployeeId" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Claim::Claim:OpenEmployeeName' | translate }}</label>
+          <p-select
+            id="openEmployeeId"
+            [(ngModel)]="searchForm.openEmployeeId"
+            [options]="employeeOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            [loading]="loadingEmployees"
+            [filter]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="openDateFrom" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Claim::Claim:OpenDateFrom' | translate }}</label>
+          <p-datepicker
+            inputId="openDateFrom"
+            [(ngModel)]="searchForm.openDateFrom"
+            [showIcon]="true"
+            dateFormat="dd/mm/yy"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="openDateTo" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Claim::Claim:OpenDateTo' | translate }}</label>
+          <p-datepicker
+            inputId="openDateTo"
+            [(ngModel)]="searchForm.openDateTo"
+            [showIcon]="true"
+            dateFormat="dd/mm/yy"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="workTaskStatus" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Claim::Claim:Status' | translate }}</label>
+          <p-select
+            id="workTaskStatus"
+            [(ngModel)]="searchForm.workTaskStatus"
+            [options]="workTaskStatusOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="carPlate" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Claim::Claim:CarPlate' | translate }}</label>
+          <input pInputText id="carPlate" [(ngModel)]="searchForm.carPlate" (ngModelChange)="searchForm.carPlate = normalizeVehiclePlate($event)" class="w-full" />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="vin" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Claim::Claim:Vin' | translate }}</label>
+          <input pInputText id="vin" [(ngModel)]="searchForm.vin" class="w-full" />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="engineNumber" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Claim::Claim:EngineNumber' | translate }}</label>
+          <input pInputText id="engineNumber" [(ngModel)]="searchForm.engineNumber" class="w-full" />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="code" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Claim::Claim:Code' | translate }}</label>
+          <input pInputText id="code" [(ngModel)]="searchForm.code" class="w-full" />
+        </div>
+        </ng-container>
+
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button [label]="'AbpAuditLogging::Reset' | translate" icon="pi pi-refresh" severity="secondary" (onClick)="resetSearch()" />
+          <p-button label="Tạo GĐ hiện trường" icon="pi pi-plus" (onClick)="createOnsiteAssessment()" />
+          <p-menu #searchActionMenu [popup]="true" [model]="searchActionMenuItems" appendTo="body" />
+          <p-button
+            icon="pi pi-ellipsis-v"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            (click)="toggleSearchActionMenu(searchActionMenu, $event)"
+            [pTooltip]="'Thao tác khác'"
+            tooltipPosition="top"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table
+        [columns]="columns"
+        [data]="tasks"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        size="small"
+        [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadData($event)"
+      />
+    </p-panel>
+  </div>
+</div>
+
+<p-toast />
+<p-confirmDialog />
+<app-reassign-onsite-assessment-modal
+  [visible]="reassignModalVisible"
+  (visibleChange)="onReassignModalVisibleChange($event)"
+  [workTaskId]="reassignWorkTaskId || ''"
+  (reassigned)="onReassigned()"
+/>
+
+<p-dialog
+  header="Tạo giám định hiện trường"
+  [(visible)]="createModalVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '40rem', maxWidth: '95vw' }"
+  styleClass="create-onsite-assessment-dialog"
+  appendTo="body"
+  (onShow)="focusCreateOnsiteExecuteButton()"
+  (onHide)="onCreateModalVisibleChange(false)"
+>
+  <div class="grid grid-cols-12 gap-3">
+    <div class="col-span-12">
+      <label for="createClaimId" class="block mb-2 font-medium">
+        Yêu cầu bồi thường <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="createClaimId"
+        [(ngModel)]="selectedCreateClaimId"
+        [options]="createClaimOptions"
+        [loading]="loadingCreateRequests"
+        [filter]="true"
+        [showClear]="true"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Chọn yêu cầu bồi thường"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        label="Hủy bỏ"
+        severity="secondary"
+        [outlined]="true"
+        [disabled]="creating"
+        (onClick)="cancelCreateOnsiteAssessment()"
+      />
+      <p-button
+        label="Thực hiện"
+        styleClass="create-onsite-execute-button"
+        [loading]="creating"
+        [disabled]="loadingCreateRequests || !createClaimOptions.length"
+        (onClick)="submitCreateOnsiteAssessment()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  header="Phân giám định hiện trường"
+  [(visible)]="assignModalVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '44rem', maxWidth: '95vw' }"
+  appendTo="body"
+>
+  <div class="grid grid-cols-12 gap-3">
+    <div class="col-span-12 md:col-span-6">
+      <label for="assignOrg" class="block mb-2 font-medium">Đơn vị giám định <span class="text-red-500">*</span></label>
+      <p-select
+        id="assignOrg"
+        [(ngModel)]="assignForm.assigneeOrganizationId"
+        [options]="assignUnitOptions"
+        [loading]="loadingAssignUnits"
+        [filter]="true"
+        [showClear]="true"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Chọn đơn vị giám định"
+        styleClass="w-full"
+        appendTo="body"
+        (onChange)="onAssignOrganizationChange()"
+      />
+    </div>
+
+    <div class="col-span-12 md:col-span-6">
+      <label for="assignEmp" class="block mb-2 font-medium">Người giám định <span class="text-red-500">*</span></label>
+      <p-select
+        id="assignEmp"
+        [(ngModel)]="assignForm.assigneeId"
+        [options]="assignEmployeeOptions"
+        [loading]="loadingAssignEmployees"
+        [filter]="true"
+        [showClear]="true"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Chọn người giám định"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <div class="col-span-12 md:col-span-6">
+      <label for="assignStartDate" class="block mb-2 font-medium">Ngày giám định <span class="text-red-500">*</span></label>
+      <p-datepicker
+        inputId="assignStartDate"
+        [(ngModel)]="assignForm.startDate"
+        [showIcon]="true"
+        [showTime]="true"
+        hourFormat="24"
+        dateFormat="dd/mm/yy"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <div class="col-span-12 md:col-span-6">
+      <label for="assignEndDate" class="block mb-2 font-medium">Ngày dự kiến hoàn thành <span class="text-red-500">*</span></label>
+      <p-datepicker
+        inputId="assignEndDate"
+        [(ngModel)]="assignForm.endDate"
+        [showIcon]="true"
+        [showTime]="true"
+        hourFormat="24"
+        dateFormat="dd/mm/yy"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        label="Hủy bỏ"
+        severity="secondary"
+        [outlined]="true"
+        [disabled]="creating"
+        (onClick)="cancelAssignOnsiteAssessment()"
+      />
+      <p-button
+        label="Phân GĐ"
+        [loading]="creating"
+        [disabled]="loadingAssignUnits || loadingAssignEmployees"
+        (onClick)="submitAssignOnsiteAssessment()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>

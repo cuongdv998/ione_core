@@ -1,0 +1,50 @@
+{
+  "description": "Prompt library for ABP Framework + Angular project using Cursor AI.",
+  "backend": {
+    "createEntity": "You are editing an ABP Framework (Open Source) modular DDD project. Task: Create a new Entity as an AggregateRoot in the <MODULE> module, Domain layer. Requirements: private/protected setters, constructors with validation, no EF or application logic. Follow ABP conventions strictly.",
+    "createDto": "Create DTOs in Application.Contracts layer for <MODULE>. Follow naming conventions (<Name>Dto). Do not include domain logic. Only include properties needed for API.",
+    "createAppService": "Create an Application Service in the <MODULE> Application layer. Implement CRUD methods, orchestrate domain logic only, no business rules inside. Use ObjectMapper for mapping. Inject repositories via constructor. Follow ABP conventions.",
+    "addRepository": "Add a repository implementation in the EntityFrameworkCore layer for <MODULE>. Update DbContext extension class. Use EF Core conventions. No business logic.",
+    "createController": "Create API controller for <MODULE> in HttpApi layer. Use AppService interfaces. Do not add business logic. Follow ABP routing conventions.",
+    "addPermission": "Add permission definitions for <MODULE> under Domain.Shared in Permissions class. Use ABP permission naming conventions: <Module>.<Action>."
+  },
+  "frontend": {
+    "createFeature": "Generate a new Angular feature module under features/<module>. Use standalone components, clean folder structure (pages, components, services, state). Use proxy-generated API services only. No hardcoded URLs.",
+    "createPage": "Create a standalone Angular page component inside features/<module>/pages. Use proxy DTOs. Keep UI logic minimal and move business logic to service. Use reactive forms.",
+    "createService": "Create Angular service under features/<module>/services. Use proxy-generated endpoints. No duplicated API calls. Business logic goes here.",
+    "createState": "Create state management (signals or NGXS) under features/<module>/state. Do not store state in components. Keep state pure.",
+    "generateTable": "Create Angular table component using CDK table or PrimeNG (if allowed). Use DTOs from proxy. Support pagination, sorting, filtering. Keep layout responsive.",
+    "generateForm": "Generate Angular reactive form based on <DTO>. Use standalone component, validation rules, and submit handler calling service."
+  },
+  "refactor": {
+    "safeRefactor": "Refactor the following code without breaking module boundaries, without introducing business logic leaks, and without modifying ABP-generated files. Show diff only.",
+    "optimizeMethod": "Optimize the provided method while keeping domain invariants intact. Do not change architecture or move logic across layers. Show diff only."
+  },
+  "fullWorkflows": {
+    "createBackendModule": [
+      "Create Domain and Domain.Shared structures for <MODULE>",
+      "Create Entities and Value Objects",
+      "Create DTOs in Application.Contracts",
+      "Create AppService implementation",
+      "Create Repository and EF Core mapping",
+      "Create HttpApi controller"
+    ],
+    "createFrontendModule": [
+      "Generate Angular feature folder structure",
+      "Generate standalone pages",
+      "Generate Angular services",
+      "Generate UI components",
+      "Bind proxy API to pages",
+      "Add permissions checks"
+    ],
+    "createEndToEndFeature": [
+      "Backend Domain creation",
+      "Backend Application + DTO",
+      "Backend API exposure",
+      "Generate Angular proxy",
+      "Frontend feature creation",
+      "Frontend pages and services",
+      "Frontend UI wiring"
+    ]
+  }
+}

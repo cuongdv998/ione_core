@@ -1,0 +1,34 @@
+:host {
+  display: block;
+}
+
+.permission-accordion {
+  ::ng-deep {
+    .p-accordion-header {
+      .p-accordion-header-link {
+        padding: 0.75rem 1rem;
+      }
+    }
+    
+    .p-accordion-content {
+      padding: 1rem;
+    }
+  }
+}
+
+// Permission tree node hover effect
+.permission-tree-node {
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+}
+
+// Dark mode support
+:host-context(.dark) {
+  .permission-tree-node:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+}
+

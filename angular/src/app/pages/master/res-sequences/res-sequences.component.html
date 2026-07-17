@@ -1,0 +1,442 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Tìm theo Code -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="code" class="block mb-2 font-medium">{{ 'Master::ResSequence:Code' | translate }}</label>
+          <input
+            pInputText
+            id="code"
+            [(ngModel)]="searchForm.code"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Tìm theo Name -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="name" class="block mb-2 font-medium">{{ 'Master::ResSequence:Name' | translate }}</label>
+          <input
+            pInputText
+            id="name"
+            [(ngModel)]="searchForm.name"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Filter theo Type -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="type" class="block mb-2 font-medium">{{ 'Master::ResSequence:Type' | translate }}</label>
+          <p-select
+            id="type"
+            [(ngModel)]="searchForm.type"
+            [options]="typeOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Filter theo Status -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="status" class="block mb-2 font-medium">{{ 'Master::ResSequence:Status' | translate }}</label>
+          <p-select
+            id="status"
+            [(ngModel)]="searchForm.status"
+            [options]="statusOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button
+            [label]="'AbpAuditLogging::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button
+            [label]="'AbpAuditLogging::Search' | translate"
+            icon="pi pi-search"
+            (onClick)="search()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Master::ResSequence:New' | translate"
+            icon="pi pi-plus"
+            (onClick)="openCreateDialog()"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table
+        [columns]="columns"
+        [data]="sequences"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        size="small"
+        [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadData($event)"
+      />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create/Edit -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Master::ResSequence:New' : 'Master::ResSequence:Edit') | translate"
+  [modal]="true"
+  [style]="{ width: '900px', maxWidth: '90vw', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflow: 'auto', maxHeight: 'calc(90vh - 120px)' }"
+>
+  <div class="grid grid-cols-12 gap-4 p-4">
+    <!-- Code field - Full width -->
+    <div class="col-span-12">
+      <label for="formCode" class="block mb-2 font-medium">
+        {{ 'Master::ResSequence:Code' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formCode"
+        [(ngModel)]="formData.code"
+        [readonly]="dialogMode === 'edit'"
+        class="w-full"
+        [class.bg-gray-100]="dialogMode === 'edit'"
+        (input)="onCodeInput($event)"
+        maxlength="25"
+      />
+      <small class="text-gray-500">{{ 'Master::ResSequence:CodeInvalid' | translate }}</small>
+      <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+        {{ 'Master::ResSequence:CodeCannotBeChanged' | translate }}
+      </small>
+    </div>
+
+    <!-- Name field - Full width -->
+    <div class="col-span-12">
+      <label for="formName" class="block mb-2 font-medium">
+        {{ 'Master::ResSequence:Name' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formName"
+        [(ngModel)]="formData.name"
+        class="w-full"
+        maxlength="250"
+      />
+    </div>
+
+    <!-- Prefix field - Left column -->
+    <div class="col-span-12 md:col-span-6">
+      <label for="formPrefix" class="block mb-2 font-medium">
+        {{ 'Master::ResSequence:Prefix' | translate }}
+      </label>
+      <input
+        pInputText
+        id="formPrefix"
+        [(ngModel)]="formData.prefix"
+        class="w-full"
+        maxlength="150"
+      />
+    </div>
+
+    <!-- Suffix field - Right column -->
+    <div class="col-span-12 md:col-span-6">
+      <label for="formSuffix" class="block mb-2 font-medium">
+        {{ 'Master::ResSequence:Suffix' | translate }}
+      </label>
+      <input
+        pInputText
+        id="formSuffix"
+        [(ngModel)]="formData.suffix"
+        class="w-full"
+        maxlength="150"
+      />
+    </div>
+
+    <!-- Type field - Left column -->
+    <div class="col-span-12 md:col-span-6">
+      <label for="formType" class="block mb-2 font-medium">
+        {{ 'Master::ResSequence:Type' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formType"
+        [(ngModel)]="formData.type"
+        [options]="typeOptions"
+        [placeholder]="'Master::ResSequence:Type' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Padding field - Right column -->
+    <div class="col-span-12 md:col-span-6">
+      <label for="formPadding" class="block mb-2 font-medium">
+        {{ 'Master::ResSequence:Padding' | translate }}
+      </label>
+      <p-inputNumber
+        id="formPadding"
+        [(ngModel)]="formData.padding"
+        [min]="0"
+        [showButtons]="true"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- NumberNext field - Left column -->
+    <div class="col-span-12 md:col-span-6">
+      <label for="formNumberNext" class="block mb-2 font-medium">
+        {{ 'Master::ResSequence:NumberNext' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-inputNumber
+        id="formNumberNext"
+        [(ngModel)]="formData.numberNext"
+        [min]="0"
+        [max]="9999999999"
+        [showButtons]="true"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- NumberIncrement field - Right column -->
+    <div class="col-span-12 md:col-span-6">
+      <label for="formNumberIncrement" class="block mb-2 font-medium">
+        {{ 'Master::ResSequence:NumberIncrement' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-inputNumber
+        id="formNumberIncrement"
+        [(ngModel)]="formData.numberIncrement"
+        [min]="1"
+        [max]="9"
+        [showButtons]="true"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- UseDateRange field - Left column -->
+    <div class="col-span-12 md:col-span-6">
+      <label for="formUseDateRange" class="block mb-2 font-medium">
+        {{ 'Master::ResSequence:UseDateRange' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formUseDateRange"
+        [(ngModel)]="formData.useDateRange"
+        [options]="useDateRangeOptions"
+        [placeholder]="'Master::ResSequence:UseDateRange' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+        (onChange)="onUseDateRangeChange()"
+      />
+    </div>
+
+    <!-- DateRangeType field (only when UseDateRange = Yes) - Right column -->
+    <div class="col-span-12 md:col-span-6" *ngIf="formData.useDateRange === 1">
+      <label for="formDateRangeType" class="block mb-2 font-medium">
+        {{ 'Master::ResSequence:DateRangeType' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formDateRangeType"
+        [(ngModel)]="formData.dateRangeType"
+        [options]="dateRangeTypeOptions"
+        [placeholder]="'Master::ResSequence:DateRangeType' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Status field - Left column -->
+    <div class="col-span-12 md:col-span-6">
+      <label for="formStatus" class="block mb-2 font-medium">
+        {{ 'Master::ResSequence:Status' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formStatus"
+        [(ngModel)]="formData.status"
+        [options]="statusOptions"
+        [placeholder]="'Master::ResSequence:Status' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Master::Cancel' | translate"
+        severity="secondary"
+        (onClick)="dialogVisible = false"
+        [disabled]="loading"
+      />
+      <p-button
+        [label]="'Master::Save' | translate"
+        (onClick)="save()"
+        [loading]="loading"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Test Dialog -->
+<p-dialog
+  [(visible)]="testDialogVisible"
+  [header]="'Master::ResSequence:Test' | translate"
+  [modal]="true"
+  [style]="{ width: '700px', maxWidth: '90vw' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="flex flex-col gap-4 p-4">
+    <!-- Sequence Info -->
+    <div *ngIf="testSequence" class="grid grid-cols-12 gap-4">
+      <div class="col-span-12">
+        <label class="block mb-2 font-medium">{{ 'Master::ResSequence:Code' | translate }}</label>
+        <p class="text-gray-700">{{ testSequence.code }}</p>
+      </div>
+      <div class="col-span-12">
+        <label class="block mb-2 font-medium">{{ 'Master::ResSequence:Name' | translate }}</label>
+        <p class="text-gray-700">{{ testSequence.name }}</p>
+      </div>
+      <div class="col-span-12 md:col-span-6">
+        <label class="block mb-2 font-medium">{{ 'Master::ResSequence:NumberNext' | translate }}</label>
+        <p class="text-gray-700">{{ testSequence.numberNext }}</p>
+      </div>
+      <div class="col-span-12 md:col-span-6">
+        <label class="block mb-2 font-medium">{{ 'Master::ResSequence:NumberIncrement' | translate }}</label>
+        <p class="text-gray-700">{{ testSequence.numberIncrement }}</p>
+      </div>
+    </div>
+
+    <!-- Parameters Section -->
+    <div class="border-t pt-4">
+      <div class="flex justify-between items-center mb-3">
+        <label class="block font-medium">{{ 'Master::ResSequence:Parameters' | translate }}</label>
+        <p-button
+          [label]="'Master::ResSequence:AddParameter' | translate"
+          icon="pi pi-plus"
+          size="small"
+          severity="secondary"
+          (onClick)="addTestParameter()"
+          [disabled]="testLoading"
+        />
+      </div>
+
+      <div *ngIf="testParameters.length === 0" class="text-sm text-gray-500 italic mb-2">
+        {{ 'Master::ResSequence:NoParameters' | translate }}
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <div *ngFor="let param of testParameters; let i = index" class="flex gap-2 items-center">
+          <div class="flex-1">
+            <input
+              pInputText
+              [(ngModel)]="param.key"
+              class="w-full"
+              [disabled]="testLoading"
+            />
+          </div>
+          <div class="flex-1">
+            <input
+              pInputText
+              [(ngModel)]="param.value"
+              class="w-full"
+              [disabled]="testLoading"
+            />
+          </div>
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            size="small"
+            [text]="true"
+            (onClick)="removeTestParameter(i)"
+            [disabled]="testLoading"
+            [pTooltip]="'Master::Delete' | translate"
+          />
+        </div>
+      </div>
+
+      <small class="text-gray-500 block mt-2">
+        {{ 'Master::ResSequence:ParametersHint' | translate }}
+      </small>
+    </div>
+
+    <!-- Test Result -->
+    <div *ngIf="testResult" class="mt-4 p-4 bg-green-50 border border-green-200 rounded">
+      <h4 class="font-semibold text-green-800 mb-2">{{ 'Master::ResSequence:GeneratedCode' | translate }}</h4>
+      <p class="text-2xl font-mono font-bold text-green-900">{{ testResult.generatedCode }}</p>
+      <p class="text-sm text-green-700 mt-2">
+        {{ 'Master::ResSequence:NextNumber' | translate }}: <strong>{{ testResult.nextNumber }}</strong>
+      </p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="testLoading" class="flex justify-center items-center py-8">
+      <i class="pi pi-spin pi-spinner text-2xl text-blue-500"></i>
+      <span class="ml-2">{{ 'Master::ResSequence:Generating' | translate }}...</span>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Master::Close' | translate"
+        severity="secondary"
+        (onClick)="testDialogVisible = false"
+        [disabled]="testLoading"
+      />
+      <p-button
+        [label]="'Master::ResSequence:Generate' | translate"
+        icon="pi pi-play"
+        (onClick)="testGenerate()"
+        [loading]="testLoading"
+        [disabled]="testSequence?.status !== 0"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Messages -->
+<p-toast />
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog />
+

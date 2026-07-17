@@ -1,0 +1,806 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Tìm theo Line of Business -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="lobId" class="block mb-2 font-medium">{{ 'Product::ProTableRate:Lob' | translate }}</label>
+          <p-select
+            id="lobId"
+            [(ngModel)]="searchForm.lobId"
+            [options]="fullLobOptions"
+            [placeholder]="'Product::ProTableRate:All' | translate"
+            [showClear]="true"
+            [loading]="loadingLobs"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Tìm theo Insurer -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="insurerId" class="block mb-2 font-medium">{{ 'Product::ProTableRate:Insurer' | translate }}</label>
+          <p-select
+            id="insurerId"
+            [(ngModel)]="searchForm.insurerId"
+            [options]="fullInsurerOptions"
+            [placeholder]="'Product::ProTableRate:All' | translate"
+            [showClear]="true"
+            [loading]="loadingInsurers"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Tìm theo Code -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="code" class="block mb-2 font-medium">{{ 'Product::ProTableRate:Code' | translate }}</label>
+          <input
+            pInputText
+            id="code"
+            [(ngModel)]="searchForm.code"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Tìm theo Name -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="name" class="block mb-2 font-medium">{{ 'Product::ProTableRate:Name' | translate }}</label>
+          <input
+            pInputText
+            id="name"
+            [(ngModel)]="searchForm.name"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Filter theo Status -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="status" class="block mb-2 font-medium">{{ 'Product::ProTableRate:Status' | translate }}</label>
+          <p-select
+            id="status"
+            [(ngModel)]="searchForm.status"
+            [options]="statusOptions"
+            [placeholder]="'Product::ProTableRate:All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Filter theo Sản phẩm áp dụng -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="productId" class="block mb-2 font-medium">{{ 'Product::ProTableRate:AppliedProduct' | translate }}</label>
+          <p-select
+            id="productId"
+            [(ngModel)]="searchForm.productId"
+            [options]="productOptions"
+            [placeholder]="'Product::ProTableRate:All' | translate"
+            [showClear]="true"
+            [loading]="loadingProducts"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button
+            [label]="'AbpAuditLogging::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button
+            [label]="'AbpAuditLogging::Search' | translate"
+            icon="pi pi-search"
+            (onClick)="search()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Product::ProTableRate:New' | translate"
+            icon="pi pi-plus"
+            (onClick)="openCreateDialog()"
+          />
+          <p-button
+            [label]="'Product::ProTableRate:ExportFile' | translate"
+            icon="pi pi-download"
+            severity="secondary"
+            [loading]="exporting"
+            [disabled]="exporting || tableRates.length === 0"
+            (onClick)="exportToExcel()"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu - ProTableRate -->
+  <div class="col-span-12">
+    <p-panel [header]="'Product::ProTableRate:List' | translate">
+      <app-v-table
+        [columns]="columns"
+        [data]="tableRates"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        [rowClickable]="true"
+        [selectionMode]="'single'"
+        [metaKeySelection]="false"
+        [(selection)]="selectedTableRate"
+        size="small"
+        [scrollHeight]="'400px'"
+        (lazyLoad)="loadData($event)"
+        (rowClick)="onTableRateRowClick($event)"
+      />
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu - ProTableRateLine -->
+  <div class="col-span-12" *ngIf="selectedTableRateId">
+    <p-panel [header]="'Product::ProTableRateLine:List' | translate">
+      <div class="mb-4 flex justify-end gap-2">
+        <p-button
+          *ngIf="LINE_PERMISSIONS.CREATE | appPermission"
+          [label]="'Product::ProTableRateLine:ImportExcel' | translate"
+          icon="pi pi-upload"
+          (onClick)="openImportDialog()"
+          size="small"
+          severity="secondary"
+        />
+        <p-button
+          *ngIf="LINE_PERMISSIONS.CREATE | appPermission"
+          [label]="'Product::ProTableRateLine:New' | translate"
+          icon="pi pi-plus"
+          (onClick)="openCreateLineDialog()"
+          size="small"
+        />
+      </div>
+      <app-v-table
+        [columns]="lineColumns"
+        [data]="tableRateLines"
+        [actions]="lineActions"
+        [totalCount]="lineTotalCount"
+        [loading]="lineLoading"
+        [rows]="linePageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        size="small"
+        [scrollHeight]="'400px'"
+        (lazyLoad)="loadLineData($event)"
+      />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create/Edit/View -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Product::ProTableRate:New' : dialogMode === 'edit' ? 'Product::ProTableRate:Edit' : 'Product::ProTableRate:ViewDetail') | translate"
+  [modal]="true"
+  [style]="{ width: '800px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflow: 'visible' }"
+>
+  <div class="flex flex-col gap-4 p-4">
+    <!-- Line of Business field -->
+    <div>
+      <label for="formLobId" class="block mb-2 font-medium">
+        {{ 'Product::ProTableRate:Lob' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formLobId"
+        [(ngModel)]="formData.lobId"
+        [options]="lobOptions"
+        [placeholder]="'Product::ProTableRate:SelectLob' | translate"
+        [disabled]="loadingLobs || dialogMode === 'view'"
+        [loading]="loadingLobs"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Insurer field -->
+    <div>
+      <label for="formInsurerId" class="block mb-2 font-medium">
+        {{ 'Product::ProTableRate:Insurer' | translate }}
+      </label>
+      <p-select
+        id="formInsurerId"
+        [(ngModel)]="formData.insurerId"
+        [options]="insurerOptions"
+        [placeholder]="'Product::ProTableRate:SelectInsurer' | translate"
+        [showClear]="true"
+        [disabled]="loadingInsurers || dialogMode === 'view'"
+        [loading]="loadingInsurers"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Code field -->
+    <div>
+      <label for="formCode" class="block mb-2 font-medium">
+        {{ 'Product::ProTableRate:Code' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formCode"
+        [(ngModel)]="formData.code"
+        [readonly]="dialogMode === 'edit'"
+        [disabled]="dialogMode === 'view'"
+        class="w-full"
+        [class.bg-gray-100]="dialogMode === 'edit' || dialogMode === 'view'"
+        (input)="onCodeInput($event)"
+        maxlength="50"
+      />
+      <small class="text-gray-500">{{ 'Product::ProTableRate:CodeFormat' | translate }}</small>
+      <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+        {{ 'Product::ProTableRate:CodeCannotBeChanged' | translate }}
+      </small>
+    </div>
+
+    <!-- Name field -->
+    <div>
+      <label for="formName" class="block mb-2 font-medium">
+        {{ 'Product::ProTableRate:Name' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formName"
+        [(ngModel)]="formData.name"
+        [disabled]="dialogMode === 'view'"
+        class="w-full"
+        maxlength="250"
+      />
+    </div>
+
+    <!-- Description field -->
+    <div>
+      <label for="formDescription" class="block mb-2 font-medium">
+        {{ 'Product::ProTableRate:Description' | translate }}
+      </label>
+      <textarea
+        pTextarea
+        id="formDescription"
+        [(ngModel)]="formData.description"
+        [disabled]="dialogMode === 'view'"
+        class="w-full"
+        [rows]="3"
+        maxlength="500"
+      ></textarea>
+    </div>
+
+    <!-- Status field -->
+    <div>
+      <label for="formStatus" class="block mb-2 font-medium">
+        {{ 'Product::ProTableRate:Status' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formStatus"
+        [(ngModel)]="formData.status"
+        [options]="statusOptions"
+        [placeholder]="'Product::ProTableRate:Status' | translate"
+        [disabled]="dialogMode === 'view'"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Variables Section -->
+    <div class="border-t pt-4 mt-4">
+      <div class="flex justify-between items-center mb-4">
+        <label class="block font-medium">
+          {{ 'Product::ProTableRateVariable:Variables' | translate }}
+        </label>
+      </div>
+
+      <!-- Variables List -->
+      <div *ngIf="displayVariables.length > 0" class="mb-4">
+        <div class="overflow-x-auto">
+          <p-table [value]="displayVariables" styleClass="p-datatable-sm">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>{{ 'Product::ProTableRateVariable:Code' | translate }}</th>
+                <th>{{ 'Product::ProTableRateVariable:Name' | translate }}</th>
+                <th>{{ 'Product::ProTableRateVariable:Operator' | translate }}</th>
+                <th>{{ 'AbpAuditLogging::CreationTime' | translate }}</th>
+                <th>{{ 'AbpAuditLogging::CreatorId' | translate }}</th>
+                <th *ngIf="dialogMode !== 'view'" style="width: 100px">{{ 'Product::Actions' | translate }}</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-variable let-rowIndex="rowIndex">
+              <tr>
+                <td>{{ variable.attributeCode || '' }}</td>
+                <td>{{ variable.attributeName || variable.attributeId || '' }}</td>
+                <td>{{ getOperatorLabel(variable.operator) }}</td>
+                <td>{{ formatDate(variable.creationTime) }}</td>
+                <td>{{ formatCreator(variable.creatorName) }}</td>
+                <td *ngIf="dialogMode !== 'view'" class="text-center">
+                  <p-button
+                    icon="pi pi-trash"
+                    severity="danger"
+                    [text]="true"
+                    [rounded]="true"
+                    size="small"
+                    (click)="onRemoveVariable($event, variable.attributeId)"
+                    [pTooltip]="'Product::Delete' | translate"
+                    tooltipPosition="top"
+                  />
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+
+      <!-- Add Variable Form -->
+      <div *ngIf="dialogMode !== 'view'" class="border border-gray-300 rounded p-4 bg-gray-50">
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-12 md:col-span-6">
+            <label for="newVariableAttribute" class="block mb-2 text-sm font-medium">
+              {{ 'Product::ProTableRateVariable:Attribute' | translate }}
+              <span class="text-red-500">*</span>
+            </label>
+            <p-select
+              id="newVariableAttribute"
+              [(ngModel)]="newVariable.attributeId"
+              [options]="attributeOptions"
+              [placeholder]="'Product::ProTableRateVariable:SelectAttribute' | translate"
+              [loading]="loadingAttributes"
+              [disabled]="loadingAttributes"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+              appendTo="body"
+            />
+          </div>
+          <div class="col-span-12 md:col-span-4">
+            <label for="newVariableOperator" class="block mb-2 text-sm font-medium">
+              {{ 'Product::ProTableRateVariable:Operator' | translate }}
+              <span class="text-red-500">*</span>
+            </label>
+            <p-select
+              id="newVariableOperator"
+              [(ngModel)]="newVariable.operator"
+              [options]="operatorOptions"
+              [placeholder]="'Product::ProTableRateVariable:SelectOperator' | translate"
+              [loading]="loadingOperators"
+              [disabled]="loadingOperators"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+              appendTo="body"
+            />
+          </div>
+          <div class="col-span-12 md:col-span-2 flex items-end">
+            <p-button
+              [label]="'Product::Add' | translate"
+              icon="pi pi-plus"
+              (onClick)="addVariable()"
+              styleClass="w-full"
+              size="small"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Product::Cancel' | translate"
+        severity="secondary"
+        (onClick)="dialogVisible = false"
+        [disabled]="loading"
+      />
+      <p-button
+        *ngIf="dialogMode !== 'view'"
+        [label]="'Product::Save' | translate"
+        (onClick)="save()"
+        [loading]="loading"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Messages -->
+<p-toast />
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog />
+
+<!-- Dialog Create/Edit/View ProTableRateLine -->
+<p-dialog
+  [(visible)]="lineDialogVisible"
+  [header]="(lineDialogMode === 'create' ? 'Product::ProTableRateLine:New' : lineDialogMode === 'edit' ? 'Product::ProTableRateLine:Edit' : 'Product::ProTableRateLine:ViewDetail') | translate"
+  [modal]="true"
+  [style]="{ width: '900px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflow: 'visible' }"
+>
+  <div class="flex flex-col gap-4 p-4">
+    <!-- First row: Coverage, Channel, Partner -->
+    <div class="grid grid-cols-12 gap-4">
+      <!-- Coverage field -->
+      <div class="col-span-12 md:col-span-4">
+        <label for="lineCoverageId" class="block mb-2 font-medium">
+          {{ 'Product::ProTableRateLine:Coverage' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="lineCoverageId"
+          [(ngModel)]="lineFormData.coverageId"
+          [options]="filteredCoverageOptions"
+          [placeholder]="'Product::ProTableRateLine:SelectCoverage' | translate"
+          [showClear]="true"
+          [loading]="loadingCoverages"
+          [disabled]="loadingCoverages || lineDialogMode === 'view'"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- Channel field -->
+      <div class="col-span-12 md:col-span-4">
+        <label for="lineChannelId" class="block mb-2 font-medium">
+          {{ 'Product::ProTableRateLine:Channel' | translate }}
+        </label>
+        <p-select
+          id="lineChannelId"
+          [(ngModel)]="lineFormData.channelId"
+          [options]="channelOptions"
+          [placeholder]="'Product::ProTableRateLine:SelectChannel' | translate"
+          [showClear]="true"
+          [loading]="loadingChannels"
+          [disabled]="loadingChannels || lineDialogMode === 'view'"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- Partner field -->
+      <div class="col-span-12 md:col-span-4">
+        <label for="linePartnerId" class="block mb-2 font-medium">
+          {{ 'Product::ProTableRateLine:Partner' | translate }}
+        </label>
+        <p-select
+          id="linePartnerId"
+          [(ngModel)]="lineFormData.partnerId"
+          [options]="linePartnerOptions"
+          [placeholder]="'Product::ProTableRateLine:SelectPartner' | translate"
+          [showClear]="true"
+          [loading]="loadingLinePartners"
+          [disabled]="loadingLinePartners || lineDialogMode === 'view'"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+    </div>
+
+    <!-- Rate fields in grid -->
+    <div class="grid grid-cols-12 gap-4">
+      <!-- Minimum Rate -->
+      <div class="col-span-12 md:col-span-4">
+        <label for="lineMinimumRate" class="block mb-2 font-medium">
+          {{ 'Product::ProTableRateLine:MinimumRate' | translate }}
+        </label>
+        <p-inputNumber
+          id="lineMinimumRate"
+          [(ngModel)]="lineFormData.minimumRate"
+          [min]="0"
+          [maxFractionDigits]="2"
+          [disabled]="lineDialogMode === 'view'"
+          styleClass="w-full"
+          [showButtons]="false"
+        />
+      </div>
+
+      <!-- Base Rate -->
+      <div class="col-span-12 md:col-span-4">
+        <label for="lineBaseRate" class="block mb-2 font-medium">
+          {{ 'Product::ProTableRateLine:BaseRate' | translate }}
+        </label>
+        <p-inputNumber
+          id="lineBaseRate"
+          [(ngModel)]="lineFormData.baseRate"
+          [min]="0"
+          [maxFractionDigits]="2"
+          [disabled]="lineDialogMode === 'view'"
+          styleClass="w-full"
+          [showButtons]="false"
+        />
+      </div>
+
+      <!-- Flat Rate -->
+      <div class="col-span-12 md:col-span-4">
+        <label for="lineFlatRate" class="block mb-2 font-medium">
+          {{ 'Product::ProTableRateLine:FlatRate' | translate }}
+        </label>
+        <p-inputNumber
+          id="lineFlatRate"
+          [(ngModel)]="lineFormData.flatRate"
+          [min]="0"
+          [maxFractionDigits]="2"
+          [disabled]="lineDialogMode === 'view'"
+          styleClass="w-full"
+          [showButtons]="false"
+        />
+      </div>
+
+      <!-- Max Discount -->
+      <div class="col-span-12 md:col-span-4">
+        <label for="lineMaxDiscount" class="block mb-2 font-medium">
+          {{ 'Product::ProTableRateLine:MaxDiscount' | translate }}
+        </label>
+        <p-inputNumber
+          id="lineMaxDiscount"
+          [(ngModel)]="lineFormData.maxDiscount"
+          [min]="0"
+          [maxFractionDigits]="2"
+          [disabled]="lineDialogMode === 'view'"
+          styleClass="w-full"
+          [showButtons]="false"
+        />
+      </div>
+
+      <!-- Loading (Tăng/giảm phí) -->
+      <div class="col-span-12 md:col-span-4">
+        <label for="lineLoading" class="block mb-2 font-medium">
+          {{ 'Product::ProTableRateLine:Loading' | translate }}
+        </label>
+        <p-inputNumber
+          id="lineLoading"
+          [(ngModel)]="lineFormData.loading"
+          [maxFractionDigits]="3"
+          [disabled]="lineDialogMode === 'view'"
+          styleClass="w-full"
+          [showButtons]="false"
+        />
+      </div>
+
+      <!-- Loading Rate -->
+      <div class="col-span-12 md:col-span-4">
+        <label for="lineLoadingRate" class="block mb-2 font-medium">
+          {{ 'Product::ProTableRateLine:LoadingRate' | translate }}
+        </label>
+        <p-inputNumber
+          id="lineLoadingRate"
+          [(ngModel)]="lineFormData.loadingRate"
+          [min]="0"
+          [maxFractionDigits]="2"
+          [disabled]="lineDialogMode === 'view'"
+          styleClass="w-full"
+          [showButtons]="false"
+        />
+      </div>
+    </div>
+
+    <!-- Name (Diễn giải) and Condition (Điều kiện tính phí) as textareas -->
+    <div class="grid grid-cols-12 gap-4">
+      <!-- Name field (Diễn giải) -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="lineName" class="block mb-2 font-medium">
+          {{ 'Product::ProTableRateLine:Name' | translate }}
+        </label>
+        <textarea
+          pTextarea
+          id="lineName"
+          [(ngModel)]="lineFormData.name"
+          [disabled]="lineDialogMode === 'view'"
+          class="w-full"
+          [rows]="3"
+          maxlength="250"
+        ></textarea>
+      </div>
+
+      <!-- Condition field (Điều kiện tính phí) -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="lineCondition" class="block mb-2 font-medium">
+          {{ 'Product::ProTableRateLine:Condition' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <textarea
+          pTextarea
+          id="lineCondition"
+          [(ngModel)]="lineFormData.condition"
+          [disabled]="lineDialogMode === 'view'"
+          class="w-full"
+          [rows]="3"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Date fields -->
+    <div class="grid grid-cols-12 gap-4">
+      <!-- Effect Date -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="lineEffectDate" class="block mb-2 font-medium">
+          {{ 'Product::ProTableRateLine:EffectDate' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-datepicker
+          inputId="lineEffectDate"
+          [(ngModel)]="lineFormData.effectDate"
+          [showIcon]="true"
+          [disabled]="lineDialogMode === 'view'"
+          dateFormat="dd/mm/yy"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- Expire Date -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="lineExpireDate" class="block mb-2 font-medium">
+          {{ 'Product::ProTableRateLine:ExpireDate' | translate }}
+        </label>
+        <p-datepicker
+          inputId="lineExpireDate"
+          [(ngModel)]="lineFormData.expireDate"
+          [showIcon]="true"
+          [disabled]="lineDialogMode === 'view'"
+          dateFormat="dd/mm/yy"
+          [minDate]="lineFormData.effectDate || undefined"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Product::Cancel' | translate"
+        severity="secondary"
+        (onClick)="lineDialogVisible = false"
+        [disabled]="lineLoading"
+      />
+      <p-button
+        *ngIf="lineDialogMode !== 'view'"
+        [label]="'Product::Save' | translate"
+        (onClick)="saveLine()"
+        [loading]="lineLoading"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Import Excel Dialog -->
+<p-dialog
+  [(visible)]="importDialogVisible"
+  header="Import biểu phí"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="flex flex-col gap-4 p-4">
+    <p class="text-sm text-gray-600 m-0">
+      {{ 'Product::ProTableRateLine:ImportColumnHint' | translate }}
+    </p>
+    <div class="flex gap-2">
+      <p-fileUpload
+        mode="basic"
+        [accept]="'.xlsx,.xls'"
+        [maxFileSize]="10485760"
+        [auto]="false"
+        chooseLabel="Chọn file"
+        [disabled]="importing"
+        (onSelect)="onFileSelect($event)"
+        styleClass="w-full"
+      />
+      <p-button
+        [label]="'Product::ProTableRateLine:ExportTemplate' | translate"
+        icon="pi pi-download"
+        (onClick)="downloadTemplate()"
+        [disabled]="importing || !selectedTableRateId"
+        styleClass="template-download-btn"
+      />
+    </div>
+
+    <div *ngIf="selectedImportFile" class="text-sm text-gray-600">
+      {{ 'Product::ProTableRateLine:SelectedFile' | translate }}: {{ selectedImportFile.name }}
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        label="Huỷ bỏ"
+        severity="secondary"
+        (onClick)="closeImportDialog()"
+        [disabled]="importing"
+      />
+      <p-button
+        label="Thực hiện"
+        (onClick)="executeImport()"
+        [loading]="importing"
+        [disabled]="!selectedImportFile || importing"
+        styleClass="execute-import-btn"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Import Result Dialog -->
+<p-dialog
+  [(visible)]="importResultDialogVisible"
+  [header]="'Product::ProTableRateLine:ImportComplete' | translate"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="flex flex-col gap-4 p-4">
+    <div class="text-center">
+      <p class="text-lg font-semibold mb-4">{{ 'Product::ProTableRateLine:ImportComplete' | translate }}!</p>
+      <div class="grid grid-cols-3 gap-4 mb-4">
+        <div class="p-3 bg-gray-100 rounded">
+          <div class="text-sm text-gray-600">{{ 'Product::ProTableRateLine:TotalRows' | translate }}</div>
+          <div class="text-lg font-semibold">{{ importResult?.totalRows || 0 }}</div>
+        </div>
+        <div class="p-3 bg-green-100 rounded">
+          <div class="text-sm text-green-600">{{ 'Product::ProTableRateLine:SuccessCount' | translate }}</div>
+          <div class="text-lg font-semibold text-green-700">{{ importResult?.successCount || 0 }}</div>
+        </div>
+        <div class="p-3 bg-red-100 rounded">
+          <div class="text-sm text-red-600">{{ 'Product::ProTableRateLine:ErrorCount' | translate }}</div>
+          <div class="text-lg font-semibold text-red-700">{{ importResult?.errorCount || 0 }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        *ngIf="importResult?.resultFileBytes"
+        [label]="'Product::ProTableRateLine:DownloadResultFile' | translate"
+        icon="pi pi-download"
+        (onClick)="downloadResultFile()"
+        severity="secondary"
+      />
+      <p-button
+        [label]="'Product::Close' | translate"
+        (onClick)="closeImportResultDialog()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>

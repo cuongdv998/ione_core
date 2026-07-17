@@ -1,0 +1,290 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Tìm theo UOM Class -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="classId" class="block mb-2 font-medium">{{ 'Master::ResUom:ClassId' | translate }}</label>
+          <p-select
+            id="classId"
+            [(ngModel)]="searchForm.classId"
+            [options]="uomClassOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            [loading]="loadingUomClasses"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Tìm theo Code -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="code" class="block mb-2 font-medium">{{ 'Master::ResUom:Code' | translate }}</label>
+          <input
+            pInputText
+            id="code"
+            [(ngModel)]="searchForm.code"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Tìm theo Name -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="name" class="block mb-2 font-medium">{{ 'Master::ResUom:Name' | translate }}</label>
+          <input
+            pInputText
+            id="name"
+            [(ngModel)]="searchForm.name"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Filter theo Status -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="status" class="block mb-2 font-medium">{{ 'Master::ResUom:Status' | translate }}</label>
+          <p-select
+            id="status"
+            [(ngModel)]="searchForm.status"
+            [options]="statusOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Filter theo Type -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="type" class="block mb-2 font-medium">{{ 'Master::ResUom:Type' | translate }}</label>
+          <p-select
+            id="type"
+            [(ngModel)]="searchForm.type"
+            [options]="typeOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button
+            [label]="'AbpAuditLogging::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button
+            [label]="'AbpAuditLogging::Search' | translate"
+            icon="pi pi-search"
+            (onClick)="search()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Master::ResUom:New' | translate"
+            icon="pi pi-plus"
+            (onClick)="openCreateDialog()"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table
+        [columns]="columns"
+        [data]="resUoms"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        size="small"
+        [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadData($event)"
+      />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create/Edit -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Master::ResUom:New' : 'Master::ResUom:Edit') | translate"
+  [modal]="true"
+  [style]="{ width: '700px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="res-uoms-dialog"
+>
+  <div class="flex flex-col gap-4 p-4">
+    <!-- UOM Class field -->
+    <div>
+      <label for="formClassId" class="block mb-2 font-medium">
+        {{ 'Master::ResUom:ClassId' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formClassId"
+        [(ngModel)]="formData.classId"
+        [options]="uomClassOptions"
+        [placeholder]="'Master::ResUom:SelectClassId' | translate"
+        [disabled]="dialogMode === 'edit'"
+        [loading]="loadingUomClasses"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+        [class.bg-gray-100]="dialogMode === 'edit'"
+      />
+      <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+        {{ 'Master::ResUom:ClassIdCannotBeChanged' | translate }}
+      </small>
+    </div>
+
+    <!-- Code field -->
+    <div>
+      <label for="formCode" class="block mb-2 font-medium">
+        {{ 'Master::ResUom:Code' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formCode"
+        [(ngModel)]="formData.code"
+        [readonly]="dialogMode === 'edit'"
+        class="w-full"
+        [class.bg-gray-100]="dialogMode === 'edit'"
+        (input)="onCodeInput($event)"
+        maxlength="25"
+      />
+      <small class="text-gray-500">{{ 'Master::ResUom:CodeInvalid' | translate }}</small>
+      <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+        {{ 'Master::ResUom:CodeCannotBeChanged' | translate }}
+      </small>
+    </div>
+
+    <!-- Name field -->
+    <div>
+      <label for="formName" class="block mb-2 font-medium">
+        {{ 'Master::ResUom:Name' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formName"
+        [(ngModel)]="formData.name"
+        class="w-full"
+        maxlength="100"
+      />
+    </div>
+
+    <!-- Rounding field -->
+    <div>
+      <label for="formRounding" class="block mb-2 font-medium">
+        {{ 'Master::ResUom:Rounding' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-inputNumber
+        id="formRounding"
+        [(ngModel)]="formData.rounding"
+        [min]="0"
+        [maxFractionDigits]="4"
+        [minFractionDigits]="0"
+        styleClass="w-full"
+        [showButtons]="true"
+        [step]="roundingStep"
+      />
+    </div>
+
+    <!-- Factor field -->
+    <div>
+      <label for="formFactor" class="block mb-2 font-medium">
+        {{ 'Master::ResUom:Factor' | translate }}
+      </label>
+      <p-inputNumber
+        id="formFactor"
+        [(ngModel)]="formData.factor"
+        [min]="0"
+        [max]="0.999999"
+        [maxFractionDigits]="6"
+        [minFractionDigits]="0"
+        styleClass="w-full"
+        [showButtons]="true"
+        [step]="factorStep"
+      />
+      <small class="text-gray-500">{{ 'Master::ResUom:FactorRangeHint' | translate }}</small>
+    </div>
+
+    <!-- Type field -->
+    <div>
+      <label for="formType" class="block mb-2 font-medium">
+        {{ 'Master::ResUom:Type' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formType"
+        [(ngModel)]="formData.type"
+        [options]="typeOptions"
+        [placeholder]="'Master::ResUom:Type' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Status field -->
+    <div>
+      <label for="formStatus" class="block mb-2 font-medium">
+        {{ 'Master::ResUom:Status' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formStatus"
+        [(ngModel)]="formData.status"
+        [options]="statusOptions"
+        [placeholder]="'Master::ResUom:Status' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Master::Cancel' | translate"
+        severity="secondary"
+        (onClick)="dialogVisible = false"
+        [disabled]="loading"
+      />
+      <p-button
+        [label]="'Master::Save' | translate"
+        (onClick)="save()"
+        [loading]="loading"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Messages -->
+<p-toast />
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog />

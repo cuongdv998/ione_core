@@ -1,0 +1,49 @@
+// ProTableRates Component Styles
+
+// Fix scroll issue when p-select dropdown opens in dialog
+::ng-deep {
+  .p-dialog-content {
+    overflow: auto !important;
+  }
+
+  .p-dialog {
+    .p-select-overlay {
+      z-index: 10000 !important;
+    }
+  }
+}
+
+// Import dialog styles
+.template-download-btn {
+  background-color: #ff9800 !important;
+  border-color: #ff9800 !important;
+  color: white !important;
+
+  &:hover {
+    background-color: #f57c00 !important;
+    border-color: #f57c00 !important;
+  }
+
+  &:disabled {
+    background-color: #cccccc !important;
+    border-color: #cccccc !important;
+    color: #666666 !important;
+  }
+}
+
+.execute-import-btn {
+  background-color: #ff9800 !important;
+  border-color: #ff9800 !important;
+  color: white !important;
+
+  &:hover:not(:disabled) {
+    background-color: #f57c00 !important;
+    border-color: #f57c00 !important;
+  }
+
+  &:disabled {
+    background-color: #cccccc !important;
+    border-color: #cccccc !important;
+    color: #666666 !important;
+  }
+}

@@ -1,0 +1,133 @@
+// Policies Component Styles
+
+// Fix scroll issue when p-select dropdown opens in dialog
+::ng-deep {
+  .p-dialog-content {
+    overflow: auto !important;
+  }
+
+  .p-dialog {
+    .p-select-overlay {
+      z-index: 10000 !important;
+    }
+  }
+}
+
+/* Ellipsis for long selected values in p-select (policy form) */
+:host ::ng-deep .v-ellipsis-select {
+  min-width: 0; /* allow flex items to shrink */
+}
+
+:host ::ng-deep .v-ellipsis-select .p-select-label,
+:host ::ng-deep .v-ellipsis-select .p-dropdown-label,
+:host ::ng-deep .v-ellipsis-select .p-inputtext {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .v-ellipsis-select .p-select-label-container,
+:host ::ng-deep .v-ellipsis-select .p-dropdown-label-container {
+  min-width: 0;
+}
+
+/* Coverage table: fixed layout to prevent resize/blink when typing amount */
+:host ::ng-deep .coverage-table-fixed .p-datatable-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+:host ::ng-deep .coverage-table-fixed .p-datatable-thead > tr > th,
+:host ::ng-deep .coverage-table-fixed .p-datatable-tbody > tr > td {
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+:host ::ng-deep .coverage-table-fixed .p-inputnumber,
+:host ::ng-deep .coverage-table-fixed .p-inputnumber input {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Nút màn tìm kiếm policy: cùng màu cam */
+:host ::ng-deep .policy-search-actions .p-button {
+  background-color: #ff9800;
+  border-color: #ff9800;
+}
+:host ::ng-deep .policy-search-actions .p-button:hover:not(:disabled) {
+  background-color: #f57c00;
+  border-color: #f57c00;
+}
+
+/* Policy summary table: fixed columns + min width so discount/markup inputs do not overlap */
+:host ::ng-deep .policy-summary-datatable .p-datatable-table {
+  table-layout: fixed;
+  width: 100%;
+  min-width: 38rem;
+}
+
+:host ::ng-deep .policy-summary-datatable .p-datatable-thead > tr > th,
+:host ::ng-deep .policy-summary-datatable .p-datatable-tbody > tr > td {
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+
+:host ::ng-deep .policy-summary-datatable .p-datatable-thead > tr > th:nth-child(1),
+:host ::ng-deep .policy-summary-datatable .p-datatable-tbody > tr > td:nth-child(1) {
+  width: 32%;
+  word-break: break-word;
+}
+
+:host ::ng-deep .policy-summary-datatable .p-datatable-thead > tr > th:nth-child(2),
+:host ::ng-deep .policy-summary-datatable .p-datatable-tbody > tr > td:nth-child(2) {
+  width: 22%;
+}
+
+:host ::ng-deep .policy-summary-datatable .p-datatable-thead > tr > th:nth-child(3),
+:host ::ng-deep .policy-summary-datatable .p-datatable-tbody > tr > td:nth-child(3),
+:host ::ng-deep .policy-summary-datatable .p-datatable-thead > tr > th:nth-child(4),
+:host ::ng-deep .policy-summary-datatable .p-datatable-tbody > tr > td:nth-child(4) {
+  width: 23%;
+  min-width: 9rem;
+}
+
+:host ::ng-deep .policy-summary-datatable .p-datatable-tfoot > tr > td {
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+
+:host ::ng-deep .policy-summary-datatable .p-inputnumber {
+  width: 100%;
+  max-width: 100%;
+}
+
+:host ::ng-deep .policy-summary-datatable .p-inputnumber .p-inputtext {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Quick search: input fills bordered shell flush (no inner padding gap) */
+:host ::ng-deep .quick-search-shell .quick-search-complete {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: stretch;
+  width: 100%;
+}
+
+:host ::ng-deep .quick-search-shell .quick-search-complete .p-autocomplete-input,
+:host ::ng-deep .quick-search-shell .quick-search-complete .p-inputtext {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent;
+}

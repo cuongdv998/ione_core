@@ -1,0 +1,33 @@
+.policy-request-approval-detail {
+  .page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    .page-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .titles {
+      .page-title {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+      .subtitle {
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+        color: var(--p-text-muted-color);
+      }
+    }
+  }
+
+  .content {
+    margin-top: 0;
+  }
+}

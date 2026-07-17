@@ -1,0 +1,89 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="onVisibleChange($event)"
+  [header]="'Claim::Transfer' | translate"
+  [modal]="true"
+  [style]="{ width: '520px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onShow)="focusConfirmButton()"
+  (onHide)="close()"
+>
+  <div class="grid grid-cols-12 gap-4 p-2">
+    <div class="col-span-12">
+      <label for="transferReasonId" class="block mb-2 font-medium">
+        {{ 'Claim::TransferReason' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="transferReasonId"
+        [(ngModel)]="reasonId"
+        [options]="reasonOptions"
+        [placeholder]="'Claim::SelectReason' | translate"
+        [showClear]="true"
+        [loading]="loadingReasons"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div class="col-span-12">
+      <label for="transferReasonDescription" class="block mb-2 font-medium">
+        {{ 'Claim::Description' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <textarea
+        pTextarea
+        id="transferReasonDescription"
+        [(ngModel)]="reasonDescription"
+        [rows]="3"
+        class="w-full"
+      ></textarea>
+    </div>
+    <div class="col-span-12">
+      <label for="departmentId" class="block mb-2 font-medium">
+        {{ 'Claim::Department' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="departmentId"
+        [(ngModel)]="departmentId"
+        [options]="departmentOptions"
+        [placeholder]="'Claim::SelectDepartment' | translate"
+        [showClear]="true"
+        [loading]="loadingDepartments"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+        (onChange)="onDepartmentChange()"
+      />
+    </div>
+    <div class="col-span-12">
+      <label for="assigneeId" class="block mb-2 font-medium">
+        {{ 'Claim::Assignee' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="assigneeId"
+        [(ngModel)]="assigneeId"
+        [options]="employeeOptions"
+        [placeholder]="'Claim::SelectEmployee' | translate"
+        [showClear]="true"
+        [loading]="loadingEmployees"
+        [disabled]="!departmentId"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button [label]="'Claim::Cancel' | translate" severity="secondary" (onClick)="close()" [disabled]="saving" />
+    <p-button
+      [label]="'Claim::Confirm' | translate"
+      styleClass="transfer-confirm-button"
+      (onClick)="submit()"
+      [loading]="saving"
+    />
+  </ng-template>
+</p-dialog>
+<p-toast />

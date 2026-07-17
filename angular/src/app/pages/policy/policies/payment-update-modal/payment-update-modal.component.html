@@ -1,0 +1,149 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="onVisibleChange($event)"
+  [header]="'Policy::Payment:UpdatePayment' | translate"
+  [modal]="true"
+  [style]="{ width: '540px' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflow: 'visible' }"
+  styleClass="payment-update-dialog"
+>
+  <!-- Single payment mode (popup theo wireframe) -->
+  <div class="flex flex-col gap-4 p-4" *ngIf="mode === 'single'; else excelMode">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Hình thức thanh toán -->
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium">
+          {{ 'Policy::Payment:PaymentMethod' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          [options]="paymentMethods"
+          optionLabel="name"
+          optionValue="id"
+          [(ngModel)]="formPaymentMethodId"
+          [showClear]="false"
+          [disabled]="loadingConfig || submitting"
+          [placeholder]="'Policy::Payment:SelectPaymentMethod' | translate"
+          appendTo="body"
+          styleClass="w-full"
+        >
+        </p-select>
+      </div>
+
+      <!-- Ngày thanh toán -->
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium">
+          {{ 'Policy::Payment:PaymentDate' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-datepicker
+          [(ngModel)]="formPaymentDate"
+          [showIcon]="true"
+          dateFormat="dd/mm/yy"
+          [disabled]="loadingConfig || submitting"
+          appendTo="body"
+        >
+        </p-datepicker>
+      </div>
+    </div>
+
+    <!-- Số tiền thanh toán -->
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-medium">
+        {{ 'Policy::Payment:PaymentAmount' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-inputNumber
+        [(ngModel)]="formAmount"
+        [min]="0"
+        mode="decimal"
+        [maxFractionDigits]="0"
+        locale="vi-VN"
+        [disabled]="loadingConfig || submitting"
+        inputId="payment-amount"
+        class="w-full"
+      ></p-inputNumber>
+      <small class="text-xs text-gray-600" *ngIf="!loadingConfig">
+        {{ 'Policy::Payment:AmountToPay' | translate }}:
+        <strong>{{ amountToPay | number:'1.0-0':'vi-VN' }}</strong>
+      </small>
+    </div>
+  </div>
+
+  <!-- Excel import mode (giữ lại để cập nhật hàng loạt) -->
+  <ng-template #excelMode>
+    <div class="flex flex-col gap-4 p-4">
+      <div class="border border-gray-300 rounded p-4 bg-gray-50">
+        <div class="flex flex-wrap gap-2 mb-3">
+          <p-button
+            [label]="'Policy::Payment:SelectFile' | translate"
+            icon="pi pi-upload"
+            severity="secondary"
+            (onClick)="fileInput.click()"
+            [disabled]="importing"
+          />
+          <p-button
+            [label]="'Policy::Payment:DownloadTemplate' | translate"
+            icon="pi pi-download"
+            severity="info"
+            [outlined]="true"
+            (onClick)="downloadTemplate()"
+            [disabled]="importing"
+          />
+        </div>
+        <input
+          #fileInput
+          type="file"
+          accept=".xlsx,.xls"
+          class="hidden"
+          (change)="onFileSelected($event)"
+        />
+        <div class="text-sm text-gray-600">
+          {{ selectedFileName || ('Policy::Payment:FileNamePlaceholder' | translate) }}
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <!-- Footer cho single mode -->
+    <div class="flex justify-end gap-2" *ngIf="mode === 'single'; else excelFooter">
+      <p-button
+        [label]="'Policy::Payment:Execute' | translate"
+        icon="pi pi-check"
+        (onClick)="onSubmitSingle()"
+        [loading]="submitting"
+        [disabled]="!canSubmitSingle()"
+      />
+      <p-button
+        [label]="'AbpUi::Close' | translate"
+        severity="secondary"
+        (onClick)="onClose()"
+        [disabled]="submitting || loadingConfig"
+      />
+    </div>
+
+    <!-- Footer cho excel mode -->
+    <ng-template #excelFooter>
+      <div class="flex justify-end gap-2">
+        <p-button
+          [label]="'Policy::Payment:Execute' | translate"
+          icon="pi pi-check"
+          (onClick)="onExecute()"
+          [loading]="importing"
+          [disabled]="!selectedFile"
+        />
+        <p-button
+          [label]="'AbpUi::Close' | translate"
+          severity="secondary"
+          (onClick)="onClose()"
+          [disabled]="importing"
+        />
+      </div>
+    </ng-template>
+  </ng-template>
+</p-dialog>
+
+<p-toast/>

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\..\common.props" />
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>iOne.Workflow</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\src\common\domain\iOne.Domain\iOne.Domain.csproj" />
+    <ProjectReference Include="..\iOne.Workflow.Application.Contracts\iOne.Workflow.Application.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.11" />
+    <PackageReference Include="Volo.Abp.Ddd.Application" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.Users.Abstractions" Version="9.3.6" />
+  </ItemGroup>
+</Project>

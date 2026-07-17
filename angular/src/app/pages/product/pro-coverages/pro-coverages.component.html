@@ -1,0 +1,252 @@
+<div class="grid grid-cols-12 gap-4">
+    <!-- Search Panel -->
+    <div class="col-span-12">
+        <p-panel [header]="'Product::SearchInformation' | translate" [toggleable]="true">
+            <div class="grid grid-cols-12 gap-4">
+                <!-- Line of Business -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label for="searchLob" class="block mb-2 font-medium">{{ 'Product::ProCoverage:LineOfBusiness' |
+                        translate }}</label>
+                    <p-select inputId="searchLob" [(ngModel)]="searchForm.lobId" [options]="lobSearchOptions"
+                        optionLabel="label" optionValue="value" [filter]="true" filterBy="label" [showClear]="true"
+                        styleClass="w-full" [placeholder]="'Product::ProCoverage:SelectLineOfBusiness' | translate" />
+                </div>
+
+                <!-- Group -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label for="searchGroup" class="block mb-2 font-medium">{{ 'Product::ProCoverage:Group' | translate
+                        }}</label>
+                    <p-select inputId="searchGroup" [(ngModel)]="searchForm.coverageGroupId"
+                        [options]="groupSearchOptions" optionLabel="label" optionValue="value" [filter]="true"
+                        filterBy="label" [showClear]="true" styleClass="w-full"
+                        [placeholder]="'Product::ProCoverage:SelectGroup' | translate" />
+                </div>
+
+                <!-- Code -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label for="searchCode" class="block mb-2 font-medium">{{ 'Product::ProCoverage:Code' | translate
+                        }}</label>
+                    <input pInputText id="searchCode" [(ngModel)]="searchForm.code" class="w-full" />
+                </div>
+
+                <!-- Name -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label for="searchName" class="block mb-2 font-medium">{{ 'Product::ProCoverage:Name' | translate
+                        }}</label>
+                    <input pInputText id="searchName" [(ngModel)]="searchForm.name" class="w-full" />
+                </div>
+
+                <!-- Object Type -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label for="searchObjectType" class="block mb-2 font-medium">{{ 'Product::ProCoverage:ObjectType' |
+                        translate }}</label>
+                    <p-select inputId="searchObjectType" [(ngModel)]="searchForm.objectTypeId"
+                        [options]="objectTypeSearchOptions" optionLabel="label" optionValue="value" [filter]="true"
+                        filterBy="label" [showClear]="true" styleClass="w-full"
+                        [placeholder]="'Product::ProCoverage:SelectObjectType' | translate" />
+                </div>
+
+                <!-- Coverage Type -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label for="searchCoverageType" class="block mb-2 font-medium">{{
+                        'Product::ProCoverage:CoverageType' | translate }}</label>
+                    <p-select inputId="searchCoverageType" [(ngModel)]="searchForm.coverageTypeId"
+                        [options]="coverageTypeSearchOptions" optionLabel="label" optionValue="value" [filter]="true"
+                        filterBy="label" [showClear]="true" styleClass="w-full"
+                        [placeholder]="'Product::ProCoverage:SelectCoverageType' | translate" />
+                </div>
+
+                <!-- Dieukhoan (Type) -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label for="searchType" class="block mb-2 font-medium">{{ 'Product::ProCoverage:Type' | translate
+                        }}</label>
+                    <p-select inputId="searchType" [(ngModel)]="searchForm.type" [options]="typeOptions"
+                        optionLabel="label" optionValue="value" [showClear]="true" styleClass="w-full"
+                        [placeholder]="'Product::ProCoverage:Type' | translate" />
+                </div>
+
+
+                <!-- Status -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label for="searchStatus" class="block mb-2 font-medium">{{ 'Product::ProCoverage:Status' |
+                        translate }}</label>
+                    <p-select inputId="searchStatus" [(ngModel)]="searchForm.status" [options]="statusOptions"
+                        optionLabel="label" optionValue="value"
+                        [placeholder]="'Product::ProCoverage:SelectStatus' | translate" styleClass="w-full"
+                        [showClear]="true" />
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-span-12 flex gap-2 justify-end">
+                    <p-button [label]="'Product::Reset' | translate" icon="pi pi-refresh" severity="secondary"
+                        (onClick)="resetSearch()" />
+                    <p-button [label]="'Product::Search' | translate" icon="pi pi-search" (onClick)="search()" />
+                </div>
+            </div>
+        </p-panel>
+    </div>
+
+    <!-- Data List Panel -->
+    <div class="col-span-12">
+        <p-panel [header]="'Product::ProCoverage:List' | translate">
+            <ng-template pTemplate="icons">
+                <button pButton class="p-panel-header-icon" icon="pi pi-plus" (click)="openCreateDialog()"
+                    *ngIf="PERMISSIONS.CREATE | appPermission" [pTooltip]="'Product::Create' | translate">
+                </button>
+            </ng-template>
+
+            <app-v-table [columns]="columns" [data]="items" [actions]="actions" [totalCount]="totalCount"
+                [loading]="loading" [rows]="pageSize" [rowsPerPageOptions]="[10, 20, 50]" [showGridlines]="true"
+                [stripedRows]="true" [rowHover]="true" size="small" [scrollHeight]="'calc(100vh - 450px)'"
+                (lazyLoad)="loadData($event)" />
+        </p-panel>
+    </div>
+</div>
+
+<!-- Create/Edit Dialog -->
+<p-dialog [(visible)]="dialogVisible"
+    [header]="(dialogMode === 'create' ? 'Product::Create' : 'Product::Edit') | translate" [modal]="true"
+    [style]="{ width: '50vw' }" [contentStyle]="{ 'max-height': '70vh', 'overflow-y': 'auto' }" [draggable]="false"
+    [resizable]="false" (onHide)="onDialogHide()">
+    <form #form="ngForm" class="grid grid-cols-12 gap-4 pt-4" *ngIf="formData">
+
+        <!-- Line of Business -->
+        <div class="col-span-6">
+            <label for="lob" class="block mb-2 font-medium required">{{ 'Product::ProCoverage:LineOfBusiness' |
+                translate }}</label>
+            <p-select inputId="lob" [(ngModel)]="formData.lobId" name="lobId" #lobId="ngModel" [options]="lobOptions"
+                optionLabel="label" optionValue="value" [filter]="true" filterBy="label" [showClear]="true"
+                styleClass="w-full" appendTo="body" required [class.ng-invalid]="lobId.invalid && lobId.touched"
+                [class.ng-dirty]="lobId.touched" />
+            <small class="text-red-500" *ngIf="lobId.invalid && lobId.touched">
+                {{ 'Product::ProCoverage:LobIdRequired' | translate }}
+            </small>
+        </div>
+
+        <!-- Group -->
+        <div class="col-span-6">
+            <label for="group" class="block mb-2 font-medium required">{{ 'Product::ProCoverage:Group' | translate
+                }}</label>
+            <p-select inputId="group" [(ngModel)]="formData.coverageGroupId" name="coverageGroupId"
+                #coverageGroupId="ngModel" [options]="groupOptions" optionLabel="label" optionValue="value"
+                [filter]="true" filterBy="label" [showClear]="true" styleClass="w-full" appendTo="body" required
+                [class.ng-invalid]="coverageGroupId.invalid && coverageGroupId.touched"
+                [class.ng-dirty]="coverageGroupId.touched" />
+            <small class="text-red-500" *ngIf="coverageGroupId.invalid && coverageGroupId.touched">
+                {{ 'Product::ProCoverage:CoverageGroupIdRequired' | translate }}
+            </small>
+        </div>
+
+        <!-- Code -->
+        <div class="col-span-6">
+            <label for="code" class="block mb-2 font-medium required">{{ 'Product::ProCoverage:Code' | translate
+                }}</label>
+            <input pInputText id="code" [(ngModel)]="formData.code" name="code" #code="ngModel" class="w-full"
+                [class.ng-invalid]="code.invalid && code.touched" [class.ng-dirty]="code.touched"
+                [disabled]="dialogMode === 'edit'" required pattern="^[a-zA-Z0-9_]+$"
+                (blur)="formData.code = formData.code?.trim()" />
+            <small class="text-red-500" *ngIf="code.errors?.['required'] && code.touched">
+                {{ 'Product::ProCoverage:CodeRequired' | translate }}
+            </small>
+            <small class="text-red-500" *ngIf="code.errors?.['pattern'] && code.touched">
+                {{ 'Product::ProCoverage:CodeHasSpecialChar' | translate }}
+            </small>
+        </div>
+
+        <!-- Name -->
+        <div class="col-span-6">
+            <label for="name" class="block mb-2 font-medium required">{{ 'Product::ProCoverage:Name' | translate
+                }}</label>
+            <input pInputText id="name" [(ngModel)]="formData.name" name="name" #name="ngModel" class="w-full"
+                [class.ng-invalid]="name.invalid && name.touched" [class.ng-dirty]="name.touched" required
+                (blur)="formData.name = formData.name?.trim()" />
+            <small class="text-red-500" *ngIf="name.invalid && name.touched">
+                {{ 'Product::ProCoverage:NameRequired' | translate }}
+            </small>
+        </div>
+
+        <!-- Short Name -->
+        <div class="col-span-6">
+            <label for="shortName" class="block mb-2 font-medium required">{{ 'Product::ProCoverage:ShortName' |
+                translate }}</label>
+            <input pInputText id="shortName" [(ngModel)]="formData.shortName" name="shortName" #shortName="ngModel"
+                class="w-full" [class.ng-invalid]="shortName.invalid && shortName.touched"
+                [class.ng-dirty]="shortName.touched" required
+                (blur)="formData.shortName = formData.shortName?.trim()" />
+            <small class="text-red-500" *ngIf="shortName.invalid && shortName.touched">
+                {{ 'Product::ProCoverage:ShortNameRequired' | translate }}
+            </small>
+        </div>
+
+        <!-- Object Type -->
+        <div class="col-span-6">
+            <label for="objectType" class="block mb-2 font-medium required">{{ 'Product::ProCoverage:ObjectType' |
+                translate
+                }}</label>
+            <p-select inputId="objectType" [(ngModel)]="formData.objectTypeId" name="objectTypeId"
+                #objectTypeId="ngModel" [options]="objectTypeOptions" optionLabel="label" optionValue="value"
+                [filter]="true" filterBy="label" [showClear]="true" styleClass="w-full" appendTo="body" required
+                [class.ng-invalid]="objectTypeId.invalid && objectTypeId.touched"
+                [class.ng-dirty]="objectTypeId.touched" />
+            <small class="text-red-500" *ngIf="objectTypeId.invalid && objectTypeId.touched">
+                {{ 'Product::ProCoverage:ObjectTypeIdRequired' | translate }}
+            </small>
+        </div>
+
+        <!-- Coverage Type -->
+        <div class="col-span-6">
+            <label for="coverageType" class="block mb-2 font-medium required">{{ 'Product::ProCoverage:CoverageType' |
+                translate
+                }}</label>
+            <p-select inputId="coverageType" [(ngModel)]="formData.coverageTypeId" name="coverageTypeId"
+                #coverageTypeId="ngModel" [options]="coverageTypeOptions" optionLabel="label" optionValue="value"
+                [filter]="true" filterBy="label" [showClear]="true" styleClass="w-full" appendTo="body" required
+                [class.ng-invalid]="coverageTypeId.invalid && coverageTypeId.touched"
+                [class.ng-dirty]="coverageTypeId.touched" />
+            <small class="text-red-500" *ngIf="coverageTypeId.invalid && coverageTypeId.touched">
+                {{ 'Product::ProCoverage:CoverageTypeIdRequired' | translate }}
+            </small>
+        </div>
+
+        <!-- Type (Dieu khoan) -->
+        <div class="col-span-6">
+            <label for="type" class="block mb-2 font-medium required">{{ 'Product::ProCoverage:Type' | translate
+                }}</label>
+            <p-select inputId="type" [(ngModel)]="formData.type" name="type" #type="ngModel" [options]="typeOptions"
+                optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" required
+                [class.ng-invalid]="type.invalid && type.touched" [class.ng-dirty]="type.touched" />
+            <small class="text-red-500" *ngIf="type.invalid && type.touched">
+                {{ 'Product::ProCoverage:TypeRequired' | translate }}
+            </small>
+        </div>
+
+        <!-- Status -->
+        <div class="col-span-6">
+            <label for="status" class="block mb-2 font-medium required">{{ 'Product::ProCoverage:Status' | translate
+                }}</label>
+            <p-select inputId="status" [(ngModel)]="formData.status" name="status" #status="ngModel"
+                [options]="statusOptions" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body"
+                required [class.ng-invalid]="status.invalid && status.touched" [class.ng-dirty]="status.touched" />
+            <small class="text-red-500" *ngIf="status.invalid && status.touched">
+                {{ 'Product::ProCoverage:StatusRequired' | translate }}
+            </small>
+        </div>
+
+        <!-- Description -->
+        <div class="col-span-12">
+            <label for="description" class="block mb-2 font-medium">{{ 'Product::ProCoverage:Description' | translate
+                }}</label>
+            <textarea pTextarea id="description" [(ngModel)]="formData.description" name="description" rows="3"
+                class="w-full"></textarea>
+        </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+        <p-button [label]="'Product::Cancel' | translate" icon="pi pi-times" severity="secondary"
+            (onClick)="dialogVisible = false" />
+        <p-button [label]="'Product::Save' | translate" icon="pi pi-check" (onClick)="save()" [loading]="loading" />
+    </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

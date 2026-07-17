@@ -1,0 +1,467 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Search Panel -->
+  <div class="col-span-12">
+    <p-panel [header]="'Master::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Row 1 -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="objectTypeItemId" class="block mb-2 font-medium">{{ 'Master::ResObjectItemDepreciation:ObjectTypeItemId' | translate }}</label>
+          <p-select
+            inputId="objectTypeItemId"
+            [(ngModel)]="searchForm.objectTypeItemId"
+            [options]="objectTypeItemOptions"
+            optionLabel="label"
+            optionValue="value"
+            [placeholder]="'Master::ResObjectItemDepreciation:EnterObjectTypeItemId' | translate"
+            styleClass="w-full"
+            [showClear]="true"
+            [filter]="true"
+            [loading]="loadingObjectTypeItems"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="carGroupId" class="block mb-2 font-medium">{{ 'Master::ResObjectItemDepreciation:CarGroupId' | translate }}</label>
+          <p-select
+            inputId="carGroupId"
+            [(ngModel)]="searchForm.carGroupId"
+            [options]="carGroupOptions"
+            optionLabel="label"
+            optionValue="value"
+            [placeholder]="'Master::ResObjectItemDepreciation:EnterCarGroupId' | translate"
+            styleClass="w-full"
+            [showClear]="true"
+            [filter]="true"
+            [loading]="loadingCarGroups"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="status" class="block mb-2 font-medium">{{ 'Master::ResObjectItemDepreciation:Status' | translate }}</label>
+          <p-select
+            inputId="status"
+            [(ngModel)]="searchForm.status"
+            [options]="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [placeholder]="'Master::ResObjectItemDepreciation:SelectStatus' | translate"
+            styleClass="w-full"
+            [showClear]="true"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="effectDateFrom" class="block mb-2 font-medium">{{ 'Master::ResObjectItemDepreciation:EffectDateFrom' | translate }}</label>
+          <p-datepicker
+            inputId="effectDateFrom"
+            [(ngModel)]="searchForm.effectDateFrom"
+            dateFormat="dd/mm/yy"
+            styleClass="w-full"
+            [showIcon]="true"
+            [showClear]="true"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="effectDateTo" class="block mb-2 font-medium">{{ 'Master::ResObjectItemDepreciation:EffectDateTo' | translate }}</label>
+          <p-datepicker
+            inputId="effectDateTo"
+            [(ngModel)]="searchForm.effectDateTo"
+            dateFormat="dd/mm/yy"
+            styleClass="w-full"
+            [showIcon]="true"
+            [showClear]="true"
+          />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button
+            [label]="'Master::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button
+            [label]="'Master::Search' | translate"
+            icon="pi pi-search"
+            (onClick)="search()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Master::ResObjectItemDepreciation:ExportTemplate' | translate"
+            icon="pi pi-download"
+            severity="secondary"
+            (onClick)="downloadTemplate()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Master::ResObjectItemDepreciation:Import' | translate"
+            icon="pi pi-upload"
+            severity="secondary"
+            (onClick)="openImportDialog()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Master::ResObjectItemDepreciation:New' | translate"
+            icon="pi pi-plus"
+            (onClick)="openCreateDialog()"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Data Panel -->
+  <div class="col-span-12">
+    <p-panel [header]="'Master::ResObjectItemDepreciation:List' | translate">
+      <app-v-table
+        [columns]="columns"
+        [data]="depreciations"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        size="small"
+        [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadData($event)"
+      />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Create/Edit Dialog -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Master::ResObjectItemDepreciation:New' : 'Master::ResObjectItemDepreciation:Edit') | translate"
+  [modal]="true"
+  [style]="{ width: '700px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <ng-container *ngIf="dialogVisible">
+    <div class="flex flex-col gap-4 p-4">
+    <!-- ObjectTypeItemId -->
+    <div>
+      <label for="formObjectTypeItemId" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectItemDepreciation:ObjectTypeItemId' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        inputId="formObjectTypeItemId"
+        [(ngModel)]="formData.objectTypeItemId"
+        [options]="objectTypeItemOptions"
+        optionLabel="label"
+        optionValue="value"
+        [placeholder]="'Master::ResObjectItemDepreciation:EnterObjectTypeItemId' | translate"
+        styleClass="w-full"
+        [filter]="true"
+        [loading]="loadingObjectTypeItems"
+        required
+      />
+    </div>
+
+    <!-- CarGroupId -->
+    <div>
+      <label for="formCarGroupId" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectItemDepreciation:CarGroupId' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        inputId="formCarGroupId"
+        [(ngModel)]="formData.carGroupId"
+        [options]="carGroupOptions"
+        optionLabel="label"
+        optionValue="value"
+        [placeholder]="'Master::ResObjectItemDepreciation:EnterCarGroupId' | translate"
+        styleClass="w-full"
+        [filter]="true"
+        [loading]="loadingCarGroups"
+        required
+      />
+    </div>
+
+    <!-- UsedTimeFrom -->
+    <div>
+      <label for="formUsedTimeFrom" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectItemDepreciation:UsedTimeFrom' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-inputnumber
+        inputId="formUsedTimeFrom"
+        [(ngModel)]="formData.usedTimeFrom"
+        styleClass="w-full"
+        [min]="0"
+        [showButtons]="true"
+        [step]="0.1"
+        [minFractionDigits]="0"
+        [maxFractionDigits]="2"
+        required
+      />
+    </div>
+
+    <!-- UsedTimeTo -->
+    <div>
+      <label for="formUsedTimeTo" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectItemDepreciation:UsedTimeTo' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-inputnumber
+        inputId="formUsedTimeTo"
+        [(ngModel)]="formData.usedTimeTo"
+        styleClass="w-full"
+        [min]="0"
+        [showButtons]="true"
+        [step]="0.1"
+        [minFractionDigits]="0"
+        [maxFractionDigits]="2"
+        required
+      />
+    </div>
+
+    <!-- DepreciationPercent -->
+    <div>
+      <label for="formDepreciationPercent" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectItemDepreciation:DepreciationPercent' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-inputnumber
+        inputId="formDepreciationPercent"
+        [(ngModel)]="formData.depreciationPercent"
+        styleClass="w-full"
+        [min]="0"
+        [max]="100"
+        [showButtons]="true"
+        [step]="0.1"
+        [minFractionDigits]="0"
+        [maxFractionDigits]="2"
+        suffix="%"
+        required
+      />
+    </div>
+
+    <!-- EffectDate -->
+    <div>
+      <label for="formEffectDate" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectItemDepreciation:EffectDate' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-datepicker
+        inputId="formEffectDate"
+        [(ngModel)]="formData.effectDate"
+        dateFormat="dd/mm/yy"
+        styleClass="w-full"
+        [showIcon]="true"
+        required
+      />
+    </div>
+
+    <!-- ExpireDate -->
+    <div>
+      <label for="formExpireDate" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectItemDepreciation:ExpireDate' | translate }}
+      </label>
+      <p-datepicker
+        inputId="formExpireDate"
+        [(ngModel)]="formData.expireDate"
+        dateFormat="dd/mm/yy"
+        styleClass="w-full"
+        [showIcon]="true"
+        [showClear]="true"
+      />
+    </div>
+
+    <!-- Status -->
+    <div>
+      <label for="formStatus" class="block mb-2 font-medium">
+        {{ 'Master::ResObjectItemDepreciation:Status' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        inputId="formStatus"
+        [(ngModel)]="formData.status"
+        [options]="statusOptions"
+        optionLabel="label"
+        optionValue="value"
+        [placeholder]="'Master::ResObjectItemDepreciation:SelectStatus' | translate"
+        styleClass="w-full"
+      />
+    </div>
+  </div>
+  </ng-container>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="'AbpUi::Cancel' | translate"
+      icon="pi pi-times"
+      severity="secondary"
+      (onClick)="dialogVisible = false"
+    />
+    <p-button
+      [label]="'AbpUi::Save' | translate"
+      icon="pi pi-check"
+      (onClick)="save()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- Detail Dialog -->
+<p-dialog
+  [(visible)]="detailDialogVisible"
+  [header]="'Master::ResObjectItemDepreciation:Detail' | translate"
+  [modal]="true"
+  [style]="{ width: '700px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div *ngIf="selectedDepreciationDetail" class="p-4">
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-6">
+        <strong>{{ 'Master::ResObjectItemDepreciation:ObjectTypeItemId' | translate }}:</strong>
+        <p class="mt-1">{{ formatObjectTypeItemId(selectedDepreciationDetail.objectTypeItemId) }}</p>
+      </div>
+      <div class="col-span-6">
+        <strong>{{ 'Master::ResObjectItemDepreciation:CarGroupId' | translate }}:</strong>
+        <p class="mt-1">
+          <span *ngIf="selectedDepreciationDetail.carGroupCode && selectedDepreciationDetail.carGroupName">
+            {{ selectedDepreciationDetail.carGroupCode }} - {{ selectedDepreciationDetail.carGroupName }}
+          </span>
+          <span *ngIf="!selectedDepreciationDetail.carGroupCode || !selectedDepreciationDetail.carGroupName">
+            {{ selectedDepreciationDetail.carGroupId }}
+          </span>
+        </p>
+      </div>
+      <div class="col-span-6">
+        <strong>{{ 'Master::ResObjectItemDepreciation:UsedTimeFrom' | translate }}:</strong>
+        <p class="mt-1">{{ selectedDepreciationDetail.usedTimeFrom }}</p>
+      </div>
+      <div class="col-span-6">
+        <strong>{{ 'Master::ResObjectItemDepreciation:UsedTimeTo' | translate }}:</strong>
+        <p class="mt-1">{{ selectedDepreciationDetail.usedTimeTo }}</p>
+      </div>
+      <div class="col-span-6">
+        <strong>{{ 'Master::ResObjectItemDepreciation:DepreciationPercent' | translate }}:</strong>
+        <p class="mt-1">{{ selectedDepreciationDetail.depreciationPercent }}%</p>
+      </div>
+      <div class="col-span-6">
+        <strong>{{ 'Master::ResObjectItemDepreciation:EffectDate' | translate }}:</strong>
+        <p class="mt-1">{{ selectedDepreciationDetail.effectDate | date:'dd/MM/yyyy' }}</p>
+      </div>
+      <div class="col-span-6" *ngIf="selectedDepreciationDetail.expireDate">
+        <strong>{{ 'Master::ResObjectItemDepreciation:ExpireDate' | translate }}:</strong>
+        <p class="mt-1">{{ selectedDepreciationDetail.expireDate | date:'dd/MM/yyyy' }}</p>
+      </div>
+      <div class="col-span-6">
+        <strong>{{ 'Master::ResObjectItemDepreciation:Status' | translate }}:</strong>
+        <p class="mt-1">{{ formatStatus(selectedDepreciationDetail.status) }}</p>
+      </div>
+      <div class="col-span-6">
+        <strong>{{ 'AbpIdentity::CreationTime' | translate }}:</strong>
+        <p class="mt-1">{{ selectedDepreciationDetail.creationTime | date:'dd/MM/yyyy HH:mm:ss' }}</p>
+      </div>
+      <div class="col-span-6" *ngIf="selectedDepreciationDetail.lastModificationTime">
+        <strong>{{ 'Master::LastModificationTime' | translate }}:</strong>
+        <p class="mt-1">{{ selectedDepreciationDetail.lastModificationTime | date:'dd/MM/yyyy HH:mm:ss' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="'AbpUi::Close' | translate"
+      icon="pi pi-times"
+      severity="secondary"
+      (onClick)="detailDialogVisible = false"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- Import Dialog -->
+<p-dialog
+  [(visible)]="importDialogVisible"
+  [header]="'Master::ResObjectItemDepreciation:Import' | translate"
+  [modal]="true"
+  [style]="{ width: '800px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="p-4">
+    <!-- Instructions -->
+    <div class="mb-4">
+      <p class="mb-2 font-semibold">{{ 'Master::ResObjectItemDepreciation:ImportInstructions' | translate }}</p>
+      <ul class="list-disc ml-6 text-sm text-gray-600">
+        <li>{{ 'Master::ResObjectItemDepreciation:ImportInstruction1' | translate }}</li>
+        <li>{{ 'Master::ResObjectItemDepreciation:ImportInstruction2' | translate }}</li>
+        <li>{{ 'Master::ResObjectItemDepreciation:ImportInstruction3' | translate }}</li>
+      </ul>
+    </div>
+
+    <!-- File Upload -->
+    <div>
+      <label class="block mb-2 font-medium">{{ 'Master::ResObjectItemDepreciation:SelectExcelFile' | translate }}</label>
+      <p-fileUpload
+        mode="basic"
+        [accept]="'.xlsx,.xls'"
+        [maxFileSize]="10485760"
+        [auto]="false"
+        chooseLabel="{{ 'Master::ResObjectItemDepreciation:ChooseFile' | translate }}"
+        [disabled]="importing"
+        (onSelect)="onFileSelect($event)"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- Import Result -->
+    <div *ngIf="importResult" class="mt-4">
+      <p class="font-semibold mb-2">{{ 'Master::ResObjectItemDepreciation:ImportResult' | translate }}</p>
+      <div class="grid grid-cols-3 gap-4 mb-4">
+        <div class="p-3 bg-gray-100 rounded">
+          <div class="text-sm text-gray-600">{{ 'Master::ResObjectItemDepreciation:TotalRows' | translate }}</div>
+          <div class="text-lg font-semibold">{{ importResult.totalRows }}</div>
+        </div>
+        <div class="p-3 bg-green-100 rounded">
+          <div class="text-sm text-green-600">{{ 'Master::ResObjectItemDepreciation:SuccessCount' | translate }}</div>
+          <div class="text-lg font-semibold text-green-700">{{ importResult.successCount }}</div>
+        </div>
+        <div class="p-3 bg-red-100 rounded">
+          <div class="text-sm text-red-600">{{ 'Master::ResObjectItemDepreciation:ErrorCount' | translate }}</div>
+          <div class="text-lg font-semibold text-red-700">{{ importResult.errorCount }}</div>
+        </div>
+      </div>
+
+      <!-- Error Details -->
+      <div *ngIf="importResult.errors && importResult.errors.length > 0" class="mt-4">
+        <p class="font-semibold mb-2 text-red-600">{{ 'Master::ResObjectItemDepreciation:ImportErrors' | translate }}</p>
+        <div class="max-h-60 overflow-y-auto border rounded">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-100 sticky top-0">
+              <tr>
+                <th class="p-2 text-left border">{{ 'Master::ResObjectItemDepreciation:RowNumber' | translate }}</th>
+                <th class="p-2 text-left border">{{ 'Master::ResObjectItemDepreciation:Field' | translate }}</th>
+                <th class="p-2 text-left border">{{ 'Master::ResObjectItemDepreciation:Error' | translate }}</th>
+                <th class="p-2 text-left border">{{ 'Master::ResObjectItemDepreciation:Value' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let error of importResult.errors" class="hover:bg-gray-50">
+                <td class="p-2 border">{{ error.rowNumber }}</td>
+                <td class="p-2 border">{{ error.field }}</td>
+                <td class="p-2 border text-red-600">{{ error.message }}</td>
+                <td class="p-2 border font-mono text-xs">{{ error.value }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="'AbpUi::Close' | translate"
+      icon="pi pi-times"
+      severity="secondary"
+      (onClick)="importDialogVisible = false"
+    />
+  </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

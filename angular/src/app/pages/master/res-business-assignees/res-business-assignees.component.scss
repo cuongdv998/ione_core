@@ -1,0 +1,14 @@
+// Res Business Assignees Component Styles
+// Nội dung dialog scroll bên trong (contentStyle overflow: auto trong template).
+// Overlay của select/datepicker dùng appendTo="body" nên vẫn hiển thị đúng.
+
+:host ::ng-deep {
+  .p-dialog {
+    .p-select-overlay {
+      z-index: 10000 !important;
+    }
+    .p-datepicker {
+      z-index: 10000 !important;
+    }
+  }
+}

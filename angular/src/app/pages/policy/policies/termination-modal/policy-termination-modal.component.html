@@ -1,0 +1,562 @@
+<ng-template #bodyContent>
+  <div class="flex flex-col gap-6 p-4">
+    <!-- Section B: Termination Reason Fields (Top) -->
+    <div class="border-b pb-4">
+      <h3 class="text-lg font-semibold mb-4 underline">{{ 'Policy::Policy:TerminationReason' | translate }}</h3>
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Termination Reason -->
+        <div class="col-span-12 md:col-span-6">
+          <label for="terminationReasonId" class="block mb-2 font-medium">
+            {{ 'Policy::Policy:TerminationReason' | translate }}
+            <span class="text-red-500">*</span>
+          </label>
+          <p-select id="terminationReasonId" [(ngModel)]="formData.terminationReasonId"
+            [options]="terminationReasonOptions"
+            [placeholder]="'Policy::Policy:SelectTerminationReason' | translate"
+            optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Termination Reason Description -->
+        <div class="col-span-12">
+          <label for="terminationReasonDescription" class="block mb-2 font-medium">
+            {{ 'Policy::Policy:TerminationReasonDescription' | translate }}
+          </label>
+          <textarea pTextarea id="terminationReasonDescription"
+            [(ngModel)]="formData.terminationReasonDescription"
+            [placeholder]="'Policy::Policy:TerminationReasonDescription' | translate"
+            class="w-full" [rows]="3"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section A: Policy Information (Bottom - Read-only) -->
+    <!-- Section 1: Contract Information -->
+    <div class="border-b pb-4">
+      <h3 class="text-lg font-semibold mb-4 underline">{{ 'Policy::Policy:ContractInformation' | translate }}</h3>
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Primary Insurance Partner -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:PrimaryInsurancePartner' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.primaryInsurancePartnerId" [options]="primaryInsurancePartnerOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Contract Number -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:ContractNo' | translate }}
+          </label>
+          <input pInputText [value]="formData.contractNo || '-'" [readonly]="true"
+            class="w-full bg-gray-100" />
+        </div>
+
+        <!-- Contract Type -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:ContractType' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.contractType" [options]="contractTypeOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Line of Business -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:LineOfBusiness' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.lobId" [options]="lobOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Customer -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:Customer' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.customerId" [options]="customerOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Payer -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:Payer' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.payerId" [options]="payerOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Receive Invoice -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:IsReceiveInvoice' | translate }}
+          </label>
+          <input pInputText [value]="formData.isReceiveInvoice ? 'Yes' : 'No'" [readonly]="true"
+            class="w-full bg-gray-100" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: General Information -->
+    <div class="border-b pb-4">
+      <h3 class="text-lg font-semibold mb-4 underline">{{ 'Policy::Policy:GeneralInformation' | translate }}</h3>
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Policy Number -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:PolicyNo' | translate }}
+          </label>
+          <input pInputText [value]="formData.policyNo || '-'" [readonly]="true"
+            class="w-full bg-gray-100" />
+        </div>
+
+        <!-- Root Policy Number -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:RootPolicyNo' | translate }}
+          </label>
+          <input pInputText [value]="formData.insurerPolicyNo || '-'" [readonly]="true"
+            class="w-full bg-gray-100" />
+        </div>
+
+        <!-- Certificate Number -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:CertificateNo' | translate }}
+          </label>
+          <input pInputText [value]="formData.certificateNo || '-'" [readonly]="true"
+            class="w-full bg-gray-100" />
+        </div>
+
+        <!-- Policy Type -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:PolicyTypeId' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.policyTypeId" [options]="policyTypeOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Version -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:Version' | translate }}
+          </label>
+          <input pInputText [value]="formData.versionNo || '-'" [readonly]="true"
+            class="w-full bg-gray-100" />
+        </div>
+
+        <!-- Beneficiary -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:Beneficiary' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.beneficiaryId" [options]="beneficiaryOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Currency -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:Currency' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.currencyId" [options]="currencyOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Exchange Rate -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:ExchangeRate' | translate }}
+          </label>
+          <input pInputText [value]="formData.exchangeRate || '-'" [readonly]="true"
+            class="w-full bg-gray-100" />
+        </div>
+
+        <!-- Sell Type -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:SellType' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.sellType" [options]="sellTypeOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Seller -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:Seller' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.sellerId" [options]="sellerOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Implementer -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:Implementer' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.implementerId" [options]="implementerOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Is Renewal -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:IsRenewal' | translate }}
+          </label>
+          <input pInputText [value]="formData.isRenewal ? 'Yes' : 'No'" [readonly]="true"
+            class="w-full bg-gray-100" />
+        </div>
+
+        <!-- Premium Total -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:PremiumTotal' | translate }}
+          </label>
+          <input pInputText [value]="(formData.premiumTotal | number:'1.0-0':'vi-VN') || '-'" [readonly]="true"
+            class="w-full bg-gray-100" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Insured Object Information -->
+    <div class="border-b pb-4">
+      <h3 class="text-lg font-semibold mb-4 underline">{{ 'Policy::Policy:InsuredObjectInformation' | translate }}</h3>
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Vehicle Owner -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:VehicleOwner' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.vehicleOwnerId" [options]="vehicleOwnerOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Car Usage -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:BusinessPurpose' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.carUsage" [options]="businessPurposeOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Car Brand -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:CarBrand' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.carBrandId" [options]="carBrandOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Car Model -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:CarModel' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.carModelId" [options]="carModelOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Vehicle Plate -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:VehiclePlate' | translate }}
+          </label>
+          <input pInputText [value]="formData.vehiclePlate || '-'" [readonly]="true"
+            class="w-full bg-gray-100" />
+        </div>
+
+        <!-- Engine Number -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:EngineNumber' | translate }}
+          </label>
+          <input pInputText [value]="formData.engineNumber || '-'" [readonly]="true"
+            class="w-full bg-gray-100" />
+        </div>
+
+        <!-- Chassis Number -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:ChassisNumber' | translate }}
+          </label>
+          <input pInputText [value]="formData.chassisNumber || '-'" [readonly]="true"
+            class="w-full bg-gray-100" />
+        </div>
+
+        <!-- Seating Capacity -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:SeatingCapacity' | translate }}
+          </label>
+          <input pInputText [value]="formData.seatingCapacity || '-'" [readonly]="true"
+            class="w-full bg-gray-100" />
+        </div>
+
+        <!-- Weight -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:Weight' | translate }}
+          </label>
+          <input pInputText [value]="formData.weight || '-'" [readonly]="true"
+            class="w-full bg-gray-100" />
+        </div>
+
+        <!-- Production Year -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:ProductionYear' | translate }}
+          </label>
+          <p-datepicker inputId="formProductionYear" [(ngModel)]="formData.productionYear"
+            [placeholder]="'Policy::Policy:ProductionYear' | translate" [showIcon]="true" dateFormat="dd/mm/yy"
+            styleClass="w-full" appendTo="body" [disabled]="true" />
+        </div>
+
+        <!-- Car Line -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:CarLineCode' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.carLineId" [options]="carLineOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Car Group -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:CarGroupCode' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.carGroupId" [options]="carGroupOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Vehicle Type -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:VehicleType' | translate }}
+          </label>
+          <p-select [(ngModel)]="formData.vehicleTypeId" [options]="carTypeOptions"
+            [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Phạm vi bảo hiểm (Insurance Coverage Scope) -->
+    <div class="border-b pb-4">
+      <h3 class="text-lg font-semibold mb-4 underline">{{ 'Policy::Policy:InsuranceCoverageScope' | translate }}</h3>
+
+      <!-- Row: Thời hạn bảo hiểm (từ) *, Thời hạn bảo hiểm (đến) * -->
+      <div class="grid grid-cols-12 gap-4 mb-6">
+        <!-- Insurance Period From -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:InsurancePeriodFrom' | translate }}
+          </label>
+          <p-datepicker inputId="formInsurancePeriodFrom" [(ngModel)]="formData.insurancePeriodFrom"
+            [placeholder]="'Policy::Policy:InsurancePeriodFrom' | translate" [showIcon]="true" [showTime]="true"
+            hourFormat="24" [showSeconds]="true" dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body"
+            [disabled]="true" />
+        </div>
+
+        <!-- Insurance Period To -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:InsurancePeriodTo' | translate }}
+          </label>
+          <p-datepicker inputId="formInsurancePeriodTo" [(ngModel)]="formData.insurancePeriodTo"
+            [placeholder]="'Policy::Policy:InsurancePeriodTo' | translate" [showIcon]="true" [showTime]="true"
+            hourFormat="24" [showSeconds]="true" dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body"
+            [disabled]="true" />
+        </div>
+      </div>
+
+      <!-- Dynamic Product Switches -->
+      <div *ngFor="let product of products" class="mb-4">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="relative inline-block w-12 h-6">
+            <input type="checkbox" [id]="'product-' + product.id" [checked]="isProductSelected(product.id || '')"
+              [disabled]="true" class="sr-only peer" />
+            <label [for]="'product-' + product.id"
+              class="absolute cursor-not-allowed top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full transition-colors duration-200 peer-checked:bg-blue-600 opacity-60">
+              <span
+                class="absolute h-5 w-5 bg-white rounded-full top-0.5 left-0.5 transition-transform duration-200 peer-checked:translate-x-6"></span>
+            </label>
+          </div>
+          <span class="font-medium">{{ product.name }}</span>
+        </div>
+
+        <div *ngIf="isProductSelected(product.id || '') && isVcxProductCode(product)" class="mb-4">
+          <div class="grid grid-cols-12 gap-4">
+            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+              <label class="block mb-2 font-medium">
+                {{ 'Policy::Policy:CarValue' | translate }}
+              </label>
+              <input pInputText [value]="(formData.carValue | number:'1.0-0':'vi-VN') || '-'" [readonly]="true"
+                class="w-full bg-gray-100" />
+            </div>
+            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+              <label class="block mb-2 font-medium">
+                {{ 'Policy::Policy:CarColor' | translate }}
+              </label>
+              <p-select [(ngModel)]="formData.carColor" [options]="carColorOptions"
+                [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+            </div>
+            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+              <label class="block mb-2 font-medium">
+                {{ 'Policy::Policy:Origin' | translate }}
+              </label>
+              <p-select [(ngModel)]="formData.origin" [options]="carOriginOptions"
+                [disabled]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+            </div>
+            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+              <label class="block mb-2 font-medium">
+                {{ 'Policy::Policy:IsNewCar' | translate }}
+              </label>
+              <input pInputText [value]="formData.isNewCar ? 'Yes' : 'No'" [readonly]="true"
+                class="w-full bg-gray-100" />
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="isProductSelected(product.id || '')" class="overflow-x-auto">
+          <p-table [value]="getAllCoveragesWithSections(product.id || '')" styleClass="p-datatable-sm"
+            [rowHover]="true">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width:200px">{{ 'Policy::Policy:Benefit' | translate }}</th>
+                <th style="width:150px">{{ 'Policy::Policy:InsuranceAmount' | translate }}</th>
+                <th style="width:100px">{{ 'Policy::Policy:Quantity' | translate }}</th>
+                <th style="width:100px">{{ 'Policy::Policy:TaxRate' | translate }}</th>
+                <th style="width:120px">{{ 'Policy::Policy:PremiumRate' | translate }} (%)</th>
+                <th style="width:150px">{{ 'Policy::Policy:Premium' | translate }}</th>
+                <th style="width:120px">{{ 'Policy::Policy:VAT' | translate }}</th>
+                <th style="width:150px">{{ 'Policy::Policy:PremiumWithVAT' | translate }}</th>
+                <th style="width:150px">{{ 'Policy::Policy:Deductible' | translate }}</th>
+                <th style="width:150px">{{ 'Policy::Policy:RefundAmount' | translate }}</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-item>
+              <!-- Section Header Row -->
+              <tr *ngIf="item.isSectionHeader" class="bg-gray-100 font-semibold">
+                <td>{{ item.benefit }}</td>
+                <td [colSpan]="9"></td>
+              </tr>
+              <!-- Coverage Item Row -->
+              <tr *ngIf="!item.isSectionHeader">
+                <td>
+                  <div class="flex items-center gap-2" *ngIf="item.coverageType !== 0"
+                    [style.paddingLeft.px]="(item.hierarchyLevel || 0) * 16">
+                    <p-checkbox [(ngModel)]="item.selected" [binary]="true"
+                      [inputId]="'coverage-checkbox-' + item.benefit" [disabled]="true" />
+                    <span>{{ item.benefit }}</span>
+                  </div>
+                  <span *ngIf="item.coverageType === 0" [style.paddingLeft.px]="(item.hierarchyLevel || 0) * 16">
+                    {{ item.benefit }}
+                  </span>
+                </td>
+                <td>
+                  <p-inputNumber [(ngModel)]="item.insuranceAmount" [useGrouping]="true" locale="vi-VN" styleClass="w-full"
+                    [disabled]="true" />
+                </td>
+                <td>
+                    <p-inputNumber [(ngModel)]="item.quantity" [maxFractionDigits]="0" locale="vi-VN" styleClass="w-full"
+                      [disabled]="true" />
+                </td>
+                <td>
+<p-inputNumber [(ngModel)]="item.taxRate" [maxFractionDigits]="2" locale="vi-VN" styleClass="w-full"
+                  [disabled]="true" />
+                </td>
+                <td>
+<p-inputNumber [(ngModel)]="item.premiumRate" [maxFractionDigits]="2" locale="vi-VN" styleClass="w-full"
+                  [disabled]="true" />
+                </td>
+                <td>{{ item.premium | number:'1.0-0':'vi-VN' }}</td>
+                <td>{{ item.vat | number:'1.0-0':'vi-VN' }}</td>
+                <td>{{ item.premiumWithVAT | number:'1.0-0':'vi-VN' }}</td>
+                <td>
+                  <input pInputText [value]="(item.deductible != null && item.deductible !== '' ? (item.deductible | number:'1.0-0':'vi') : '-')" [readonly]="true"
+                    class="w-full bg-gray-100" />
+                </td>
+                <td>
+                  <span class="text-red-500 font-bold">{{ item.refundAmount | number:'1.0-0':'vi-VN' }}</span>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="footer">
+              <tr class="font-bold bg-gray-50">
+                <td>{{ 'Policy::Policy:Total' | translate }}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>{{ getProductTotals(product.id || '').premium | number:'1.0-0':'vi-VN' }}</td>
+                <td>{{ getProductTotals(product.id || '').vat | number:'1.0-0':'vi-VN' }}</td>
+                <td>{{ getProductTotals(product.id || '').premiumWithVAT | number:'1.0-0':'vi-VN' }}</td>
+                <td></td>
+                <td></td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Notes -->
+    <div class="pb-4">
+      <h3 class="text-lg font-semibold mb-4 underline">{{ 'Policy::Policy:Summary' | translate }}</h3>
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Customer Notes -->
+        <div class="col-span-12 lg:col-span-6">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:CustomerNotes' | translate }}
+          </label>
+          <textarea pTextarea [value]="formData.customerNotes || ''" [readonly]="true"
+            class="w-full bg-gray-100" [rows]="3"></textarea>
+        </div>
+
+        <!-- Internal Notes -->
+        <div class="col-span-12 lg:col-span-6">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:InternalNotes' | translate }}
+          </label>
+          <textarea pTextarea [value]="formData.internalNotes || ''" [readonly]="true"
+            class="w-full bg-gray-100" [rows]="3"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
+<ng-template #footerContent>
+  <div class="flex justify-end gap-2">
+    <p-button [label]="'Policy::Save' | translate" (onClick)="onSubmit()"
+      [loading]="loading" />
+    <p-button [label]="'Policy::Back' | translate" severity="secondary"
+      (onClick)="onCancel()" [disabled]="loading" />
+  </div>
+</ng-template>
+
+@if (!pageMode) {
+  <p-dialog [(visible)]="visible" (visibleChange)="onVisibleChange($event)"
+    [header]="'Policy::Policy:TerminationModalTitle' | translate" [modal]="true"
+    [style]="{ width: '1200px', maxHeight: '90vh' }" [draggable]="false" [resizable]="false"
+    [contentStyle]="{ overflow: 'auto' }" (onHide)="close()">
+    <ng-container *ngTemplateOutlet="bodyContent"></ng-container>
+    <ng-template pTemplate="footer">
+      <ng-container *ngTemplateOutlet="footerContent"></ng-container>
+    </ng-template>
+  </p-dialog>
+} @else {
+  <div class="termination-page-content">
+    <ng-container *ngTemplateOutlet="bodyContent"></ng-container>
+    <div class="termination-page-footer">
+      <ng-container *ngTemplateOutlet="footerContent"></ng-container>
+    </div>
+  </div>
+}
+
+<p-toast />

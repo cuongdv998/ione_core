@@ -1,0 +1,145 @@
+<div class="p-4">
+  @if (loading) {
+  <div class="flex justify-center p-8"><i class="pi pi-spin pi-spinner text-3xl"></i></div>
+  } @else {
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+    @for (doc of hydratedDocuments; track doc.id) {
+    <div class="border rounded overflow-hidden bg-gray-50">
+      @if (isImageDoc(doc) && getPreviewSource(doc); as previewSource) {
+      <img [src]="previewSource" [alt]="doc.fileName || ''"
+        class="w-full aspect-square object-cover cursor-pointer" (click)="openPreview(doc)" />
+      } @else if (isImageDoc(doc)) {
+      <div class="aspect-square flex items-center justify-center cursor-pointer bg-gray-200"
+        (click)="openPreview(doc)">
+        <i class="pi pi-image text-4xl text-gray-500"></i>
+      </div>
+      } @else if (isVideoDoc(doc)) {
+      <div class="aspect-square flex flex-col items-center justify-center cursor-pointer bg-gray-200"
+        (click)="openPreview(doc)">
+        <i class="pi pi-video text-4xl text-gray-500 mb-1"></i>
+        <span class="text-xs truncate w-full px-2 text-center">{{ doc.fileName }}</span>
+      </div>
+      } @else {
+      <div class="aspect-square flex flex-col items-center justify-center cursor-pointer bg-gray-200"
+        (click)="openPreview(doc)">
+        <i class="pi pi-file text-4xl text-gray-500 mb-1"></i>
+        <span class="text-xs truncate w-full px-2 text-center">{{ doc.fileName }}</span>
+      </div>
+      }
+      <div class="p-2 text-xs truncate" [title]="doc.fileName">{{ doc.fileName || doc.id }}</div>
+    </div>
+    }
+  </div>
+  @if (hydratedDocuments.length === 0) {
+  <p class="text-gray-500 text-center py-8">{{ 'Claim::NoDocuments' | translate }}</p>
+  }
+  }
+</div>
+
+<p-dialog
+  [(visible)]="previewVisible"
+  [modal]="true"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [showHeader]="false"
+  [style]="{ width: 'min(96vw, 1100px)', border: 'none' }"
+  [contentStyle]="{ padding: '0', overflow: 'hidden' }"
+  [styleClass]="'incident-media-dialog'"
+  [maskStyleClass]="'incident-media-dialog-mask'"
+  (onShow)="onPreviewDialogShow()"
+  (onHide)="closePreview()"
+>
+  @if (previewDoc; as d) {
+  <div class="incident-media-preview">
+    <header class="incident-media-preview__header">
+      <div class="incident-media-preview__title-row">
+        <i class="pi incident-media-preview__type-icon" [class.pi-image]="isImageDoc(d)"
+          [class.pi-video]="isVideoDoc(d)"></i>
+        <span class="incident-media-preview__title" [title]="d.fileName || ''">
+          {{ d.fileName || ('Claim::Preview' | translate) }}
+        </span>
+      </div>
+      <div class="incident-media-preview__toolbar">
+        @if (isImageDoc(d) && d.url) {
+        <p-button
+          type="button"
+          [text]="true"
+          [rounded]="true"
+          severity="secondary"
+          icon="pi pi-minus"
+          (onClick)="zoomOut()"
+          [pTooltip]="'Claim::MediaPreview:ZoomOut' | translate"
+          tooltipPosition="bottom"
+        />
+        <span class="incident-media-preview__zoom-pill">{{ zoomPercent }}%</span>
+        <p-button
+          type="button"
+          [text]="true"
+          [rounded]="true"
+          severity="secondary"
+          icon="pi pi-plus"
+          (onClick)="zoomIn()"
+          [pTooltip]="'Claim::MediaPreview:ZoomIn' | translate"
+          tooltipPosition="bottom"
+        />
+        <p-button
+          type="button"
+          [text]="true"
+          [rounded]="true"
+          severity="secondary"
+          icon="pi pi-refresh"
+          (onClick)="resetZoom()"
+          [pTooltip]="'Claim::MediaPreview:ResetZoom' | translate"
+          tooltipPosition="bottom"
+        />
+        <span class="incident-media-preview__toolbar-divider" aria-hidden="true"></span>
+        }
+        <p-button
+          type="button"
+          [text]="true"
+          [rounded]="true"
+          severity="secondary"
+          icon="pi pi-download"
+          (onClick)="downloadCurrent()"
+          [disabled]="!d.url"
+          [pTooltip]="'Claim::MediaPreview:Download' | translate"
+          tooltipPosition="bottom"
+        />
+        <p-button
+          type="button"
+          [text]="true"
+          [rounded]="true"
+          severity="secondary"
+          icon="pi pi-times"
+          (onClick)="closePreview()"
+          [pTooltip]="'Claim::MediaPreview:Close' | translate"
+          tooltipPosition="bottom"
+        />
+      </div>
+    </header>
+
+    @if (d.url && isImageDoc(d)) {
+    <p class="incident-media-preview__hint">{{ 'Claim::MediaPreview:WheelHint' | translate }}</p>
+    <div class="incident-media-preview__viewport" #previewViewport>
+      <div class="incident-media-preview__stage">
+        <img
+          [src]="d.url"
+          [alt]="d.fileName || ''"
+          [class.incident-media-preview__img--loading]="!imageFitReady"
+          [ngStyle]="imageFitReady ? previewImgStyle : null"
+          (load)="onPreviewImgLoad($event)"
+          draggable="false"
+          class="incident-media-preview__img"
+        />
+      </div>
+    </div>
+    }
+    @if (d.url && isVideoDoc(d)) {
+    <div class="incident-media-preview__viewport incident-media-preview__viewport--video">
+      <video [src]="d.url" controls playsinline class="incident-media-preview__video"></video>
+    </div>
+    }
+  </div>
+  }
+</p-dialog>

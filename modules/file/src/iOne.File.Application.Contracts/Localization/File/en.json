@@ -1,0 +1,16 @@
+{
+  "Culture": "en",
+  "Texts": {
+    "Menu:File": "File",
+    "Permission:Create": "Create",
+    "Permission:Edit": "Edit",
+    "Permission:Delete": "Delete",
+    "Permission:View": "View",
+    "Permission:FileModule": "File",
+    "Permission:WordToPdf": "Convert Word to PDF",
+    "File:WordToPdf:EmptyFile": "The uploaded file is empty.",
+    "File:WordToPdf:UnsupportedExtension": "Only .doc and .docx files are supported.",
+    "File:WordToPdf:ConversionFailed": "Could not convert the document to PDF."
+  }
+}
+

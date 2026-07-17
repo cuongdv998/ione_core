@@ -1,0 +1,289 @@
+<div class="quotation-approval-detail-page grid grid-cols-12 gap-2 p-4">
+  @if (!claimId || !approvalWorkTaskId) {
+    <div class="col-span-12 p-4 text-center text-gray-600">Thiếu tham số đường dẫn (claimId / workTaskId).</div>
+  } @else if (loadingClaim && !claim) {
+    <div class="col-span-12 flex justify-center p-8">
+      <i class="pi pi-spin pi-spinner text-3xl"></i>
+    </div>
+  } @else if (!claim) {
+    <div class="col-span-12 p-4 text-center text-gray-600">{{ 'Claim::ClaimNotFound' | translate }}</div>
+  } @else {
+    <div class="col-span-12 detail-container">
+      @if (showHeaderEstimateAmount) {
+        <div class="detail-header-estimate-wrap">
+          <div class="detail-header-estimate">
+            <span class="detail-header-estimate__label">Ước BT</span>
+            <span class="detail-header-estimate__value">{{ headerEstimateAmountValue }}</span>
+          </div>
+        </div>
+      }
+
+      <div class="grid grid-cols-1 md:grid-cols-6 gap-2 mb-2 border-b pb-2">
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2">
+            <span class="text-gray-600 font-semibold text-sm"># {{ headerNumberLabel }}</span>
+            <span class="text-blue-600 font-bold text-base">{{ headerNumberValue }}</span>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 block mb-0.5">{{ 'Claim::IncidentDate' | translate }}</span>
+            <span class="text-sm font-semibold">{{ formatDateTime(claim.incidentDate) }}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2 text-sm font-semibold">
+            <i class="pi pi-exclamation-triangle text-gray-500"></i>
+            <span>{{ formatDateTime(claim.notifyDate) }}</span>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 block mb-0.5">Bảo hiểm gốc</span>
+            <span class="text-sm font-semibold">{{ claim.insurerName || '-' }}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2 text-sm font-semibold">
+            <i class="pi pi-user text-gray-500"></i>
+            <span>{{ claim.contactName || '-' }}</span>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 block mb-0.5">{{ 'Claim::VehicleInfo' | translate }}</span>
+            <span class="text-sm font-semibold text-gray-700">{{ getVehicleDisplay() }}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2 text-sm font-semibold">
+            <i class="pi pi-phone text-gray-500"></i>
+            <span>{{ claim.contactPhone || '-' }}</span>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 block mb-0.5">{{ 'Claim::Priority' | translate }}</span>
+            <span class="text-sm font-semibold" [class]="getPriorityClass(claim.priority)">{{ getPriorityDisplay() }}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex items-start gap-2 text-sm font-semibold">
+            <i class="pi pi-headphones text-gray-500 mt-1"></i>
+            <div class="flex flex-col">
+              <span>{{ getOpenEmployeeDisplay() }}</span>
+              <span class="text-xs font-normal text-gray-500">{{ getOpenEmployeeSecondaryText() }}</span>
+            </div>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 block mb-0.5">Người xử lý</span>
+            <span class="text-sm font-semibold text-gray-800 block">{{ claim.processEmpName || '-' }}</span>
+            <span class="text-xs text-gray-500">{{ getHandlerSecondaryText() }}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2 text-sm font-bold text-green-600">
+            <i class="pi pi-sync"></i>
+            <span>{{ getClaimStatusDisplay() }}</span>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 block mb-0.5">{{ 'Claim::ProcessClaimType' | translate }}</span>
+            <span class="text-sm font-semibold">{{ getProcessClaimTypeDisplay() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <p-tabs [(value)]="activeTab" (valueChange)="onTabChange($event)">
+        <p-tablist>
+          <p-tab [value]="0">Thông tin chung</p-tab>
+          <p-tab [value]="1">Ảnh hiện trường</p-tab>
+          <p-tab [value]="2">Giám định hiện trường</p-tab>
+          @if (detailWtId) {
+            <p-tab [value]="3">Giám định chi tiết</p-tab>
+            <p-tab [value]="4">Nhận xét đánh giá</p-tab>
+            @if (showRepairPlanTab) {
+              <p-tab [value]="5">Phương án sửa chữa</p-tab>
+            }
+          } @else {
+            @if (showRepairPlanTab) {
+              <p-tab [value]="3">Phương án sửa chữa</p-tab>
+            }
+          }
+        </p-tablist>
+        <p-tabpanels>
+          <p-tabpanel [value]="0">
+            <app-claim-task-info-tab
+              [claim]="claim"
+              [policies]="policies"
+              [policiesLoading]="policiesLoading"
+              (refreshPolicies)="refreshPolicies()"
+            />
+          </p-tabpanel>
+          <p-tabpanel [value]="1">
+            <app-claim-task-incident-images-tab [documents]="documents" [loading]="loadingDocuments" />
+          </p-tabpanel>
+          <p-tabpanel [value]="2">
+            @if (onsiteWorkTaskId) {
+              <app-claim-onsite-assessment-tab
+                [claim]="claim"
+                [claimId]="claimId!"
+                [workTaskId]="onsiteWorkTaskId"
+                [workTaskStatus]="workTaskStatus"
+                [refreshVersion]="onsiteRefreshVersion"
+                [forceReadOnly]="true"
+                [showOnsiteActions]="false"
+                [useClaimScopedDetail]="true"
+                (closeRequested)="confirmCloseMain()"
+              />
+            } @else {
+              <div class="p-4 text-gray-600 text-center">Không có dữ liệu giám định hiện trường.</div>
+            }
+          </p-tabpanel>
+          @if (detailWtId) {
+            <p-tabpanel [value]="3">
+              <app-detailed-assessment-tab
+                [claim]="claim"
+                [workTaskId]="detailWtId"
+                [workTaskStatus]="workTaskStatus"
+                [refreshVersion]="detailedRefreshVersion"
+                [forceReadOnly]="true"
+                [showDetailedActions]="false"
+                (closeRequested)="confirmCloseMain()"
+              />
+            </p-tabpanel>
+            <p-tabpanel [value]="4">
+              <app-detailed-assessment-evaluation-tab
+                [workTaskId]="detailWtId"
+                [editable]="false"
+                [refreshVersion]="detailedRefreshVersion"
+                [active]="activeTab === 4"
+                (closeRequested)="confirmCloseMain()"
+              />
+            </p-tabpanel>
+            @if (showRepairPlanTab) {
+              <p-tabpanel [value]="5">
+                <app-repair-plan-tab
+                  [claim]="claim"
+                  [claimId]="claimId!"
+                  [workTaskId]="approvalWorkTaskId!"
+                  [readOnly]="true"
+                  [repairPlanTabActive]="activeTab === repairPlanTabIndex"
+                  (closeRequested)="confirmCloseMain()"
+                />
+              </p-tabpanel>
+            }
+          } @else {
+            @if (showRepairPlanTab) {
+              <p-tabpanel [value]="3">
+                <app-repair-plan-tab
+                  [claim]="claim"
+                  [claimId]="claimId!"
+                  [workTaskId]="approvalWorkTaskId!"
+                  [readOnly]="true"
+                  [repairPlanTabActive]="activeTab === repairPlanTabIndex"
+                  (closeRequested)="confirmCloseMain()"
+                />
+              </p-tabpanel>
+            }
+          }
+        </p-tabpanels>
+      </p-tabs>
+    </div>
+
+    <div class="col-span-12 bg-white border-t p-3 flex flex-wrap justify-between gap-2 sticky bottom-0 z-10">
+      <p-button [label]="'Claim::Back' | translate" severity="secondary" (onClick)="confirmCloseMain()" />
+      <div class="flex flex-wrap gap-2 justify-end">
+        @if (canAct) {
+          <p-button label="Điều chuyển duyệt" icon="pi pi-share-alt" severity="warn" (onClick)="openReassign()" />
+          <p-button label="Từ chối" icon="pi pi-times" severity="warn" (onClick)="openReject()" />
+          <p-button label="Duyệt" icon="pi pi-check" severity="warn" (onClick)="confirmApprove()" />
+        }
+      </div>
+    </div>
+  }
+</div>
+
+<p-dialog
+  [(visible)]="rejectDialogVisible"
+  header="Lý do từ chối"
+  [modal]="true"
+  [style]="{ width: '640px', maxWidth: '96vw' }"
+  [closable]="false"
+  appendTo="body"
+  styleClass="pasc-sub-dialog"
+>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="flex flex-col gap-2">
+      <label>Lý do từ chối <span class="text-red-500">*</span></label>
+      <p-select
+        [(ngModel)]="rejectReasonId"
+        [options]="rejectReasonOptions"
+        [loading]="loadingReasonOptions"
+        [showClear]="true"
+        placeholder="--Lựa chọn--"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div class="flex flex-col gap-2">
+      <label>Mô tả <span class="text-red-500">*</span></label>
+      <textarea pTextarea [(ngModel)]="rejectDescription" rows="5" class="w-full"></textarea>
+    </div>
+  </div>
+  <div class="mt-4 flex justify-end gap-2">
+    <p-button label="Thực hiện" icon="pi pi-check" severity="warn" [loading]="savingReject" (onClick)="submitRejectExecuteClick()" />
+    <p-button label="Đóng" severity="secondary" (onClick)="confirmCloseRejectModal()" />
+  </div>
+</p-dialog>
+
+<p-dialog
+  [(visible)]="reassignDialogVisible"
+  header="Điều chuyển duyệt PASC"
+  [modal]="true"
+  [style]="{ width: '520px', maxWidth: '96vw' }"
+  [closable]="false"
+  appendTo="body"
+  styleClass="pasc-sub-dialog"
+>
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-2">
+      <label>Lý do điều chuyển <span class="text-red-500">*</span></label>
+      <p-select
+        [(ngModel)]="reassignReasonId"
+        [options]="rejectReasonOptions"
+        [loading]="loadingReasonOptions"
+        [showClear]="true"
+        placeholder="--Lựa chọn--"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div class="flex flex-col gap-2">
+      <label>Mô tả <span class="text-red-500">*</span></label>
+      <textarea pTextarea [(ngModel)]="reassignDescription" rows="4" class="w-full"></textarea>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label>Người được điều chuyển <span class="text-red-500">*</span></label>
+      <p-select
+        [(ngModel)]="newAssigneeId"
+        [options]="reassignApproverOptions"
+        [loading]="loadingReassignApprovers"
+        [filter]="true"
+        filterPlaceholder="Tìm..."
+        placeholder="Chọn nhân viên"
+        styleClass="w-full"
+        optionLabel="name"
+        optionValue="id"
+        appendTo="body"
+      />
+    </div>
+  </div>
+  <div class="mt-4 flex justify-end gap-2">
+    <p-button label="Thực hiện" icon="pi pi-send" severity="warn" [loading]="savingReassign" [disabled]="!newAssigneeId" (onClick)="submitReassign()" />
+    <p-button label="Đóng" severity="secondary" (onClick)="confirmCloseReassignModal()" />
+  </div>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog appendTo="body" />

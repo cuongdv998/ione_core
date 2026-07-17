@@ -1,0 +1,35 @@
+/**
+ * Styles for UOM Classes Component
+ * Using Tailwind CSS utility classes in template
+ * Add custom styles here if needed
+ */
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+// Custom styles for status display
+.status-active {
+  color: #22c55e;
+  font-weight: 500;
+}
+
+.status-inactive {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+// Custom table styles
+.uom-class-table {
+  font-size: 0.875rem;
+  
+  th {
+    font-weight: 600;
+    text-align: left;
+  }
+  
+  td {
+    vertical-align: top;
+  }
+}

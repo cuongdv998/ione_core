@@ -1,0 +1,88 @@
+:host {
+  display: block;
+}
+
+.evaluation-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  background: #fff;
+}
+
+.evaluation-title {
+  margin: 0 0 1.25rem;
+  color: #1f3b5b;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.evaluation-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.evaluation-row {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.evaluation-label {
+  font-weight: 600;
+  color: #334155;
+  padding-top: 0.25rem;
+}
+
+.required-mark {
+  color: #dc2626;
+}
+
+.evaluation-options {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  min-height: 2.5rem;
+  align-items: center;
+}
+
+.option-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 150px;
+}
+
+.evaluation-note {
+  width: 100%;
+  max-width: 720px;
+}
+
+.field-error {
+  grid-column: 2;
+  color: #dc2626;
+}
+
+.evaluation-action-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+:host ::ng-deep .btn-orange {
+  background: #f59a23 !important;
+  border-color: #f59a23 !important;
+}
+
+@media (max-width: 960px) {
+  .evaluation-row {
+    grid-template-columns: 1fr;
+  }
+
+  .field-error {
+    grid-column: 1;
+  }
+}

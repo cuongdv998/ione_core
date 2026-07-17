@@ -1,0 +1,16 @@
+// Res Uoms Component Styles
+
+::ng-deep {
+  // Dialog content: scroll theo chiều dọc khi nội dung dài (p-select dùng appendTo="body" nên không bị cắt)
+  .p-dialog.res-uoms-dialog .p-dialog-content {
+    max-height: calc(90vh - 140px);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .p-dialog.res-uoms-dialog {
+    .p-select-overlay {
+      z-index: 10000 !important;
+    }
+  }
+}

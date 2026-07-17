@@ -1,0 +1,698 @@
+:host {
+  --detail-control-height: 2.125rem;
+}
+
+:host {
+  display: block;
+}
+
+.detailed-assessment-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.detailed-scroll-content {
+  padding: 0.25rem 0 1rem;
+}
+
+.detailed-scroll-content.readonly-mode {
+  opacity: 0.92;
+}
+
+.detailed-scroll-content.readonly-mode :is(
+  input,
+  textarea,
+  button,
+  .p-inputtext,
+  .p-inputnumber,
+  .p-select,
+  .p-datepicker,
+  .p-checkbox,
+  .p-button
+) {
+  pointer-events: none !important;
+}
+
+:host ::ng-deep .detailed-scroll-content.readonly-mode .p-inputtext,
+:host ::ng-deep .detailed-scroll-content.readonly-mode .p-inputnumber,
+:host ::ng-deep .detailed-scroll-content.readonly-mode .p-inputnumber-input,
+:host ::ng-deep .detailed-scroll-content.readonly-mode .p-textarea,
+:host ::ng-deep .detailed-scroll-content.readonly-mode .p-select,
+:host ::ng-deep .detailed-scroll-content.readonly-mode .p-select-label,
+:host ::ng-deep .detailed-scroll-content.readonly-mode .p-select-trigger,
+:host ::ng-deep .detailed-scroll-content.readonly-mode .p-select-dropdown,
+:host ::ng-deep .detailed-scroll-content.readonly-mode .p-datepicker .p-inputtext {
+  background: #f3f4f6 !important;
+  color: #6b7280 !important;
+}
+
+:host ::ng-deep .detailed-scroll-content.readonly-mode .p-inputtext,
+:host ::ng-deep .detailed-scroll-content.readonly-mode .p-inputnumber,
+:host ::ng-deep .detailed-scroll-content.readonly-mode .p-textarea,
+:host ::ng-deep .detailed-scroll-content.readonly-mode .p-select,
+:host ::ng-deep .detailed-scroll-content.readonly-mode .p-datepicker {
+  border-color: #d1d5db !important;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 4px;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 500;
+  color: #374151;
+}
+
+.field-label.required::after {
+  content: ' *';
+  color: #dc2626;
+}
+
+.field-error {
+  display: block;
+  margin-top: 0.25rem;
+  color: #dc2626;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.group-title {
+  margin: 18px 0 14px;
+  padding-top: 8px;
+  border-top: 1px solid #111827;
+  font-family: inherit;
+  color: #111827;
+  font-size: 19px;
+  line-height: 1.25;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.detailed-scroll-content > .group-title:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.paper-section {
+  margin-top: 0;
+  padding: 0.25rem 0 0.5rem;
+  border: 0;
+  background: #fff;
+}
+
+.paper-section .group-title {
+  margin: 18px 0 14px;
+  padding: 8px 0 0;
+  border-top: 1px solid #111827;
+  font-family: inherit;
+  color: #111827;
+  font-size: 19px;
+  line-height: 1.25;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.paper-section .detail-table-wrap {
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.paper-section .detail-table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.paper-section .detail-table th,
+.paper-section .detail-table td {
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+  border-bottom: 0;
+  padding: 0.22rem 0.45rem;
+  vertical-align: middle;
+  background: #fff;
+}
+
+.paper-section .detail-table th {
+  background: #fff;
+  color: #475569;
+  font-weight: 700;
+  text-align: center;
+}
+
+.paper-section .detail-table td {
+  color: #334155;
+}
+
+.paper-section .detail-table th:first-child,
+.paper-section .detail-table td:first-child {
+  padding-left: 0.25rem;
+}
+
+.paper-section .detail-table th:last-child,
+.paper-section .detail-table td:last-child {
+  padding-right: 0.25rem;
+}
+
+.paper-section .stt-col {
+  width: 52px;
+  min-width: 52px;
+  text-align: center;
+}
+
+.paper-section .flag-col {
+  width: 112px;
+  min-width: 112px;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.paper-section .doc-file-col {
+  text-align: center;
+}
+
+.paper-section .document-file-link,
+.paper-section .document-file-empty {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.paper-section .document-file-actions-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+}
+
+.paper-section :is(.p-inputtext, .p-textarea, .p-datepicker .p-inputtext) {
+  min-height: 1.8rem;
+  border-color: #d1d5db;
+  border-radius: 0.45rem;
+  box-shadow: none;
+}
+
+.paper-section .compact-textarea {
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+  line-height: 1.2;
+  resize: none;
+  overflow: hidden;
+}
+
+.paper-section :is(.p-checkbox, .p-checkbox-box) {
+  margin: 0 auto;
+}
+
+:host ::ng-deep .paper-section p-checkbox.need-supplement-checkbox .p-checkbox {
+  pointer-events: none;
+}
+
+.coverage-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 280px) auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-top: 1rem;
+}
+
+.section-card {
+  margin-top: 1rem;
+  border: 1px solid #d9dee7;
+  border-radius: 0;
+  background: #fff;
+  padding: 0.6rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.section-header h5 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.detail-table-wrap {
+  overflow: visible;
+}
+
+.detail-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.detail-table th,
+.detail-table td {
+  word-break: break-word;
+}
+
+.person-detail-table th,
+.person-detail-table td {
+  min-width: 110px;
+}
+
+.detail-table th,
+.detail-table td {
+  border: 1px solid #dfe4ea;
+  padding: 0.22rem 0.32rem;
+  vertical-align: middle;
+  background: #fff;
+}
+
+.detail-table th {
+  background: #f8fafc;
+  text-align: left;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.section-detail-table th {
+  text-align: center;
+}
+
+.detail-table .item-stt-col {
+  width: 48px;
+  min-width: 48px;
+  text-align: center;
+}
+
+.detail-table .item-col {
+  width: 16%;
+}
+
+.detail-table .quantity-col {
+  width: 7%;
+  min-width: 72px;
+}
+
+.detail-table .risk-col {
+  width: 12%;
+}
+
+.detail-table th.item-stt-col,
+.detail-table td.item-stt-col {
+  padding-left: 0.2rem;
+  padding-right: 0.2rem;
+}
+
+.attachment-cell {
+  min-width: 92px;
+}
+
+.attachment-cell-inline {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+}
+
+.attachment-cell-inline .attachment-list {
+  display: none;
+}
+
+.attachment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.attachment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  font-size: 0.75rem;
+}
+
+.attachment-chip button {
+  border: 0;
+  background: transparent;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 0;
+}
+
+.document-file-count {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.document-file-link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 0.875rem;
+  color: #334155;
+  cursor: pointer;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.document-file-empty {
+  font-size: 0.875rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.detail-table th.doc-file-col,
+.detail-table td.doc-file-col {
+  width: 96px;
+  min-width: 96px;
+  padding-left: 0.35rem;
+  padding-right: 0.25rem;
+}
+
+:host ::ng-deep .detail-table td.doc-file-col .p-button {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+}
+
+.detail-upload-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 68vh;
+}
+
+.detail-upload-toolbar {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.detail-upload-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1.35fr);
+  gap: 16px;
+  min-height: 0;
+  flex: 1;
+}
+
+.detail-upload-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 120px;
+  max-height: 60vh;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.detail-upload-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 64px;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+
+.detail-upload-file-item.is-uploading {
+  opacity: 0.7;
+}
+
+.detail-upload-file-item.is-selected {
+  border-color: #f59e0b;
+  background: #fff7ed;
+}
+
+.detail-upload-file-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #64748b;
+  overflow: hidden;
+}
+
+.detail-upload-file-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-upload-file-thumb i {
+  font-size: 20px;
+}
+
+.detail-upload-file-info {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.detail-upload-file-type,
+.detail-upload-file-name {
+  display: block;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail-upload-file-type {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.detail-upload-file-name {
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.detail-upload-file-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.detail-upload-file-download,
+.detail-upload-file-delete {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+}
+
+.detail-upload-file-download {
+  color: #2563eb;
+}
+
+.detail-upload-file-delete {
+  color: #ef4444;
+}
+
+.detail-upload-file-download:disabled,
+.detail-upload-file-delete:disabled {
+  color: #cbd5e1;
+}
+
+.detail-upload-empty {
+  padding: 16px 12px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+}
+
+.detail-upload-preview {
+  min-height: 68vh;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.detail-upload-preview-stage,
+.detail-upload-preview-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 68vh;
+}
+
+.detail-upload-preview-image {
+  width: 100%;
+  height: 100%;
+  max-height: 68vh;
+  object-fit: contain;
+  background: #0f172a;
+}
+
+.detail-upload-preview-empty {
+  color: #64748b;
+  padding: 20px;
+  text-align: center;
+}
+
+.detail-upload-preview-frame {
+  width: 100%;
+  height: 68vh;
+  border: 0;
+  background: #fff;
+}
+
+.document-file-preview-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 420px;
+  background: #0f172a;
+}
+
+.document-file-preview-image {
+  max-width: 100%;
+  max-height: 78vh;
+  object-fit: contain;
+}
+
+.document-file-preview-frame {
+  width: 100%;
+  height: 78vh;
+  border: 0;
+}
+
+.document-file-preview-unsupported {
+  padding: 2rem;
+  text-align: center;
+  color: #475569;
+}
+
+.detail-action-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 0 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 28%);
+}
+
+:host ::ng-deep .compact-select,
+:host ::ng-deep .compact-number,
+:host ::ng-deep .compact-date,
+:host ::ng-deep .compact-textarea,
+:host ::ng-deep p-datepicker,
+:host ::ng-deep p-datepicker .p-inputtext {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+:host ::ng-deep .detail-table .p-datepicker,
+:host ::ng-deep .detail-table .p-inputnumber,
+:host ::ng-deep .detail-table .p-select {
+  width: 100%;
+}
+
+:host ::ng-deep .detail-table .p-inputtext,
+:host ::ng-deep .detail-table .p-inputnumber-input,
+:host ::ng-deep .detail-table .p-textarea,
+:host ::ng-deep .detail-table .p-select,
+:host ::ng-deep .detail-table .p-datepicker .p-inputtext {
+  min-height: var(--detail-control-height);
+  height: var(--detail-control-height);
+  border-radius: 0.45rem;
+  border-color: #d1d5db;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+:host ::ng-deep .detail-table .compact-textarea {
+  min-height: var(--detail-control-height);
+  height: var(--detail-control-height);
+  padding-top: 0.42rem;
+  padding-bottom: 0.42rem;
+  line-height: 1.2;
+  resize: none;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+:host ::ng-deep .detail-table .p-select-label,
+:host ::ng-deep .detail-table .p-inputtext,
+:host ::ng-deep .detail-table .p-inputnumber-input,
+:host ::ng-deep .detail-table .p-datepicker .p-inputtext {
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+}
+
+:host ::ng-deep .detail-table .p-inputnumber-input {
+  width: 100%;
+  text-align: right;
+}
+
+:host ::ng-deep .detail-table .p-select-label {
+  line-height: 1.2;
+}
+
+:host ::ng-deep .detail-table td .p-button {
+  width: 2rem;
+  height: 2rem;
+}
+
+:host ::ng-deep .detail-table td .p-button.p-button-icon-only {
+  padding: 0;
+}
+
+.text-center {
+  text-align: center;
+}
+
+@media (max-width: 991px) {
+  .coverage-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-upload-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-upload-preview,
+  .detail-upload-preview-stage,
+  .detail-upload-preview-empty,
+  .detail-upload-preview-frame {
+    min-height: 40vh;
+    height: 40vh;
+  }
+}

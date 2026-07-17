@@ -1,0 +1,11 @@
+{
+  "Culture": "vi-VN",
+  "Texts": {
+    "Menu:Survey": "Khảo sát",
+    "Permission:Create": "Tạo mới",
+    "Permission:Edit": "Sửa",
+    "Permission:Delete": "Xóa",
+    "Permission:View": "Xem"
+  }
+}
+

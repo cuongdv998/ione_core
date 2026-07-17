@@ -1,0 +1,111 @@
+<div class="grid grid-cols-12 gap-4">
+    <!-- Search Panel -->
+    <div class="col-span-12">
+        <p-panel [header]="'Product::SearchInformation' | translate" [toggleable]="true">
+            <div class="grid grid-cols-12 gap-4">
+                <!-- Code -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label for="searchCode" class="block mb-2 font-medium">{{ 'Product::ProCoverageGroup:Code' |
+                        translate }}</label>
+                    <input pInputText id="searchCode" [(ngModel)]="searchForm.code" class="w-full" />
+                </div>
+
+                <!-- Name -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label for="searchName" class="block mb-2 font-medium">{{ 'Product::ProCoverageGroup:Name' |
+                        translate }}</label>
+                    <input pInputText id="searchName" [(ngModel)]="searchForm.name" class="w-full" />
+                </div>
+
+                <!-- Status -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label for="searchStatus" class="block mb-2 font-medium">{{ 'Product::ProCoverageGroup:Status'
+                        |
+                        translate }}</label>
+                    <p-select inputId="searchStatus" [(ngModel)]="searchForm.status" [options]="statusOptions"
+                        optionLabel="label" optionValue="value"
+                        [placeholder]="'Product::ProCoverageGroup:SelectStatus' | translate" styleClass="w-full"
+                        [showClear]="true" />
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-span-12 flex gap-2 justify-end">
+                    <p-button [label]="'Product::Reset' | translate" icon="pi pi-refresh" severity="secondary"
+                        (onClick)="resetSearch()" />
+                    <p-button [label]="'Product::Search' | translate" icon="pi pi-search" (onClick)="search()" />
+                    <button [label]="'Product::Create' | translate" pButton class="p-panel-header-icon"
+                        icon="pi pi-plus" (click)="openCreateDialog()" *ngIf="PERMISSIONS.CREATE | appPermission"
+                        [pTooltip]="'Product::Create' | translate">
+                    </button>
+                </div>
+            </div>
+        </p-panel>
+    </div>
+
+    <!-- Data List Panel -->
+    <div class="col-span-12">
+        <p-panel [header]="'Product::ProCoverageGroup:List' | translate">
+            <app-v-table [columns]="columns" [data]="items" [actions]="actions" [totalCount]="totalCount"
+                [loading]="loading" [rows]="pageSize" [rowsPerPageOptions]="[10, 20, 50]" [showGridlines]="true"
+                [stripedRows]="true" [rowHover]="true" size="small" [scrollHeight]="'calc(100vh - 400px)'"
+                (lazyLoad)="loadData($event)" />
+        </p-panel>
+    </div>
+</div>
+
+<!-- Create/Edit Dialog -->
+<p-dialog [(visible)]="dialogVisible"
+    [header]="(dialogMode === 'create' ? 'Product::Create' : 'Product::Edit') | translate" [modal]="true"
+    [style]="{ width: '40vw' }" [draggable]="false" [resizable]="false" (onHide)="onDialogHide()">
+    <form #form="ngForm" class="grid grid-cols-12 gap-4 pt-4" *ngIf="formData">
+        <!-- Code -->
+        <div class="col-span-12">
+            <label for="code" class="block mb-2 font-medium required">{{ 'Product::ProCoverageGroup:Code' | translate
+                }}</label>
+            <input pInputText id="code" [(ngModel)]="formData.code" name="code" class="w-full" [disabled]="dialogMode === 'edit'"
+                required pattern="^[a-zA-Z0-9_]+$" #code="ngModel" (blur)="formData.code = formData.code?.trim()"
+                style="text-transform: uppercase" (input)="formData.code = formData.code?.toUpperCase()" />
+            <small class="text-red-500 block mt-1" *ngIf="(code.dirty || code.touched) && code.errors?.['required']">
+                {{ 'Product::ProCoverageGroup:CodeRequired' | translate }}
+            </small>
+            <small class="text-red-500 block mt-1" *ngIf="(code.dirty || code.touched) && code.errors?.['pattern']">
+                {{ 'Product::ProCoverageGroup:CodeHasSpecialChar' | translate }}
+            </small>
+        </div>
+
+        <!-- Name -->
+        <div class="col-span-12">
+            <label for="name" class="block mb-2 font-medium required">{{ 'Product::ProCoverageGroup:Name' | translate
+                }}</label>
+            <input pInputText id="name" name="name" [(ngModel)]="formData.name" class="w-full" required #name="ngModel"
+                   (blur)="formData.name = formData.name?.trim()" />
+            <small class="text-red-500 block mt-1" *ngIf="(name.dirty || name.touched) && name.errors?.['required']">
+                {{ 'Product::ProCoverageGroup:NameRequired' | translate }}
+            </small>
+        </div>
+
+        <!-- Status -->
+        <div class="col-span-12">
+            <label for="status" class="block mb-2 font-medium required">{{ 'Product::ProCoverageGroup:Status' |
+                translate }}</label>
+            <p-select inputId="status" name="status" [(ngModel)]="formData.status" [options]="statusOptions" optionLabel="label"
+                optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Description -->
+        <div class="col-span-12">
+            <label for="description" class="block mb-2 font-medium">{{ 'Product::ProCoverageGroup:Description' |
+                translate }}</label>
+            <textarea pTextarea id="description" name="description" [(ngModel)]="formData.description" rows="3" class="w-full"></textarea>
+        </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+        <p-button [label]="'Product::Cancel' | translate" icon="pi pi-times" severity="secondary"
+            (onClick)="dialogVisible = false" />
+        <p-button [label]="'Product::Save' | translate" icon="pi pi-check" (onClick)="save()" [loading]="loading" />
+    </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

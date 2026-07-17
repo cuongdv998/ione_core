@@ -1,0 +1,274 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="userName" class="block mb-2 font-medium">{{ 'Master::ResUserDevice:UserName' | translate }}</label>
+          <input
+            pInputText
+            id="userName"
+            [(ngModel)]="searchForm.userName"
+            class="w-full"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="deviceUid" class="block mb-2 font-medium">{{ 'Master::ResUserDevice:DeviceUid' | translate }}</label>
+          <input
+            pInputText
+            id="deviceUid"
+            [(ngModel)]="searchForm.deviceUid"
+            class="w-full"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="appChannelCode" class="block mb-2 font-medium">{{ 'Master::ResUserDevice:AppChannelCode' | translate }}</label>
+          <input
+            pInputText
+            id="appChannelCode"
+            [(ngModel)]="searchForm.appChannelCode"
+            class="w-full"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="status" class="block mb-2 font-medium">{{ 'Master::ResUserDevice:Status' | translate }}</label>
+          <p-select
+            id="status"
+            [(ngModel)]="searchForm.status"
+            [options]="statusOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button
+            [label]="'AbpAuditLogging::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button
+            [label]="'AbpAuditLogging::Search' | translate"
+            icon="pi pi-search"
+            (onClick)="search()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Master::ResUserDevice:New' | translate"
+            icon="pi pi-plus"
+            (onClick)="openCreateDialog()"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Bảng dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table
+        [columns]="columns"
+        [data]="devices"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        size="small"
+        [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadData($event)"
+      />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create/Edit -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Master::ResUserDevice:New' : 'Master::ResUserDevice:Edit') | translate"
+  [modal]="true"
+  [style]="{ width: '640px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflow: 'auto', maxHeight: 'calc(90vh - 8rem)' }"
+>
+  <div class="user-device-dialog-body flex flex-col gap-4 p-4">
+    <!-- UserName: chỉ nhập khi tạo, disable khi sửa -->
+    <div>
+      <label for="formUserName" class="block mb-2 font-medium">
+        {{ 'Master::ResUserDevice:UserName' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formUserName"
+        [(ngModel)]="formData.userName"
+        [readonly]="dialogMode === 'edit'"
+        class="w-full"
+        [class.bg-gray-100]="dialogMode === 'edit'"
+        maxlength="50"
+      />
+      <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+        {{ 'Master::ResUserDevice:UserNameCannotBeChanged' | translate }}
+      </small>
+    </div>
+
+    <!-- DeviceUid: chỉ nhập khi tạo, disable khi sửa -->
+    <div>
+      <label for="formDeviceUid" class="block mb-2 font-medium">
+        {{ 'Master::ResUserDevice:DeviceUid' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formDeviceUid"
+        [(ngModel)]="formData.deviceUid"
+        [readonly]="dialogMode === 'edit'"
+        class="w-full"
+        [class.bg-gray-100]="dialogMode === 'edit'"
+        maxlength="250"
+      />
+      <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+        {{ 'Master::ResUserDevice:DeviceUidCannotBeChanged' | translate }}
+      </small>
+    </div>
+
+    <!-- DeviceToken -->
+    <div>
+      <label for="formDeviceToken" class="block mb-2 font-medium">
+        {{ 'Master::ResUserDevice:DeviceToken' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formDeviceToken"
+        [(ngModel)]="formData.deviceToken"
+        class="w-full"
+        maxlength="500"
+      />
+    </div>
+
+    <!-- AppChannelCode: chỉ nhập khi tạo, disable khi sửa -->
+    <div>
+      <label for="formAppChannelCode" class="block mb-2 font-medium">
+        {{ 'Master::ResUserDevice:AppChannelCode' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formAppChannelCode"
+        [(ngModel)]="formData.appChannelCode"
+        [readonly]="dialogMode === 'edit'"
+        class="w-full"
+        [class.bg-gray-100]="dialogMode === 'edit'"
+        maxlength="50"
+      />
+      <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+        {{ 'Master::ResUserDevice:AppChannelCodeCannotBeChanged' | translate }}
+      </small>
+    </div>
+
+    <!-- EffectDate: chỉ chọn khi tạo, disable khi sửa -->
+    <div>
+      <label for="formEffectDate" class="block mb-2 font-medium">
+        {{ 'Master::ResUserDevice:EffectDate' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-datepicker
+        id="formEffectDate"
+        [(ngModel)]="effectDatePicker"
+        [disabled]="dialogMode === 'edit'"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        styleClass="w-full"
+        appendTo="body"
+        [inputStyleClass]="dialogMode === 'edit' ? 'w-full bg-gray-100' : 'w-full'"
+      />
+      <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+        {{ 'Master::ResUserDevice:EffectDateCannotBeChanged' | translate }}
+      </small>
+    </div>
+
+    <!-- ExpirDate -->
+    <div>
+      <label for="formExpirDate" class="block mb-2 font-medium">{{ 'Master::ResUserDevice:ExpirDate' | translate }}</label>
+      <p-datepicker
+        id="formExpirDate"
+        [(ngModel)]="expirDatePicker"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        [showClear]="true"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Status -->
+    <div>
+      <label for="formStatus" class="block mb-2 font-medium">
+        {{ 'Master::ResUserDevice:Status' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formStatus"
+        [(ngModel)]="formData.status"
+        [options]="statusOptions"
+        [placeholder]="'Master::ResUserDevice:Status' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Os -->
+    <div>
+      <label for="formOs" class="block mb-2 font-medium">{{ 'Master::ResUserDevice:Os' | translate }}</label>
+      <input
+        pInputText
+        id="formOs"
+        [(ngModel)]="formData.os"
+        class="w-full"
+        maxlength="50"
+      />
+    </div>
+
+    <!-- DeviceName -->
+    <div>
+      <label for="formDeviceName" class="block mb-2 font-medium">{{ 'Master::ResUserDevice:DeviceName' | translate }}</label>
+      <input
+        pInputText
+        id="formDeviceName"
+        [(ngModel)]="formData.deviceName"
+        class="w-full"
+        maxlength="250"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Master::Cancel' | translate"
+        severity="secondary"
+        (onClick)="dialogVisible = false"
+        [disabled]="loading"
+      />
+      <p-button
+        [label]="'Master::Save' | translate"
+        (onClick)="save()"
+        [loading]="loading"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

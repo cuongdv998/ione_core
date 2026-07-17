@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\..\..\common.props" />
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<RootNamespace>iOne.Master</RootNamespace>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\..\src\common\domain\iOne.Domain\iOne.Domain.csproj" />
+		<ProjectReference Include="..\..\..\policy\src\iOne.Policy.Application.Contracts\iOne.Policy.Application.Contracts.csproj" />
+		<ProjectReference Include="..\..\..\hr\src\iOne.Hr.Application.Contracts\iOne.Hr.Application.Contracts.csproj" />
+		<ProjectReference Include="..\..\..\customer\src\iOne.Customer.Application.Contracts\iOne.Customer.Application.Contracts.csproj" />
+		<ProjectReference Include="..\..\..\workflow\src\iOne.Workflow.Application\iOne.Workflow.Application.csproj" />
+		<ProjectReference Include="..\iOne.Master.Application.Contracts\iOne.Master.Application.Contracts.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="RazorLight" Version="2.3.1" />
+		<PackageReference Include="Volo.Abp.PermissionManagement.Application" Version="9.3.6" />
+		<PackageReference Include="Volo.Abp.FeatureManagement.Application" Version="9.3.6" />
+		<PackageReference Include="Volo.Abp.SettingManagement.Application" Version="9.3.6" />
+		<PackageReference Include="Volo.Abp.UI.Navigation" Version="9.3.6" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
+		<PackageReference Include="ClosedXML" Version="0.104.1" />
+		<PackageReference Include="Minio" Version="5.0.0" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
+		<ProjectReference Include="..\..\..\Volo.Abp.Account\src\Volo.Abp.Account.Application\Volo.Abp.Account.Application.csproj" />
+		<ProjectReference Include="..\..\..\Volo.Abp.Identity\src\Volo.Abp.Identity.Application\Volo.Abp.Identity.Application.csproj" />
+		<ProjectReference Include="..\..\..\Volo.Abp.AuditLogging\src\Volo.Abp.AuditLogging.Application\Volo.Abp.AuditLogging.Application.csproj" />
+	</ItemGroup>
+</Project>

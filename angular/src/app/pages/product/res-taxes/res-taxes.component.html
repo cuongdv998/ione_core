@@ -1,0 +1,106 @@
+<p-toast />
+<p-confirmDialog />
+<div class="grid grid-cols-12 gap-4">
+    <!-- Search Panel -->
+    <div class="col-span-12">
+        <p-panel [header]="'Product::SearchInformation' | translate" [toggleable]="true">
+            <div class="grid grid-cols-12 gap-4">
+                <!-- Code -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label class="block mb-2 font-medium">{{ 'Product::ResTax:Code' | translate }}</label>
+                    <input pInputText [(ngModel)]="searchForm.code" class="w-full"
+                        (keydown.enter)="search()" />
+                </div>
+                <!-- Name -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label class="block mb-2 font-medium">{{ 'Product::ResTax:Name' | translate }}</label>
+                    <input pInputText [(ngModel)]="searchForm.name" class="w-full"
+                        (keydown.enter)="search()" />
+                </div>
+                <!-- Status -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label class="block mb-2 font-medium">{{ 'Product::ResTax:Status' | translate }}</label>
+                    <p-select [options]="statusOptions" [(ngModel)]="searchForm.status" optionLabel="label"
+                        optionValue="value" [showClear]="true" (onChange)="search()"
+                        [placeholder]="'Product::ResTax:SelectStatus' | translate" styleClass="w-full">
+                    </p-select>
+                </div>
+                <!-- Buttons -->
+                <div class="col-span-12 flex gap-2 justify-end">
+                    <p-button [label]="'Product::Reset' | translate" icon="pi pi-refresh" severity="secondary"
+                        (onClick)="resetSearch()" />
+                    <p-button [label]="'Product::Search' | translate" icon="pi pi-search" (onClick)="search()" />
+                    <p-button *ngIf="PERMISSIONS.CREATE | appPermission" [label]="'Product::ResTax:New' | translate"
+                        icon="pi pi-plus" (onClick)="openCreateDialog()" />
+                </div>
+            </div>
+        </p-panel>
+    </div>
+
+    <!-- Data List Panel -->
+    <div class="col-span-12">
+        <p-panel [header]="'Product::ResTax:List' | translate">
+            <app-v-table [columns]="columns" [data]="items" [totalCount]="totalCount" [loading]="loading"
+                [actions]="actions" (lazyLoad)="loadData($event)" [scrollHeight]="'calc(100vh - 400px)'">
+            </app-v-table>
+        </p-panel>
+    </div>
+</div>
+
+<!-- Create/Edit Dialog -->
+<p-dialog [header]="(dialogMode === 'create' ? 'Product::ResTax:New' : 'Product::ResTax:Edit') | translate"
+    [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '40vw' }" [draggable]="false" [resizable]="false">
+    <div class="grid grid-cols-12 gap-4 pt-4" *ngIf="formData">
+        <!-- Code (Required, only in create mode) -->
+        <div class="col-span-12" *ngIf="dialogMode === 'create'">
+            <label for="code" class="block mb-2 font-medium">
+                {{ 'Product::ResTax:Code' | translate }} <span class="text-red-500">*</span>
+            </label>
+            <input pInputText id="code" [(ngModel)]="formData.code" class="w-full" required />
+            <small class="text-gray-500 block mt-1">{{ 'Product::ResTax:CodeHint' | translate }}</small>
+        </div>
+
+        <!-- Name (Required) -->
+        <div class="col-span-12">
+            <label for="name" class="block mb-2 font-medium">
+                {{ 'Product::ResTax:Name' | translate }} <span class="text-red-500">*</span>
+            </label>
+            <input pInputText id="name" [(ngModel)]="formData.name" class="w-full" required />
+        </div>
+
+        <!-- Value (Required) -->
+        <div class="col-span-12">
+            <label for="value" class="block mb-2 font-medium">
+                {{ 'Product::ResTax:Value' | translate }} <span class="text-red-500">*</span>
+            </label>
+            <p-inputNumber id="value" [(ngModel)]="formData.value" [min]="0" [maxFractionDigits]="3"
+                [useGrouping]="false" styleClass="w-full">
+            </p-inputNumber>
+        </div>
+
+        <!-- Status (Required) -->
+        <div class="col-span-12">
+            <label for="status" class="block mb-2 font-medium">
+                {{ 'Product::ResTax:Status' | translate }} <span class="text-red-500">*</span>
+            </label>
+            <p-select id="status" [options]="statusOptions" [(ngModel)]="formData.status" optionLabel="label"
+                optionValue="value" [placeholder]="'Product::ResTax:SelectStatus' | translate" appendTo="body"
+                styleClass="w-full">
+            </p-select>
+        </div>
+
+        <!-- Description -->
+        <div class="col-span-12">
+            <label for="description" class="block mb-2 font-medium">
+                {{ 'Product::ResTax:Description' | translate }}
+            </label>
+            <textarea pTextarea id="description" [(ngModel)]="formData.description" rows="3" class="w-full"></textarea>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <button pButton [label]="'Product::Cancel' | translate" icon="pi pi-times" class="p-button-secondary"
+            (click)="dialogVisible = false"></button>
+        <button pButton [label]="'Product::Save' | translate" icon="pi pi-check" (click)="save()"></button>
+    </ng-template>
+</p-dialog>

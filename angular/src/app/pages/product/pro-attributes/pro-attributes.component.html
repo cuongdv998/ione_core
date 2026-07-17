@@ -1,0 +1,172 @@
+<div class="grid grid-cols-12 gap-4">
+    <!-- Search Panel -->
+    <div class="col-span-12">
+        <p-panel [header]="'Product::SearchInformation' | translate" [toggleable]="true">
+            <div class="grid grid-cols-12 gap-4">
+                <!-- Code -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label for="searchCode" class="block mb-2 font-medium">{{ 'Product::ProAttribute:Code' |
+                        translate }}</label>
+                    <input pInputText id="searchCode" [(ngModel)]="searchForm.code" class="w-full" />
+                </div>
+
+                <!-- Name -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label for="searchName" class="block mb-2 font-medium">{{ 'Product::ProAttribute:Name' |
+                        translate }}</label>
+                    <input pInputText id="searchName" [(ngModel)]="searchForm.name" class="w-full" />
+                </div>
+
+                <!-- Status -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                    <label for="searchStatus" class="block mb-2 font-medium">{{ 'Product::ProAttribute:Status'
+                        |
+                        translate }}</label>
+                    <p-select inputId="searchStatus" [(ngModel)]="searchForm.status" [options]="statusOptions"
+                        optionLabel="label" optionValue="value"
+                        [placeholder]="'Product::ProAttribute:SelectStatus' | translate" styleClass="w-full"
+                        [showClear]="true" />
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-span-12 flex gap-2 justify-end">
+                    <p-button [label]="'Product::Reset' | translate" icon="pi pi-refresh" severity="secondary"
+                        (onClick)="resetSearch()" />
+                    <p-button [label]="'Product::Search' | translate" icon="pi pi-search" (onClick)="search()" />
+                    <button [label]="'Product::Create' | translate" pButton icon="pi pi-plus"
+                        (click)="openCreateDialog()" *ngIf="PERMISSIONS.CREATE | appPermission">
+                    </button>
+                </div>
+            </div>
+        </p-panel>
+    </div>
+
+    <!-- Data List Panel -->
+    <div class="col-span-12">
+        <p-panel [header]="'Product::ProAttribute:List' | translate">
+            <app-v-table [columns]="columns" [data]="items" [actions]="actions" [totalCount]="totalCount"
+                [loading]="loading" [rows]="pageSize" [rowsPerPageOptions]="[10, 20, 50]" [showGridlines]="true"
+                [stripedRows]="true" [rowHover]="true" size="small" [scrollHeight]="'calc(100vh - 400px)'"
+                (lazyLoad)="loadData($event)" />
+        </p-panel>
+    </div>
+</div>
+
+<!-- Create/Edit Dialog -->
+<p-dialog [(visible)]="dialogVisible"
+    [header]="(dialogMode === 'create' ? 'Product::Create' : 'Product::Edit') | translate" [modal]="true"
+    [style]="{ width: '50vw' }" [contentStyle]="{ 'max-height': '70vh', 'overflow-y': 'auto' }" [draggable]="false"
+    [resizable]="false" (onHide)="onDialogHide()">
+    <form #form="ngForm" class="grid grid-cols-12 gap-4 pt-4" *ngIf="formData">
+        <!-- Code -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="code" class="block mb-2 font-medium required">{{ 'Product::ProAttribute:Code' | translate
+                }}</label>
+            <input pInputText id="code" [(ngModel)]="formData.code" name="code" #code="ngModel" class="w-full"
+                [class.ng-invalid]="code.invalid && code.touched" [class.ng-dirty]="code.touched"
+                [disabled]="dialogMode === 'edit'" required pattern="^[a-zA-Z0-9_]+$"
+                (blur)="formData.code = formData.code?.trim()" />
+            <small class="text-red-500" *ngIf="code.errors?.['required'] && code.touched">
+                {{ 'Product::ProAttribute:CodeRequired' | translate }}
+            </small>
+            <small class="text-red-500" *ngIf="code.errors?.['pattern'] && code.touched">
+                {{ 'Product::ProAttribute:CodeHasSpecialChar' | translate }}
+            </small>
+        </div>
+
+        <!-- Name -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="name" class="block mb-2 font-medium required">{{ 'Product::ProAttribute:Name' | translate
+                }}</label>
+            <input pInputText id="name" [(ngModel)]="formData.name" name="name" #name="ngModel" class="w-full"
+                [class.ng-invalid]="name.invalid && name.touched" [class.ng-dirty]="name.touched" required
+                (blur)="formData.name = formData.name?.trim()" />
+            <small class="text-red-500" *ngIf="name.invalid && name.touched">
+                {{ 'Product::ProAttribute:NameRequired' | translate }}
+            </small>
+        </div>
+
+        <!-- Data Type -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="dataType" class="block mb-2 font-medium required">{{ 'Product::ProAttribute:DataType' |
+                translate }}</label>
+            <p-select inputId="dataType" [(ngModel)]="formData.dataType" name="dataType" #dataType="ngModel"
+                [options]="dataTypeOptions" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body"
+                required [class.ng-invalid]="dataType.invalid && dataType.touched"
+                [class.ng-dirty]="dataType.touched" />
+            <small class="text-red-500" *ngIf="dataType.invalid && dataType.touched">
+                {{ 'Product::ProAttribute:DataTypeRequired' | translate }}
+            </small>
+        </div>
+
+        <!-- Spec -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="spec" class="block mb-2 font-medium required">{{ 'Product::ProAttribute:Spec' |
+                translate }}</label>
+            <p-select inputId="spec" [(ngModel)]="formData.spec" name="spec" #spec="ngModel" [options]="specOptions"
+                optionLabel="key" optionValue="value" styleClass="w-full" appendTo="body" required
+                [class.ng-invalid]="spec.invalid && spec.touched" [class.ng-dirty]="spec.touched" />
+            <small class="text-red-500" *ngIf="spec.invalid && spec.touched">
+                {{ 'Product::ProAttribute:SpecRequired' | translate }}
+            </small>
+        </div>
+
+        <!-- Status -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="status" class="block mb-2 font-medium required">{{ 'Product::ProAttribute:Status' |
+                translate }}</label>
+            <p-select inputId="status" [(ngModel)]="formData.status" name="status" #status="ngModel"
+                [options]="statusOptions" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body"
+                required [class.ng-invalid]="status.invalid && status.touched" [class.ng-dirty]="status.touched" />
+            <small class="text-red-500" *ngIf="status.invalid && status.touched">
+                {{ 'Product::ProAttribute:StatusRequired' | translate }}
+            </small>
+        </div>
+
+        <!-- Description -->
+        <div class="col-span-12">
+            <label for="description" class="block mb-2 font-medium">{{ 'Product::ProAttribute:Description' |
+                translate }}</label>
+            <textarea pTextarea id="description" [(ngModel)]="formData.description" name="description" rows="3"
+                class="w-full"></textarea>
+        </div>
+
+        <!-- Data Path -->
+        <div class="col-span-12">
+            <label for="dataPath" class="block mb-2 font-medium required">{{ 'Product::ProAttribute:DataPath' |
+                translate }}</label>
+            <input pInputText id="dataPath" [(ngModel)]="formData.dataPath" name="dataPath" #dataPath="ngModel"
+                class="w-full" required [class.ng-invalid]="dataPath.invalid && dataPath.touched"
+                [class.ng-dirty]="dataPath.touched" (blur)="formData.dataPath = formData.dataPath?.trim()" />
+            <small class="text-red-500" *ngIf="dataPath.invalid && dataPath.touched">
+                {{ 'Product::ProAttribute:DataPathRequired' | translate }}
+            </small>
+        </div>
+
+        <!-- Compute Script -->
+        <div class="col-span-12">
+            <label for="computeScript" class="block mb-2 font-medium">{{ 'Product::ProAttribute:ComputeScript' |
+                translate }}</label>
+            <textarea pTextarea id="computeScript" [(ngModel)]="formData.computeScript" name="computeScript" rows="3"
+                class="w-full"></textarea>
+        </div>
+
+        <!-- Clear Data Script -->
+        <div class="col-span-12">
+            <label for="clearDataScript" class="block mb-2 font-medium">{{ 'Product::ProAttribute:ClearDataScript' |
+                translate }}</label>
+            <textarea pTextarea id="clearDataScript" [(ngModel)]="formData.clearDataScript" name="clearDataScript"
+                rows="3" class="w-full"></textarea>
+        </div>
+
+    </form>
+
+    <ng-template pTemplate="footer">
+        <p-button [label]="'Product::Cancel' | translate" icon="pi pi-times" severity="secondary"
+            (onClick)="dialogVisible = false" />
+        <p-button [label]="'Product::Save' | translate" icon="pi pi-check" (onClick)="save()" [loading]="loading" />
+    </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

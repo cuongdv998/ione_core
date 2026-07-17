@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\common.props" />
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>iOne</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\iOne.Application.Contracts\iOne.Application.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.PermissionManagement.HttpApi" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.FeatureManagement.HttpApi" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.SettingManagement.HttpApi" Version="9.3.6" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../modules/Volo.Abp.Account/src/Volo.Abp.Account.HttpApi/Volo.Abp.Account.HttpApi.csproj" />
+    <ProjectReference Include="../../../modules/Volo.Abp.Identity/src/Volo.Abp.Identity.HttpApi/Volo.Abp.Identity.HttpApi.csproj" />
+    <ProjectReference Include="../../../modules/Volo.Abp.AuditLogging/src/Volo.Abp.AuditLogging.HttpApi/Volo.Abp.AuditLogging.HttpApi.csproj" />
+  </ItemGroup>
+</Project>

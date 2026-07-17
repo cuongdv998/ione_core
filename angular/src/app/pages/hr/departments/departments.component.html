@@ -1,0 +1,426 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Tìm theo Code -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="code" class="block mb-2 font-medium">{{ 'Hr::HrDepartment:Code' | translate }}</label>
+          <input
+            pInputText
+            id="code"
+            [(ngModel)]="searchForm.code"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Tìm theo Name -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="name" class="block mb-2 font-medium">{{ 'Hr::HrDepartment:Name' | translate }}</label>
+          <input
+            pInputText
+            id="name"
+            [(ngModel)]="searchForm.name"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Filter theo Status -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="status" class="block mb-2 font-medium">{{ 'Hr::HrDepartment:Status' | translate }}</label>
+          <p-select
+            id="status"
+            [(ngModel)]="searchForm.status"
+            [options]="statusOptions"
+            [placeholder]="'Hr::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Filter theo DeptLevel -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="deptLevel" class="block mb-2 font-medium">{{ 'Hr::HrDepartment:DeptLevel' | translate }}</label>
+          <p-select
+            id="deptLevel"
+            [(ngModel)]="searchForm.deptLevel"
+            [options]="deptLevelOptions"
+            [placeholder]="'Hr::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button
+            [label]="'AbpAuditLogging::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button
+            [label]="'AbpAuditLogging::Search' | translate"
+            icon="pi pi-search"
+            (onClick)="search()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Hr::HrDepartment:New' | translate"
+            icon="pi pi-plus"
+            (onClick)="openCreateDialog()"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu: Tree bên trái, Table bên phải với resizable splitter -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <p-splitter 
+        [style]="{ height: 'calc(105vh - 400px)' }" 
+        [panelSizes]="[30, 70]" 
+        [minSizes]="[20, 30]" 
+        layout="horizontal"
+        styleClass="w-full"
+      >
+        <!-- Tree bên trái -->
+        <ng-template pTemplate>
+          <div class="h-full flex flex-col p-2">
+            <p-panel [header]="'Hr::HrDepartment:TreeView' | translate" [toggleable]="false" styleClass="h-full flex flex-col">
+              <p-tree
+                [value]="treeNodes"
+                [selectionMode]="'single'"
+                [(selection)]="selectedTreeNode"
+                (onNodeSelect)="onTreeNodeSelect($event)"
+                (onNodeUnselect)="onTreeNodeUnselect()"
+                [loading]="treeLoading"
+                [scrollHeight]="'calc(100vh - 460px)'"
+                styleClass="w-full h-full"
+              >
+                <ng-template let-node pTemplate="default">
+                  <div class="flex items-center gap-2">
+                    <i class="pi pi-sitemap text-blue-500"></i>
+                    <span class="font-medium">{{ node.label }}</span>
+                  </div>
+                </ng-template>
+              </p-tree>
+            </p-panel>
+          </div>
+        </ng-template>
+
+        <!-- Table bên phải -->
+        <ng-template pTemplate>
+          <div class="h-full p-2">
+            <app-v-table
+              [columns]="columns"
+              [data]="departments"
+              [actions]="actions"
+              [totalCount]="totalCount"
+              [loading]="loading"
+              [rows]="pageSize"
+              [rowsPerPageOptions]="[10, 20, 50, 100]"
+              [showGridlines]="true"
+              [stripedRows]="true"
+              [rowHover]="true"
+              size="small"
+              [scrollHeight]="'calc(100vh - 450px)'"
+              (lazyLoad)="loadData($event)"
+            />
+          </div>
+        </ng-template>
+      </p-splitter>
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create/Edit -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Hr::HrDepartment:New' : 'Hr::HrDepartment:Edit') | translate"
+  [modal]="true"
+  [style]="{ width: '900px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflow: 'hidden', padding: '0' }"
+>
+  <div class="flex flex-col gap-4 p-4" style="max-height: calc(90vh - 140px); overflow-y: auto; overflow-x: hidden;">
+    <div class="grid grid-cols-12 gap-4">
+      <!-- Code field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formCode" class="block mb-2 font-medium">
+          {{ 'Hr::HrDepartment:Code' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input
+          pInputText
+          id="formCode"
+          [(ngModel)]="formData.code"
+          [readonly]="dialogMode === 'edit'"
+          class="w-full"
+          [class.bg-gray-100]="dialogMode === 'edit'"
+          (input)="onCodeInput($event)"
+          maxlength="25"
+        />
+        <small class="text-gray-500">{{ 'Hr::HrDepartment:CodeInvalid' | translate }}</small>
+        <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+          {{ 'Hr::HrDepartment:CodeCannotBeChanged' | translate }}
+        </small>
+      </div>
+
+      <!-- Name field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formName" class="block mb-2 font-medium">
+          {{ 'Hr::HrDepartment:Name' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input
+          pInputText
+          id="formName"
+          [(ngModel)]="formData.name"
+          class="w-full"
+          maxlength="250"
+        />
+      </div>
+
+      <!-- Description field -->
+      <div class="col-span-12">
+        <label for="formDescription" class="block mb-2 font-medium">
+          {{ 'Hr::HrDepartment:Description' | translate }}
+        </label>
+        <textarea
+          pTextarea
+          id="formDescription"
+          [(ngModel)]="formData.description"
+          class="w-full"
+          rows="3"
+          maxlength="500"
+        ></textarea>
+      </div>
+
+      <!-- Status field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formStatus" class="block mb-2 font-medium">
+          {{ 'Hr::HrDepartment:Status' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="formStatus"
+          [(ngModel)]="formData.status"
+          [options]="statusOptions"
+          [placeholder]="'Hr::HrDepartment:Status' | translate"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- DeptLevel field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formDeptLevel" class="block mb-2 font-medium">
+          {{ 'Hr::HrDepartment:DeptLevel' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="formDeptLevel"
+          [(ngModel)]="formData.deptLevel"
+          [options]="deptLevelOptions"
+          [placeholder]="'Hr::HrDepartment:DeptLevel' | translate"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- ParentId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formParentId" class="block mb-2 font-medium">
+          {{ 'Hr::HrDepartment:ParentId' | translate }}
+        </label>
+        <p-select
+          id="formParentId"
+          [(ngModel)]="formData.parentId"
+          [options]="departmentOptions"
+          [placeholder]="'Hr::HrDepartment:ParentId' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- OrgId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formOrgId" class="block mb-2 font-medium">
+          {{ 'Hr::HrDepartment:OrgId' | translate }}
+        </label>
+        <p-select
+          id="formOrgId"
+          [(ngModel)]="formData.orgId"
+          [options]="departmentOptions"
+          [placeholder]="'Hr::HrDepartment:OrgId' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- TypeId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formTypeId" class="block mb-2 font-medium">
+          {{ 'Hr::HrDepartment:TypeId' | translate }}
+        </label>
+        <p-select
+          id="formTypeId"
+          [(ngModel)]="formData.typeId"
+          [options]="typeOptions"
+          [placeholder]="'Hr::HrDepartment:TypeId' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- ProvinceId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formProvinceId" class="block mb-2 font-medium">
+          {{ 'Hr::HrDepartment:ProvinceId' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="formProvinceId"
+          [(ngModel)]="formData.provinceId"
+          (ngModelChange)="updateFullAddress()"
+          [options]="provinceOptions"
+          [placeholder]="'Hr::HrDepartment:ProvinceId' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- WardId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formWardId" class="block mb-2 font-medium">
+          {{ 'Hr::HrDepartment:WardId' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="formWardId"
+          [(ngModel)]="formData.wardId"
+          (ngModelChange)="updateFullAddress()"
+          [options]="wardOptions"
+          [placeholder]="'Hr::HrDepartment:WardId' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- Address field -->
+      <div class="col-span-12">
+        <label for="formAddress" class="block mb-2 font-medium">
+          {{ 'Hr::HrDepartment:Address' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input
+          pInputText
+          id="formAddress"
+          [(ngModel)]="formData.address"
+          (ngModelChange)="updateFullAddress()"
+          class="w-full"
+          maxlength="500"
+        />
+      </div>
+
+      <!-- FullAddress field (auto-generated, disabled) -->
+      <div class="col-span-12">
+        <label for="formFullAddress" class="block mb-2 font-medium">
+          {{ 'Hr::HrDepartment:FullAddress' | translate }}
+        </label>
+        <input
+          pInputText
+          id="formFullAddress"
+          [(ngModel)]="formData.fullAddress"
+          [readonly]="true"
+          class="w-full bg-gray-100"
+          maxlength="500"
+        />
+        <small class="text-gray-500">{{ 'Hr::HrDepartment:FullAddressAutoGenerated' | translate }}</small>
+      </div>
+
+      <!-- BankId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formBankId" class="block mb-2 font-medium">
+          {{ 'Hr::HrDepartment:BankId' | translate }}
+        </label>
+        <p-select
+          id="formBankId"
+          [(ngModel)]="formData.bankId"
+          [options]="bankOptions"
+          [placeholder]="'Hr::HrDepartment:BankId' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- BankNo field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formBankNo" class="block mb-2 font-medium">
+          {{ 'Hr::HrDepartment:BankNo' | translate }}
+        </label>
+        <input
+          pInputText
+          id="formBankNo"
+          [(ngModel)]="formData.bankNo"
+          class="w-full"
+          maxlength="50"
+        />
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Hr::Cancel' | translate"
+        severity="secondary"
+        (onClick)="dialogVisible = false"
+        [disabled]="loading"
+      />
+      <p-button
+        [label]="'Hr::Save' | translate"
+        (onClick)="save()"
+        [loading]="loading"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Messages -->
+<p-toast />
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog />
+

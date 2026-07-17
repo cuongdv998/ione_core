@@ -1,0 +1,220 @@
+<div class="onsite-assessment-detail-page">
+  @if (loading) {
+    <div class="flex justify-center p-8"><i class="pi pi-spin pi-spinner text-3xl"></i></div>
+  } @else if (!claim) {
+    <div class="p-4 text-center text-gray-600">{{ 'Claim::ClaimNotFound' | translate }}</div>
+  } @else {
+    <div class="detail-container">
+      @if (showHeaderEstimateAmount) {
+        <div class="detail-header-estimate-wrap">
+          <div class="detail-header-estimate">
+            <span class="detail-header-estimate__label">Ước BT</span>
+            <span class="detail-header-estimate__value">{{ headerEstimateAmountValue }}</span>
+          </div>
+        </div>
+      }
+      <div class="grid grid-cols-1 md:grid-cols-6 gap-2 mb-2 border-b pb-2">
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2">
+            <span class="text-gray-600 font-semibold text-sm"># {{ headerNumberLabel }}</span>
+            <span class="text-blue-600 font-bold text-base">{{ headerNumberValue }}</span>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 block mb-0.5">{{ 'Claim::IncidentDate' | translate }}</span>
+            <span class="text-sm font-semibold">{{ formatDateTime(claim.incidentDate) }}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2 text-sm font-semibold">
+            <i class="pi pi-exclamation-triangle text-gray-500"></i>
+            <span>{{ formatDateTime(claim.notifyDate) }}</span>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 block mb-0.5">Bảo hiểm gốc</span>
+            <span class="text-sm font-semibold">{{ claim.insurerName || '-' }}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2 text-sm font-semibold">
+            <i class="pi pi-user text-gray-500"></i>
+            <span>{{ claim.contactName || '-' }}</span>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 block mb-0.5">{{ 'Claim::VehicleInfo' | translate }}</span>
+            <span class="text-sm font-semibold text-gray-700">{{ getVehicleDisplay() }}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2 text-sm font-semibold">
+            <i class="pi pi-phone text-gray-500"></i>
+            <span>{{ claim.contactPhone || '-' }}</span>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 block mb-0.5">{{ 'Claim::Priority' | translate }}</span>
+            <span class="text-sm font-semibold" [class]="getPriorityClass(claim.priority)">{{ getPriorityDisplay() }}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex items-start gap-2 text-sm font-semibold">
+            <i class="pi pi-headphones text-gray-500 mt-1"></i>
+            <div class="flex flex-col">
+              <span>{{ getOpenEmployeeDisplay() }}</span>
+              <span class="text-xs font-normal text-gray-500">{{ getOpenEmployeeSecondaryText() }}</span>
+            </div>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 block mb-0.5">Người xử lý</span>
+            <span class="text-sm font-semibold text-gray-800 block">{{ claim.processEmpName || '-' }}</span>
+            <span class="text-xs text-gray-500">{{ getHandlerSecondaryText() }}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2 text-sm font-bold text-green-600">
+            <i class="pi pi-sync"></i>
+            <span>{{ getClaimStatusDisplay() }}</span>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 block mb-0.5">{{ 'Claim::ProcessClaimType' | translate }}</span>
+            <span class="text-sm font-semibold">{{ getProcessClaimTypeDisplay() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <p-tabs [(value)]="activeTab" (valueChange)="onTabChange($event)">
+        <p-tablist>
+          <p-tab [value]="0">Thông tin chung</p-tab>
+          <p-tab [value]="1">Ảnh hiện trường</p-tab>
+          @if (showOnsiteAssessmentTab) {
+            <p-tab [value]="2">Giám định hiện trường</p-tab>
+          }
+          @if (showDetailedTab) {
+            <p-tab [value]="3">Giám định chi tiết</p-tab>
+            <p-tab [value]="4">Nhận xét đánh giá</p-tab>
+            @if (repairPlanPascEligible === true) {
+              <p-tab [value]="5">Phương án sửa chữa</p-tab>
+            }
+          }
+        </p-tablist>
+        <p-tabpanels>
+          <p-tabpanel [value]="0">
+            <app-claim-task-info-tab
+              [claim]="claim"
+              [policies]="policies"
+              [policiesLoading]="policiesLoading"
+              [showTotalEstimatedLoss]="sourcePage !== 'detail-assessment-list'"
+              [totalEstimatedLossAmount]="claim.totalEstimatedLossAmount"
+              (refreshPolicies)="refreshPolicies()"
+            />
+          </p-tabpanel>
+          <p-tabpanel [value]="1">
+            <app-claim-task-incident-images-tab
+              [documents]="documents"
+              [loading]="loadingDocuments"
+            />
+          </p-tabpanel>
+          @if (showOnsiteAssessmentTab) {
+            <p-tabpanel [value]="2">
+              <app-claim-onsite-assessment-tab
+                [claim]="claim"
+                [claimId]="claimId"
+                [workTaskId]="workTaskId"
+                [workTaskStatus]="onsiteWorkTaskStatus"
+                [refreshVersion]="onsiteRefreshVersion"
+                [autoCompleteRequest]="autoTriggerComplete"
+                [forceReadOnly]="detailMode === 'view' || sourcePage === 'detail-assessment-list'"
+                [showOnsiteActions]="showOnsiteActions"
+                [useClaimScopedDetail]="sourcePage === 'detail-assessment-list'"
+                (closeRequested)="closeScreen()"
+                (rejectRequested)="openRejectModal()"
+                (acceptRequested)="acceptTask()"
+                (transferRequested)="openTransferModal()"
+                (reassignRequested)="openReassignModal()"
+              />
+            </p-tabpanel>
+          }
+          @if (showDetailedTab) {
+            <p-tabpanel [value]="3">
+              <app-detailed-assessment-tab
+                [claim]="claim"
+                [workTaskId]="workTaskId"
+                [workTaskStatus]="detailedWorkTaskStatus"
+                [quotationApprovalStatus]="repairPlanQuotationApprovalStatus"
+                [allowCompletedEdit]="allowCompletedDetailedEdit"
+                [refreshVersion]="detailedRefreshVersion"
+                [forceReadOnly]="forceDetailedReadOnly"
+                [showDetailedActions]="showDetailedActions"
+                (closeRequested)="closeScreen()"
+                (rejectRequested)="openDetailedRejectModal()"
+                (acceptRequested)="acceptDetailedTask()"
+                (transferRequested)="openDetailedTransferModal()"
+                (reassignRequested)="openDetailedReassignModal()"
+                (completed)="onDetailedAssessmentCompleted()"
+              />
+            </p-tabpanel>
+            <p-tabpanel [value]="4">
+              <app-detailed-assessment-evaluation-tab
+                [workTaskId]="workTaskId"
+                [editable]="showDetailedActions"
+                [refreshVersion]="detailedRefreshVersion"
+                [active]="activeTab === 4"
+                (closeRequested)="closeScreen()"
+                (saved)="onDetailedEvaluationSaved()"
+              />
+            </p-tabpanel>
+            @if (repairPlanPascEligible === true) {
+              <p-tabpanel [value]="5">
+                <app-repair-plan-tab
+                  [claim]="claim"
+                  [claimId]="claimId"
+                  [workTaskId]="workTaskId"
+                  [repairPlanTabActive]="activeTab === 5"
+                  [detailedAssessmentWorkTaskStatus]="detailedWorkTaskStatus"
+                  [allowSaveSubmitOnlyWhenDetailedCompleted]="true"
+                  (quotationApprovalStatusChanged)="onRepairPlanQuotationApprovalStatusChanged($event)"
+                  (closeRequested)="closeScreen()"
+                />
+              </p-tabpanel>
+            }
+          }
+        </p-tabpanels>
+      </p-tabs>
+    </div>
+  }
+</div>
+
+@if (workTaskId) {
+  <app-reject-task-modal
+    [visible]="rejectModalVisible"
+    (visibleChange)="onRejectModalVisibleChange($event)"
+    [workTaskId]="workTaskId"
+    [mode]="taskActionMode"
+    (rejected)="onTaskRejected()"
+  />
+  <app-transfer-task-modal
+    [visible]="transferModalVisible"
+    (visibleChange)="onTransferModalVisibleChange($event)"
+    [workTaskId]="workTaskId"
+    [mode]="taskActionMode"
+    (transferred)="onTaskTransferred()"
+  />
+  <app-reassign-onsite-assessment-modal
+    [visible]="reassignModalVisible"
+    (visibleChange)="onReassignModalVisibleChange($event)"
+    [workTaskId]="workTaskId"
+    (reassigned)="onTaskReassigned()"
+  />
+  <app-reassign-detailed-assessment-modal
+    [visible]="detailedReassignModalVisible"
+    (visibleChange)="onDetailedReassignModalVisibleChange($event)"
+    [workTaskId]="workTaskId || ''"
+    (reassigned)="onDetailedTaskReassigned()"
+  />
+}
+
+<p-confirmDialog />
+<p-toast />

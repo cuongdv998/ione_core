@@ -1,0 +1,162 @@
+# GitLab CI — Frontend (Angular)
+# develop + đúng paths (hoặc web): build → image → push → deploy dev (docker-compose-fe).
+# master: build → image → push (production image; không deploy).
+
+stages:
+  - build
+  - docker
+  - deploy
+
+variables:
+  NODE_VERSION: "20"
+  ANGULAR_DIR: "angular"
+  DOCKER_IMAGE_ANGULAR: "ione-angular"
+  DOCKER_REGISTRY: "${CI_REGISTRY}"
+  DOCKER_IMAGE_TAG: "${CI_COMMIT_SHORT_SHA}"
+  # Speed up FE pipeline by caching package/tool downloads
+  YARN_CACHE_FOLDER: "${CI_PROJECT_DIR}/.yarn-cache"
+  NUGET_PACKAGES: "${CI_PROJECT_DIR}/.nuget/packages"
+  DOTNET_TOOLS_DIR: "${CI_PROJECT_DIR}/.dotnet/tools"
+
+# Angular Build Job
+build:angular:
+  stage: build
+  image: node:${NODE_VERSION}
+  rules:
+    # develop: dev
+    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "push"'
+      changes:
+        - "angular/**/*"
+    # master: production — chỉ build/push image
+    - if: '$CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "push"'
+    # web develop/master: chọn FE hoặc ALL
+    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "master") && ($BUILD_TYPE == "FE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
+  before_script:
+    - corepack enable
+    - apt-get update
+    - apt-get install -y wget apt-transport-https
+    - wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb
+    - dpkg -i packages-microsoft-prod.deb
+    - apt-get update
+    - apt-get install -y dotnet-sdk-9.0
+    # Install ABP CLI to a project-local tool path so GitLab cache can persist it
+    - dotnet tool install --tool-path "$DOTNET_TOOLS_DIR" volo.abp.cli --version 9.0.3 || dotnet tool update --tool-path "$DOTNET_TOOLS_DIR" volo.abp.cli --version 9.0.3
+    - export PATH="$PATH:$DOTNET_TOOLS_DIR"
+    - abp --version
+    - cd $ANGULAR_DIR
+    # Yarn v1 cache is NOT in angular/.yarn/cache; use an explicit cache folder we can persist
+    - yarn install --frozen-lockfile --cache-folder "$YARN_CACHE_FOLDER"
+  script:
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "master" ]; then
+        API_BASE_URL="https://api.ibds.com.vn"
+        ANGULAR_BUILD_CONFIGURATION="production"
+      else
+        API_BASE_URL="https://ione-api.vnexco.com"
+        ANGULAR_BUILD_CONFIGURATION="dev"
+      fi
+      export ABP_HOST="$API_BASE_URL"
+      echo "Using API base URL: $API_BASE_URL"
+      echo "Using Angular build configuration: $ANGULAR_BUILD_CONFIGURATION"
+    - echo "Generating ABP proxies first time"
+    - yarn generate-proxy:all
+    - echo "Generating ABP proxies second time"
+    - yarn generate-proxy:all
+    - echo "Building Angular application..."
+    - yarn build --configuration "$ANGULAR_BUILD_CONFIGURATION"
+  artifacts:
+    paths:
+      - $ANGULAR_DIR/dist/
+    expire_in: 1 hour
+  cache:
+    key:
+      files:
+        - angular/yarn.lock
+      prefix: ${CI_COMMIT_REF_SLUG}-angular
+    policy: pull-push
+    paths:
+      - .yarn-cache/
+      - $ANGULAR_DIR/node_modules/
+      - .nuget/packages/
+      - .dotnet/tools/
+
+# Build Docker Image for Angular
+docker:build:angular:
+  stage: docker
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    # Enable Docker layer caching with registry-backed cache image
+    DOCKER_BUILDKIT: "1"
+  rules:
+    # develop: dev
+    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "push"'
+      changes:
+        - "angular/**/*"
+    # master: production image
+    - if: '$CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "push"'
+    # web develop/master: build/push image theo branch
+    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "master") && ($BUILD_TYPE == "FE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
+  needs:
+    - job: build:angular
+      optional: false
+  before_script:
+    # Biến CI_REGISTRY_USER / CI_REGISTRY_PASSWORD cấu hình trong GitLab CI/CD Variables
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$DOCKER_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+  script:
+    - echo "Building Docker image for Angular..."
+    - cd $ANGULAR_DIR
+    - echo "Build artifacts found, building Docker image..."
+    - docker pull $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:buildcache || true
+    - docker build --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:buildcache -t $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:$DOCKER_IMAGE_TAG -t $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:buildcache .
+    - echo "Pushing Docker image for Angular..."
+    - docker push $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:$DOCKER_IMAGE_TAG
+    - docker push $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:buildcache
+
+# Deploy Frontend — chỉ dev (develop hoặc web); không chạy trên master
+deploy:fe:
+  stage: deploy
+  image: docker:latest
+  services:
+    - docker:dind
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "push"'
+      changes:
+        - "angular/**/*"
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "develop" && ($BUILD_TYPE == "FE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
+  needs:
+    - job: docker:build:angular
+      optional: true
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$DOCKER_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+    - apk add --no-cache docker-compose || true
+  script:
+    - |
+      echo "Deploying frontend containers using docker-compose..."
+      
+      
+      echo "Pulling image from registry with git hash tag..."
+      REGISTRY_IMAGE="$DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:$DOCKER_IMAGE_TAG"
+      LOCAL_IMAGE="$DOCKER_IMAGE_ANGULAR:$DOCKER_IMAGE_TAG"
+      
+      
+      echo "Retagging image from registry to local with git hash tag..."
+      # Retag image from registry to local (using git hash tag)
+      docker tag $REGISTRY_IMAGE $LOCAL_IMAGE || {
+        echo "Error: Failed to retag image!"
+        exit 1
+      }
+      
+      echo "Setting IMAGE_TAG environment variable to: $DOCKER_IMAGE_TAG"
+      export IMAGE_TAG=$DOCKER_IMAGE_TAG
+      
+      echo "Stopping existing containers..."
+      docker-compose -f docker-compose-fe.yml down || true
+      
+      echo "Starting containers with docker-compose (using IMAGE_TAG=$IMAGE_TAG)..."
+      IMAGE_TAG=$DOCKER_IMAGE_TAG docker-compose -f docker-compose-fe.yml up -d
+      
+      echo "Frontend containers started successfully!"
+      docker-compose -f docker-compose-fe.yml ps
+      docker ps

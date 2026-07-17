@@ -1,0 +1,33 @@
+/**
+ * Styles for Audit Logs Component
+ * Using Tailwind CSS utility classes in template
+ * Add custom styles here if needed
+ */
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+// Custom styles for exception display
+pre {
+  max-height: 300px;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+// Custom table styles for property changes
+.property-changes-table {
+  font-size: 0.875rem;
+  
+  th {
+    font-weight: 600;
+    text-align: left;
+  }
+  
+  td {
+    vertical-align: top;
+  }
+}
+

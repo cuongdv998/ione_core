@@ -1,0 +1,317 @@
+<p-table
+  #dt
+  [value]="data"
+  [showGridlines]="showGridlines"
+  [stripedRows]="stripedRows"
+  [rowHover]="rowHover"
+  [styleClass]="
+    size === 'small' ? 'p-datatable-sm' :
+    size === 'large' ? 'p-datatable-lg' :
+    ''
+  "
+  [lazy]="true"
+  [paginator]="true"
+  [rows]="rows"
+  [rowsPerPageOptions]="rowsPerPageOptions"
+  [showCurrentPageReport]="showCurrentPageReport"
+  [currentPageReportTemplate]="currentPageReportTemplate"
+  [totalRecords]="totalCount"
+  [loading]="loading"
+  [resizableColumns]="resizableColumns"
+  [columnResizeMode]="columnResizeMode"
+  responsiveLayout="scroll"
+  styleClass="p-datatable-sm"
+  [scrollable]="scrollable"
+  scrollDirection="horizontal"
+  [scrollHeight]="effectiveScrollHeight"
+  [tableStyle]="{ 'min-width': tableMinWidth, 'table-layout': tableLayout }"
+  [selectionMode]="effectiveSelectionMode"
+  [metaKeySelection]="metaKeySelection"
+  [selection]="selection"
+  (selectionChange)="onSelectionChange($event)"
+  (onLazyLoad)="onLazyLoad($event)"
+  (onRowSelect)="onRowSelect($event)"
+>
+
+  <ng-template pTemplate="header">
+    <tr>
+      <th
+  *ngIf="useCustomSelectionColumn"
+  pFrozenColumn
+  pResizableColumn
+  [style.width]="indexWidth"
+  class="index-column align-center">
+  <p-checkbox
+    [ngModel]="customHeaderCheckboxChecked"
+    [binary]="true"
+    [indeterminate]="customHeaderCheckboxIndeterminate"
+    (ngModelChange)="onCustomHeaderCheckboxChange($event)"
+    (click)="$event.stopPropagation()"
+  />
+</th>
+      <th
+  *ngIf="showIndex && !useCustomSelectionColumn"
+  pFrozenColumn
+  pResizableColumn
+  [style.width]="indexWidth"
+  class="index-column align-center">
+  {{ indexHeader }}
+</th>
+      <!-- LEFT FROZEN -->
+<th
+  *ngFor="let col of leftFrozenColumns"
+  pFrozenColumn
+  pResizableColumn
+  [style.width]="col.width"
+  [pSortableColumn]="col.sortable ? col.field : undefined"
+  [ngClass]="'align-' + getColumnAlign(col)"
+>
+  {{ col.header }}
+  <p-sortIcon *ngIf="col.sortable" [field]="col.field"></p-sortIcon>
+</th>
+
+<!-- NORMAL -->
+<th
+  *ngFor="let col of normalColumns"
+  pResizableColumn
+  [style.width]="col.width"
+  [pSortableColumn]="col.sortable ? col.field : undefined"
+  [ngClass]="'align-' + getColumnAlign(col)"
+>
+  {{ col.header }}
+  <p-sortIcon *ngIf="col.sortable" [field]="col.field"></p-sortIcon>
+</th>
+
+<!-- RIGHT FROZEN -->
+<th
+  *ngFor="let col of rightFrozenColumns"
+  pFrozenColumn
+  pResizableColumn
+  alignFrozen="right"
+  [style.width]="col.width"
+  [pSortableColumn]="col.sortable ? col.field : undefined"
+  [ngClass]="'align-' + getColumnAlign(col)"
+>
+  {{ col.header }}
+  <p-sortIcon *ngIf="col.sortable" [field]="col.field"></p-sortIcon>
+</th>
+
+    <th
+      *ngIf="actions?.length"
+      class="action-col align-center"
+      pFrozenColumn
+      pResizableColumn
+      alignFrozen="right"
+      [style.width]="actionDisplay === 'buttons' ? '100px' : '70px'"
+      [style.min-width]="actionDisplay === 'buttons' ? '100px' : '70px'"
+    >
+      <button
+        *ngIf="showColumnToggle"
+        pButton
+        type="button"
+        icon="pi pi-cog"
+        [pTooltip]="columnToggleTooltip"
+        tooltipPosition="left"
+        class="p-button-text p-button-rounded column-toggle-btn"
+        (click)="columnPanel.toggle($event)">
+      </button>
+      
+      <p-popover #columnPanel>
+        <div class="column-toggle-panel">
+          <h5>{{ columnTogglePlaceholder }}</h5>
+          <p-multiSelect
+            [options]="columnOptions"
+            [(ngModel)]="selectedColumns"
+            optionLabel="header"
+            [placeholder]="columnTogglePlaceholder"
+            [style]="{'width': '100%'}"
+            display="chip"
+            [filter]="false"
+            [showHeader]="false">
+          </p-multiSelect>
+        </div>
+      </p-popover>
+    </th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+    <tr [style.cursor]="rowClickable ? 'pointer' : 'default'" [pSelectableRow]="rowClickable && effectiveSelectionMode ? row : null">
+      <!-- Custom selection checkbox column -->
+  <td *ngIf="useCustomSelectionColumn"
+  pFrozenColumn
+  [style.width]="indexWidth"
+  class="index-column align-center"
+  (click)="$event.stopPropagation()">
+  <p-checkbox
+    [ngModel]="isRowSelected(row)"
+    [binary]="true"
+    [disabled]="!isRowSelectable?.(row)"
+    (ngModelChange)="onCustomRowCheckboxChange(row, $event)"
+  />
+</td>
+      <!-- STT -->
+  <td *ngIf="showIndex && !useCustomSelectionColumn"
+  pFrozenColumn
+  [style.width]="indexWidth"
+  class="index-column align-center">
+{{ rowIndex + 1 }}
+</td>
+
+      <td
+  *ngFor="let col of leftFrozenColumns"
+  pFrozenColumn
+  [style.width]="col.width" 
+  [style.white-space]="col.wrap ? 'normal' : null"
+  [style.overflow-wrap]="col.wrap ? 'anywhere' : null"
+  [style.word-break]="col.wrap ? 'break-word' : null"
+  [ngClass]="'align-' + getColumnAlign(col) + (col.cellClass ? ' ' + col.cellClass(row[col.field], row) : '')">
+
+  <ng-container [ngSwitch]="col.type">
+    <span *ngSwitchCase="'date'">
+      {{ row[col.field] | date:(col.dateFormat || 'dd/MM/yyyy') }}
+    </span>
+    <span *ngSwitchCase="'number'">
+      {{ row[col.field] | number }}
+    </span>
+    <span *ngSwitchCase="'boolean'">
+      <p-checkbox [ngModel]="!!row[col.field]" [binary]="true" [disabled]="true" [readonly]="true" />
+    </span>
+    <span *ngSwitchDefault>
+      <ng-container *ngIf="col.linkUrl && col.linkUrl(row); else noLink">
+        <a [href]="col.linkUrl(row)" target="_blank" rel="noopener noreferrer" (click)="$event.stopPropagation()" [ngClass]="col.linkClass || 'text-primary hover:underline cursor-pointer'">{{ col.formatter ? col.formatter(row[col.field], row) : row[col.field] }}</a>
+      </ng-container>
+      <ng-template #noLink>{{ col.formatter ? col.formatter(row[col.field], row) : row[col.field] }}</ng-template>
+    </span>
+  </ng-container>
+
+</td>
+
+<td
+  *ngFor="let col of normalColumns"
+  [style.width]="col.width" 
+  [style.white-space]="col.wrap ? 'normal' : null"
+  [style.overflow-wrap]="col.wrap ? 'anywhere' : null"
+  [style.word-break]="col.wrap ? 'break-word' : null"
+  [ngClass]="'align-' + getColumnAlign(col) + (col.cellClass ? ' ' + col.cellClass(row[col.field], row) : '')">
+
+  <ng-container [ngSwitch]="col.type">
+    <span *ngSwitchCase="'date'">
+      {{ row[col.field] | date:(col.dateFormat || 'dd/MM/yyyy') }}
+    </span>
+    <span *ngSwitchCase="'number'">
+      {{ row[col.field] | number }}
+    </span>
+    <span *ngSwitchCase="'boolean'">
+      <p-checkbox [ngModel]="!!row[col.field]" [binary]="true" [disabled]="true" [readonly]="true" />
+    </span>
+    <span *ngSwitchDefault>
+      <ng-container *ngIf="col.linkUrl && col.linkUrl(row); else noLinkNorm">
+        <a [href]="col.linkUrl(row)" target="_blank" rel="noopener noreferrer" (click)="$event.stopPropagation()" [ngClass]="col.linkClass || 'text-primary hover:underline cursor-pointer'">{{ col.formatter ? col.formatter(row[col.field], row) : row[col.field] }}</a>
+      </ng-container>
+      <ng-template #noLinkNorm>{{ col.formatter ? col.formatter(row[col.field], row) : row[col.field] }}</ng-template>
+    </span>
+  </ng-container>
+
+</td>
+
+<td
+  *ngFor="let col of rightFrozenColumns"
+  pFrozenColumn
+  alignFrozen="right"
+  [style.width]="col.width" 
+  [style.white-space]="col.wrap ? 'normal' : null"
+  [style.overflow-wrap]="col.wrap ? 'anywhere' : null"
+  [style.word-break]="col.wrap ? 'break-word' : null"
+  [ngClass]="'align-' + getColumnAlign(col) + (col.cellClass ? ' ' + col.cellClass(row[col.field], row) : '')">
+
+  <ng-container [ngSwitch]="col.type">
+    <span *ngSwitchCase="'date'">
+      {{ row[col.field] | date:(col.dateFormat || 'dd/MM/yyyy') }}
+    </span>
+    <span *ngSwitchCase="'number'">
+      {{ row[col.field] | number }}
+    </span>
+    <span *ngSwitchCase="'boolean'">
+      <p-checkbox [ngModel]="!!row[col.field]" [binary]="true" [disabled]="true" [readonly]="true" />
+    </span>
+    <span *ngSwitchDefault>
+      <ng-container *ngIf="col.linkUrl && col.linkUrl(row); else noLinkRight">
+        <a [href]="col.linkUrl(row)" target="_blank" rel="noopener noreferrer" (click)="$event.stopPropagation()" [ngClass]="col.linkClass || 'text-primary hover:underline cursor-pointer'">{{ col.formatter ? col.formatter(row[col.field], row) : row[col.field] }}</a>
+      </ng-container>
+      <ng-template #noLinkRight>{{ col.formatter ? col.formatter(row[col.field], row) : row[col.field] }}</ng-template>
+    </span>
+  </ng-container>
+
+</td>
+
+      <td
+        *ngIf="actions?.length"
+        pFrozenColumn
+        alignFrozen="right"
+        class="action-col align-center"
+        [style.width]="actionDisplay === 'buttons' ? '100px' : '70px'"
+        [style.min-width]="actionDisplay === 'buttons' ? '100px' : '70px'"
+      >
+        <ng-container *ngIf="actionDisplay === 'buttons'">
+          <ng-container *ngFor="let action of actions">
+            <button
+              *ngIf="!action.separator && (action.visible ? action.visible(row) : true)"
+              pButton
+              type="button"
+              [icon]="action.icon || 'pi pi-minus'"
+              severity="secondary"
+              class="p-button-text p-button-rounded p-button-sm mr-1"
+              [pTooltip]="action.label"
+              tooltipPosition="top"
+              [disabled]="action.disabled ? action.disabled(row) : false"
+              (click)="$event.stopPropagation(); action.command?.(row)"
+            ></button>
+          </ng-container>
+        </ng-container>
+        <ng-container *ngIf="actionDisplay === 'menu'">
+          <p-menu
+            #menu
+            [popup]="true"
+            appendTo="body"
+            styleClass="vtable-action-menu"
+            [model]="buildMenuItems(row)"
+          >
+            <ng-template pTemplate="item" let-item>
+              <div
+                *ngIf="!item.separator"
+                class="p-menuitem-content"
+                (mousedown)="onMenuItemPointerDown(menu, item, $event)"
+                (click)="$event.preventDefault(); $event.stopPropagation()"
+              >
+                <a
+                  class="p-menuitem-link"
+                  [ngClass]="{ 'p-disabled': item.disabled }"
+                  role="menuitem"
+                  [attr.aria-disabled]="item.disabled ? true : null"
+                  [attr.tabindex]="item.disabled ? -1 : 0"
+                  style="width: 100%;"
+                >
+                  <span class="p-menuitem-icon" *ngIf="item.icon" [ngClass]="item.icon"></span>
+                  <span class="p-menuitem-text">{{ item.label }}</span>
+                </a>
+              </div>
+            </ng-template>
+          </p-menu>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-ellipsis-h"
+            severity="secondary"
+            class="action-button"
+            [pTooltip]="actionLabel"
+            tooltipPosition="top"
+            (mousedown)="$event.preventDefault(); $event.stopPropagation()"
+            (click)="$event.preventDefault(); $event.stopPropagation(); toggleRowActionMenu(menu, $event)">
+          </button>
+        </ng-container>
+    </td>
+    </tr>
+  </ng-template>
+
+</p-table>

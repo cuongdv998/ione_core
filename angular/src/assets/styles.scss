@@ -1,0 +1,109 @@
+/* You can add global styles to this file, and also import other style files */
+@use './tailwind.css';
+@use './layout/layout.scss';
+@use 'primeicons/primeicons.css';
+@use './demo/demo.scss';
+
+/* PrimeNG tooltip is appended to body, so this must be global */
+.p-tooltip.claim-create-single-line-tooltip,
+.p-tooltip .claim-create-single-line-tooltip {
+  max-width: none !important;
+  width: max-content !important;
+}
+
+.p-tooltip.claim-create-single-line-tooltip .p-tooltip-text,
+.p-tooltip .claim-create-single-line-tooltip .p-tooltip-text {
+  white-space: nowrap !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  max-width: none !important;
+  width: max-content !important;
+}
+
+/* Global fixes for PrimeNG Tree scrolling */
+.p-tree {
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+}
+
+.p-tree .p-tree-container,
+.p-tree .p-tree-wrapper,
+.p-tree .p-tree-root-list {
+  overflow: auto !important;
+  flex: 1;
+  padding-bottom: 2rem;
+}
+
+/* PrimeNG confirm dialog is appended to body, so component-scoped focus styles do not reach it. */
+.close-screen-confirm-dialog .close-confirm-accept-button:focus,
+.close-screen-confirm-dialog .close-confirm-accept-button:focus-visible,
+.close-screen-confirm-dialog .close-confirm-accept-button button:focus,
+.close-screen-confirm-dialog .close-confirm-accept-button button:focus-visible,
+.close-screen-confirm-dialog button.close-confirm-accept-button:focus,
+.close-screen-confirm-dialog button.close-confirm-accept-button:focus-visible,
+.close-screen-confirm-dialog .p-confirmdialog-accept:focus,
+.close-screen-confirm-dialog .p-confirmdialog-accept:focus-visible,
+.close-screen-confirm-dialog .p-confirmdialog-accept-button:focus,
+.close-screen-confirm-dialog .p-confirmdialog-accept-button:focus-visible,
+.close-screen-confirm-dialog .p-confirmdialog-accept-button button:focus,
+.close-screen-confirm-dialog .p-confirmdialog-accept-button button:focus-visible,
+.close-screen-confirm-dialog button.p-confirmdialog-accept-button:focus,
+.close-screen-confirm-dialog button.p-confirmdialog-accept-button:focus-visible {
+  outline-width: var(--focus-ring-width) !important;
+  outline-style: var(--focus-ring-style) !important;
+  outline-color: var(--focus-ring-color) !important;
+  outline-offset: var(--focus-ring-offset) !important;
+  box-shadow: var(--focus-ring-shadow) !important;
+  transition:
+    box-shadow var(--transition-duration),
+    outline-color var(--transition-duration);
+}
+
+.create-onsite-assessment-dialog .create-onsite-execute-button:focus,
+.create-onsite-assessment-dialog .create-onsite-execute-button:focus-visible,
+.create-onsite-assessment-dialog .create-onsite-execute-button button:focus,
+.create-onsite-assessment-dialog .create-onsite-execute-button button:focus-visible,
+.create-onsite-assessment-dialog button.create-onsite-execute-button:focus,
+.create-onsite-assessment-dialog button.create-onsite-execute-button:focus-visible {
+  outline-width: var(--focus-ring-width) !important;
+  outline-style: var(--focus-ring-style) !important;
+  outline-color: var(--focus-ring-color) !important;
+  outline-offset: var(--focus-ring-offset) !important;
+  box-shadow: var(--focus-ring-shadow) !important;
+  transition:
+    box-shadow var(--transition-duration),
+    outline-color var(--transition-duration);
+}
+
+.onsite-cancel-accept-button:focus,
+.onsite-cancel-accept-button:focus-visible,
+.onsite-cancel-accept-button button:focus,
+.onsite-cancel-accept-button button:focus-visible,
+button.onsite-cancel-accept-button:focus,
+button.onsite-cancel-accept-button:focus-visible {
+  outline-width: var(--focus-ring-width) !important;
+  outline-style: var(--focus-ring-style) !important;
+  outline-color: var(--focus-ring-color) !important;
+  outline-offset: var(--focus-ring-offset) !important;
+  box-shadow: var(--focus-ring-shadow) !important;
+  transition:
+    box-shadow var(--transition-duration),
+    outline-color var(--transition-duration);
+}
+
+.detailed-cancel-accept-button:focus,
+.detailed-cancel-accept-button:focus-visible,
+.detailed-cancel-accept-button button:focus,
+.detailed-cancel-accept-button button:focus-visible,
+button.detailed-cancel-accept-button:focus,
+button.detailed-cancel-accept-button:focus-visible {
+  outline-width: var(--focus-ring-width) !important;
+  outline-style: var(--focus-ring-style) !important;
+  outline-color: var(--focus-ring-color) !important;
+  outline-offset: var(--focus-ring-offset) !important;
+  box-shadow: var(--focus-ring-shadow) !important;
+  transition:
+    box-shadow var(--transition-duration),
+    outline-color var(--transition-duration);
+}

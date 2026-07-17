@@ -1,0 +1,17 @@
+// Business Flows Component Styles
+// Dialog: content overflow visible; dropdown/datepicker appendTo="body"
+
+:host ::ng-deep {
+  .p-dialog-content {
+    overflow: visible !important;
+  }
+
+  .p-dialog {
+    .p-select-overlay {
+      z-index: 10000 !important;
+    }
+    .p-datepicker {
+      z-index: 10000 !important;
+    }
+  }
+}

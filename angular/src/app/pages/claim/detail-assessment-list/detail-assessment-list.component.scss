@@ -1,0 +1,108 @@
+:host {
+  display: block;
+}
+
+:host ::ng-deep p-datepicker,
+:host ::ng-deep p-datepicker .p-datepicker,
+:host ::ng-deep p-datepicker .p-inputtext {
+  width: 100%;
+}
+
+:host ::ng-deep .p-panel .p-panel-header {
+  color: #1f4b7f;
+  font-weight: 700;
+}
+
+:host ::ng-deep .action-bar .p-button {
+  min-width: 0;
+}
+
+:host ::ng-deep .quick-search-shell .quick-search-complete {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: stretch;
+  width: 100%;
+}
+
+:host ::ng-deep .quick-search-shell .quick-search-complete .p-autocomplete-input,
+:host ::ng-deep .quick-search-shell .quick-search-complete .p-inputtext {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent;
+}
+
+.dialog-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.summary-card,
+.detail-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  padding: 1rem 1.1rem;
+}
+
+.summary-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.dialog-sections {
+  margin-top: 0.25rem;
+}
+
+.detail-card h3 {
+  margin: 0 0 1rem;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.detail-grid div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.detail-grid span {
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.detail-grid strong {
+  color: #0f172a;
+  line-height: 1.5;
+}
+
+.detail-card p {
+  margin: 0;
+  color: #334155;
+  line-height: 1.6;
+}
+
+@media (max-width: 991px) {
+  .dialog-summary,
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,323 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Hàng 1 -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="startTime" class="block mb-2 font-medium">{{ 'AbpAuditLogging::FromDate' | translate }}</label>
+          <p-datepicker
+            inputId="startTime"
+            [(ngModel)]="searchForm.startTime"
+            [showTime]="true"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            styleClass="w-full"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="endTime" class="block mb-2 font-medium">{{ 'AbpAuditLogging::ToDate' | translate }}</label>
+          <p-datepicker
+            inputId="endTime"
+            [(ngModel)]="searchForm.endTime"
+            [showTime]="true"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            styleClass="w-full"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="httpMethod" class="block mb-2 font-medium">{{ 'AbpAuditLogging::HttpMethod' | translate }}</label>
+          <p-select
+            inputId="httpMethod"
+            [(ngModel)]="searchForm.httpMethod"
+            [options]="httpMethodOptions"
+            optionLabel="label"
+            optionValue="value"
+            [placeholder]="'AbpAuditLogging::SelectHttpMethod' | translate"
+            styleClass="w-full"
+            [showClear]="true"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="httpStatusCode" class="block mb-2 font-medium">{{ 'AbpAuditLogging::HttpStatusCode' | translate }}</label>
+          <p-inputnumber
+            inputId="httpStatusCode"
+            [(ngModel)]="searchForm.httpStatusCode"
+            styleClass="w-full"
+          />
+        </div>
+
+        <!-- Hàng 2 -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="url" class="block mb-2 font-medium">{{ 'AbpAuditLogging::Url' | translate }}</label>
+          <input
+            pInputText
+            id="url"
+            [(ngModel)]="searchForm.url"
+            class="w-full"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="userName" class="block mb-2 font-medium">{{ 'AbpAuditLogging::UserName' | translate }}</label>
+          <input
+            pInputText
+            id="userName"
+            [(ngModel)]="searchForm.userName"
+            class="w-full"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="applicationName" class="block mb-2 font-medium">{{ 'AbpAuditLogging::ApplicationName' | translate }}</label>
+          <input
+            pInputText
+            id="applicationName"
+            [(ngModel)]="searchForm.applicationName"
+            class="w-full"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="clientIpAddress" class="block mb-2 font-medium">{{ 'AbpAuditLogging::IpAddress' | translate }}</label>
+          <input
+            pInputText
+            id="clientIpAddress"
+            [(ngModel)]="searchForm.clientIpAddress"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Hàng 3 -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="correlationId" class="block mb-2 font-medium">{{ 'AbpAuditLogging::CorrelationId' | translate }}</label>
+          <input
+            pInputText
+            id="correlationId"
+            [(ngModel)]="searchForm.correlationId"
+            class="w-full"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="minExecutionDuration" class="block mb-2 font-medium">{{ 'AbpAuditLogging::MinExecutionDuration' | translate }}</label>
+          <p-inputnumber
+            inputId="minExecutionDuration"
+            [(ngModel)]="searchForm.minExecutionDuration"
+            styleClass="w-full"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="maxExecutionDuration" class="block mb-2 font-medium">{{ 'AbpAuditLogging::MaxExecutionDuration' | translate }}</label>
+          <p-inputnumber
+            inputId="maxExecutionDuration"
+            [(ngModel)]="searchForm.maxExecutionDuration"
+            styleClass="w-full"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-3 flex items-end">
+          <div class="flex items-center">
+            <p-checkbox
+              inputId="hasException"
+              [(ngModel)]="searchForm.hasException"
+              [binary]="true"
+            />
+            <label for="hasException" class="ml-2">{{ 'AbpAuditLogging::HasException' | translate }}</label>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button
+            *ngIf="PERMISSIONS.VIEW | appPermission"
+            [label]="'AbpAuditLogging::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.VIEW | appPermission"
+            [label]="'AbpAuditLogging::Search' | translate"
+            icon="pi pi-search"
+            (onClick)="search()"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table
+        [columns]="columns"
+        [data]="auditLogs"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        size="small"
+        [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadAuditLogs($event)"
+      />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog chi tiết -->
+<p-dialog
+  [(visible)]="detailDialogVisible"
+  [header]="'AbpAuditLogging::AuditLogDetailTitle' | translate"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [maximizable]="true"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div *ngIf="selectedAuditLog" class="p-4">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">{{ 'AbpAuditLogging::GeneralInformation' | translate }}</p-tab>
+        <p-tab *ngIf="PERMISSIONS.VIEW_ENTITY_CHANGES | appPermission" value="1">{{ 'AbpAuditLogging::EntityChanges' | translate }} ({{ selectedAuditLog.entityChanges?.length || 0 }})</p-tab>
+        <p-tab *ngIf="PERMISSIONS.VIEW_DETAILS | appPermission" value="2">{{ 'AbpAuditLogging::Actions' | translate }} ({{ selectedAuditLog.actions?.length || 0 }})</p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <!-- Tab Thông tin chung -->
+        <p-tabpanel value="0">
+          <div class="grid grid-cols-12 gap-4">
+            <div class="col-span-6">
+              <strong>{{ 'AbpAuditLogging::Id' | translate }}:</strong> {{ selectedAuditLog.id }}
+            </div>
+            <div class="col-span-6">
+              <strong>{{ 'AbpAuditLogging::User' | translate }}:</strong> {{ selectedAuditLog.userName || ('AbpAuditLogging::NotAvailable' | translate) }}
+            </div>
+            <div class="col-span-6">
+              <strong>{{ 'AbpAuditLogging::ExecutionTimeLabel' | translate }}:</strong> {{ selectedAuditLog.executionTime | date:'dd/MM/yyyy HH:mm:ss' }}
+            </div>
+            <div class="col-span-6">
+              <strong>{{ 'AbpAuditLogging::DurationLabel' | translate }}:</strong> {{ selectedAuditLog.executionDuration }} ms
+            </div>
+            <div class="col-span-6">
+              <strong>{{ 'AbpAuditLogging::HttpMethodLabel' | translate }}:</strong> {{ selectedAuditLog.httpMethod }}
+            </div>
+            <div class="col-span-6">
+              <strong>HTTP Status:</strong> {{ selectedAuditLog.httpStatusCode }}
+            </div>
+            <div class="col-span-12">
+              <strong>URL:</strong> {{ selectedAuditLog.url }}
+            </div>
+            <div class="col-span-6">
+              <strong>{{ 'AbpAuditLogging::IpAddressLabel' | translate }}:</strong> {{ selectedAuditLog.clientIpAddress }}
+            </div>
+            <div class="col-span-6">
+              <strong>{{ 'AbpAuditLogging::ClientNameLabel' | translate }}:</strong> {{ selectedAuditLog.clientName || ('AbpAuditLogging::NotAvailable' | translate) }}
+            </div>
+            <div class="col-span-6">
+              <strong>{{ 'AbpAuditLogging::ApplicationNameLabel' | translate }}:</strong> {{ selectedAuditLog.applicationName || ('AbpAuditLogging::NotAvailable' | translate) }}
+            </div>
+            <div class="col-span-6">
+              <strong>{{ 'AbpAuditLogging::CorrelationIdLabel' | translate }}:</strong> {{ selectedAuditLog.correlationId || ('AbpAuditLogging::NotAvailable' | translate) }}
+            </div>
+            <div class="col-span-12" *ngIf="selectedAuditLog.browserInfo">
+              <strong>{{ 'AbpAuditLogging::BrowserInfoLabel' | translate }}:</strong> {{ selectedAuditLog.browserInfo }}
+            </div>
+            <div class="col-span-12" *ngIf="selectedAuditLog.exceptions">
+              <strong>{{ 'AbpAuditLogging::ExceptionsLabel' | translate }}:</strong>
+              <pre class="mt-2 p-3 bg-red-50 border border-red-200 rounded overflow-auto">{{ selectedAuditLog.exceptions }}</pre>
+            </div>
+            <div class="col-span-12" *ngIf="selectedAuditLog.comments">
+              <strong>{{ 'AbpAuditLogging::CommentsLabel' | translate }}:</strong>
+              <p class="mt-2">{{ selectedAuditLog.comments }}</p>
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- Tab Thay đổi thực thể -->
+        <p-tabpanel *ngIf="PERMISSIONS.VIEW_ENTITY_CHANGES | appPermission" value="1">
+          <div *ngIf="!selectedAuditLog.entityChanges || selectedAuditLog.entityChanges.length === 0">
+            <p>{{ 'AbpAuditLogging::NoEntityChanges' | translate }}</p>
+          </div>
+          <div *ngFor="let change of selectedAuditLog.entityChanges; let i = index" class="mb-4 p-4 border rounded">
+            <h5>{{ 'AbpAuditLogging::Change' | translate }} #{{ i + 1 }}</h5>
+            <div class="grid grid-cols-12 gap-2">
+              <div class="col-span-6">
+                <strong>{{ 'AbpAuditLogging::EntityType' | translate }}:</strong> {{ change.entityTypeFullName }}
+              </div>
+              <div class="col-span-6">
+                <strong>{{ 'AbpAuditLogging::EntityId' | translate }}:</strong> {{ change.entityId }}
+              </div>
+              <div class="col-span-6">
+                <strong>{{ 'AbpAuditLogging::ChangeType' | translate }}:</strong> {{ change.changeType }}
+              </div>
+              <div class="col-span-6">
+                <strong>{{ 'AbpAuditLogging::ChangeTime' | translate }}:</strong> {{ change.changeTime | date:'dd/MM/yyyy HH:mm:ss' }}
+              </div>
+            </div>
+            <div *ngIf="change.propertyChanges && change.propertyChanges.length > 0" class="mt-3">
+              <strong>{{ 'AbpAuditLogging::PropertyChanges' | translate }}:</strong>
+              <div class="overflow-auto">
+                <table class="w-full mt-2 border">
+                  <thead class="bg-gray-100">
+                    <tr>
+                      <th class="p-2 border">{{ 'AbpAuditLogging::PropertyName' | translate }}</th>
+                      <th class="p-2 border">{{ 'AbpAuditLogging::OriginalValue' | translate }}</th>
+                      <th class="p-2 border">{{ 'AbpAuditLogging::NewValue' | translate }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let prop of change.propertyChanges">
+                      <td class="p-2 border">{{ prop.propertyName }}</td>
+                      <td class="p-2 border">{{ prop.originalValue || 'N/A' }}</td>
+                      <td class="p-2 border">{{ prop.newValue || 'N/A' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- Tab Actions -->
+        <p-tabpanel *ngIf="PERMISSIONS.VIEW_DETAILS | appPermission" value="2">
+          <div *ngIf="!selectedAuditLog.actions || selectedAuditLog.actions.length === 0">
+            <p>{{ 'AbpAuditLogging::NoActions' | translate }}</p>
+          </div>
+          <div *ngFor="let action of selectedAuditLog.actions; let i = index" class="mb-4 p-4 border rounded">
+            <h5>Action #{{ i + 1 }}</h5>
+            <div class="grid grid-cols-12 gap-2">
+              <div class="col-span-6">
+                <strong>{{ 'AbpAuditLogging::Service' | translate }}:</strong> {{ action.serviceName }}
+              </div>
+              <div class="col-span-6">
+                <strong>{{ 'AbpAuditLogging::Method' | translate }}:</strong> {{ action.methodName }}
+              </div>
+              <div class="col-span-6">
+                <strong>{{ 'AbpAuditLogging::ExecutionTimeLabel' | translate }}:</strong> {{ action.executionTime | date:'dd/MM/yyyy HH:mm:ss' }}
+              </div>
+              <div class="col-span-6">
+                <strong>{{ 'AbpAuditLogging::DurationLabel' | translate }}:</strong> {{ action.executionDuration }} ms
+              </div>
+              <div class="col-span-12" *ngIf="action.parameters">
+                <strong>{{ 'AbpAuditLogging::Parameters' | translate }}:</strong>
+                <pre class="mt-2 p-3 bg-gray-50 border rounded overflow-auto">{{ action.parameters }}</pre>
+              </div>
+            </div>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</p-dialog>
+
+<p-toast />
+

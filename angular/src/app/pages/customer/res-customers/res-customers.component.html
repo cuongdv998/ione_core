@@ -1,0 +1,418 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4" (keydown.enter)="search()">
+        <!-- Tìm theo Filter (tổng quát) -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="filter" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:Filter' | translate }}</label>
+          <input pInputText id="filter" [(ngModel)]="searchForm.filter" class="w-full" />
+        </div>
+
+        <!-- Tìm theo Code -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="code" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:Code' | translate }}</label>
+          <input pInputText id="code" [(ngModel)]="searchForm.code" class="w-full" />
+        </div>
+
+        <!-- Tìm theo Name -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="name" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:Name' | translate }}</label>
+          <input pInputText id="name" [(ngModel)]="searchForm.name" class="w-full" />
+        </div>
+
+        <!-- Filter theo Industry -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="industryId" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:Industry' | translate
+            }}</label>
+          <p-select id="industryId" [(ngModel)]="searchForm.industryId" [options]="industryOptions"
+            [placeholder]="'Customer::All' | translate" [showClear]="true" optionLabel="label" optionValue="value"
+            styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Filter theo Organization Type -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="organizationTypeId" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:OrganizationType' |
+            translate }}</label>
+          <p-select id="organizationTypeId" [(ngModel)]="searchForm.organizationTypeId"
+            [options]="organizationTypeOptions" [placeholder]="'Customer::All' | translate" [showClear]="true"
+            optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Filter theo Status -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="status" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:Status' | translate }}</label>
+          <p-select id="status" [(ngModel)]="searchForm.status" [options]="statusOptions"
+            [placeholder]="'Customer::All' | translate" [showClear]="true" optionLabel="label" optionValue="value"
+            styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button [label]="'AbpAuditLogging::Reset' | translate" icon="pi pi-refresh" severity="secondary"
+            (onClick)="resetSearch()" />
+          <p-button [label]="'AbpAuditLogging::Search' | translate" icon="pi pi-search" (onClick)="search()" />
+          <p-button *ngIf="PERMISSIONS.CREATE | appPermission" [label]="'Customer::ResCustomer:New' | translate"
+            icon="pi pi-plus" (onClick)="openCreateDialog()" />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table [columns]="columns" [data]="resCustomers" [actions]="actions" [totalCount]="totalCount"
+        [loading]="loading" [rows]="pageSize" [rowsPerPageOptions]="[10, 20, 50, 100]" [showGridlines]="true"
+        [stripedRows]="true" [rowHover]="true" size="small" [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadData($event)" />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create/Edit -->
+<p-dialog [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Customer::ResCustomer:New' : 'Customer::ResCustomer:Edit') | translate"
+  [modal]="true" [style]="{ width: '90vw', maxWidth: '1200px', maxHeight: '90vh' }" [draggable]="false"
+  [resizable]="false" [contentStyle]="{ overflow: 'visible' }">
+  <div *ngIf="dialogVisible" class="flex flex-col gap-4 p-4 max-h-[70vh] overflow-y-auto">
+    <!-- Row 1: Code, Name -->
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 md:col-span-6">
+        <label for="formCode" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Code' | translate }}
+        </label>
+        <input pInputText id="formCode" [(ngModel)]="formData.code" [disabled]="true" class="w-full opacity-60" />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formName" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Name' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input pInputText id="formName" [(ngModel)]="formData.name" class="w-full" maxlength="250" required />
+      </div>
+    </div>
+
+    <!-- Row 2: Industry, Organization Type -->
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 md:col-span-6">
+        <label for="formIndustryId" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Industry' | translate }}
+        </label>
+        <p-select id="formIndustryId" [(ngModel)]="formData.industryId" [options]="industryOptions"
+          [placeholder]="'Customer::ResCustomer:Industry' | translate" [showClear]="true" optionLabel="label"
+          optionValue="value" styleClass="w-full" appendTo="body" />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formOrganizationTypeId" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:OrganizationType' | translate }}
+        </label>
+        <p-select id="formOrganizationTypeId" [(ngModel)]="formData.organizationTypeId"
+          [options]="organizationTypeOptions" [placeholder]="'Customer::ResCustomer:OrganizationType' | translate"
+          [showClear]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body"
+          (onChange)="onOrganizationTypeChange()" />
+      </div>
+    </div>
+
+    <!-- Row 3: Province, Ward -->
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 md:col-span-6">
+        <label for="formProvinceId" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Province' | translate }}
+        </label>
+        <p-select id="formProvinceId" [(ngModel)]="formData.provinceId" [options]="provinceOptions"
+          [placeholder]="'Customer::ResCustomer:Province' | translate" [showClear]="true" optionLabel="label" optionValue="value"
+          styleClass="w-full" appendTo="body" (onChange)="onProvinceChange()" />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formWardId" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Ward' | translate }}
+        </label>
+        <p-select id="formWardId" [(ngModel)]="formData.wardId" [options]="wardOptions"
+          [placeholder]="'Customer::ResCustomer:Ward' | translate" [showClear]="true" optionLabel="label" optionValue="value"
+          styleClass="w-full" appendTo="body" (onChange)="onWardChange()" />
+      </div>
+    </div>
+
+    <!-- Row 4: Address, Full Address (readonly) -->
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 md:col-span-6">
+        <label for="formAddress" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Address' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input pInputText id="formAddress" [(ngModel)]="formData.address" (input)="onAddressChange()" class="w-full" maxlength="250" required />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formFullAddress" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:FullAddress' | translate }}
+        </label>
+        <input pInputText id="formFullAddress" [(ngModel)]="formData.fullAddress" [readonly]="true" class="w-full bg-gray-100" />
+      </div>
+    </div>
+
+    <!-- Row 5: Email, Phone -->
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 md:col-span-6">
+        <label for="formEmail" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Email' | translate }}
+          <span *ngIf="isOrganizationTypeTC()" class="text-red-500">*</span>
+        </label>
+        <input pInputText id="formEmail" [(ngModel)]="formData.email" type="email" class="w-full" maxlength="250"
+          [required]="isOrganizationTypeTC()" />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formPhone" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Phone' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input pInputText id="formPhone" [(ngModel)]="formData.phone" class="w-full" maxlength="10" required />
+      </div>
+    </div>
+
+    <!-- Row 6: Status, Sale -->
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 md:col-span-6">
+        <label for="formStatus" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Status' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-select id="formStatus" [(ngModel)]="formData.status" [options]="statusOptions"
+          [placeholder]="'Customer::ResCustomer:Status' | translate" optionLabel="label" optionValue="value"
+          styleClass="w-full" appendTo="body" required />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formSaleId" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Sale' | translate }}
+        </label>
+        <p-select id="formSaleId" [(ngModel)]="formData.saleId" [options]="saleOptions"
+          [placeholder]="'Customer::ResCustomer:Sale' | translate" [showClear]="true" optionLabel="label"
+          optionValue="value" styleClass="w-full" appendTo="body" />
+      </div>
+    </div>
+
+    <!-- Row 7: Note -->
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12">
+        <label for="formNote" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Note' | translate }}
+        </label>
+        <textarea pTextarea id="formNote" [(ngModel)]="formData.note" class="w-full" [rows]="3" maxlength="500"></textarea>
+      </div>
+    </div>
+
+    <!-- Conditional Fields: CN (Cá nhân) -->
+    <div *ngIf="isOrganizationTypeCN()" class="grid grid-cols-12 gap-4 border-t pt-4">
+      <div class="col-span-12">
+        <h3 class="text-lg font-semibold mb-2">{{ 'Customer::ResCustomer:IndividualInfo' | translate }}</h3>
+      </div>
+
+      <!-- Row 1: IdNo (CCCD), Passport No -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formIdNo" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:IdNo' | translate }} (CCCD)
+        </label>
+        <input pInputText id="formIdNo" [(ngModel)]="formData.idNo" class="w-full" maxlength="12" />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formPassportNo" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:PassportNo' | translate }}
+        </label>
+        <input pInputText id="formPassportNo" [(ngModel)]="formData.passportNo" class="w-full" maxlength="9"
+          (input)="onPassportInput($event)" />
+      </div>
+
+      <!-- Row 2: DOB, Sex -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formDob" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:DOB' | translate }}
+        </label>
+        <p-datepicker id="formDob" [(ngModel)]="formData.dob" [showIcon]="true" [showButtonBar]="true"
+          dateFormat="dd/mm/yy" styleClass="w-full"
+          appendTo="body" />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formSex" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Sex' | translate }}
+        </label>
+        <p-select id="formSex" [(ngModel)]="formData.sex" [options]="sexOptions"
+          [placeholder]="'Customer::ResCustomer:Sex' | translate" [showClear]="true" optionLabel="label"
+          optionValue="value" styleClass="w-full" appendTo="body" />
+      </div>
+    </div>
+
+    <!-- Conditional Fields: TC (Tổ chức) -->
+    <div *ngIf="isOrganizationTypeTC()" class="grid grid-cols-12 gap-4 border-t pt-4">
+      <div class="col-span-12">
+        <h3 class="text-lg font-semibold mb-2">{{ 'Customer::ResCustomer:OrganizationInfo' | translate }}</h3>
+      </div>
+
+      <!-- Row 1: TIN, Business No -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formTin" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:TIN' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input pInputText id="formTin" [(ngModel)]="formData.tin" [required]="true" class="w-full" maxlength="14" />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formBusinessNo" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:BusinessNo' | translate }}
+        </label>
+        <input pInputText id="formBusinessNo" [(ngModel)]="formData.businessNo" class="w-full" maxlength="25" />
+      </div>
+
+      <!-- Row 2: Representative Name, Email -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formRepName" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:RepName' | translate }}
+        </label>
+        <input pInputText id="formRepName" [(ngModel)]="formData.repName" class="w-full" maxlength="250" />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formRepEmail" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:RepEmail' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input pInputText id="formRepEmail" [(ngModel)]="formData.repEmail" type="email" class="w-full" maxlength="250" required />
+      </div>
+
+      <!-- Row 3: Representative Phone, ID No -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formRepPhone" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:RepPhone' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input pInputText id="formRepPhone" [(ngModel)]="formData.repPhone" [required]="true" class="w-full" maxlength="10" />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formRepIdNo" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:RepIdNo' | translate }}
+        </label>
+        <input pInputText id="formRepIdNo" [(ngModel)]="formData.repIdNo" class="w-full" maxlength="12" />
+      </div>
+
+      <!-- Row 4: Representative Title -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formRepTitle" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:RepTitle' | translate }}
+        </label>
+        <input pInputText id="formRepTitle" [(ngModel)]="formData.repTitle" class="w-full" maxlength="250" />
+      </div>
+
+      <!-- Row 5: Authorizer, Authorizer Phone -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formAuthorizer" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Authorizer' | translate }}
+        </label>
+        <input pInputText id="formAuthorizer" [(ngModel)]="formData.authorizer" class="w-full" maxlength="250" />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formAuthorizerPhone" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:AuthorizerPhone' | translate }}
+        </label>
+        <input pInputText id="formAuthorizerPhone" [(ngModel)]="formData.authorizerPhone" class="w-full" maxlength="10" />
+      </div>
+
+      <!-- Row 6: Authorizer Email, Authorizer No -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formAuthorizerEmail" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:AuthorizerEmail' | translate }}
+        </label>
+        <input pInputText id="formAuthorizerEmail" [(ngModel)]="formData.authorizerEmail" type="email" class="w-full" maxlength="250" />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formAuthorizerNo" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:AuthorizerNo' | translate }}
+        </label>
+        <input pInputText id="formAuthorizerNo" [(ngModel)]="formData.authorizerNo" class="w-full" maxlength="25" />
+      </div>
+
+      <!-- Row 7: Authorizer Date, Authorizer Title -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formAuthorizerDate" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:AuthorizerDate' | translate }}
+        </label>
+        <p-datepicker id="formAuthorizerDate" [(ngModel)]="formData.authorizerDate" [showIcon]="true"
+          [showButtonBar]="true" dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body" />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formAuthorizerTitle" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:AuthorizerTitle' | translate }}
+        </label>
+        <input pInputText id="formAuthorizerTitle" [(ngModel)]="formData.authorizerTitle" class="w-full" maxlength="250" />
+      </div>
+    </div>
+
+    <!-- Invoice Address Section -->
+    <div class="grid grid-cols-12 gap-4 border-t pt-4">
+      <div class="col-span-12">
+        <h3 class="text-lg font-semibold mb-2">{{ 'Customer::ResCustomer:InvoiceAddress' | translate }}</h3>
+      </div>
+
+      <!-- Invoice Province, Ward -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formInvoiceProvinceId" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:InvoiceProvince' | translate }}
+        </label>
+        <p-select id="formInvoiceProvinceId" [(ngModel)]="formData.invoiceProvinceId" [options]="invoiceProvinceOptions"
+          [placeholder]="'Customer::ResCustomer:InvoiceProvince' | translate" [showClear]="true" optionLabel="label"
+          optionValue="value" styleClass="w-full" appendTo="body" (onChange)="onInvoiceProvinceChange()" />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formInvoiceWardId" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:InvoiceWard' | translate }}
+        </label>
+        <p-select id="formInvoiceWardId" [(ngModel)]="formData.invoiceWardId" [options]="invoiceWardOptions"
+          [placeholder]="'Customer::ResCustomer:InvoiceWard' | translate" [showClear]="true" optionLabel="label"
+          optionValue="value" styleClass="w-full" appendTo="body" (onChange)="onInvoiceWardChange()" />
+      </div>
+
+      <!-- Invoice Address, Full Address (readonly) -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formInvoiceAddress" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:InvoiceAddress' | translate }}
+        </label>
+        <input pInputText id="formInvoiceAddress" [(ngModel)]="formData.invoiceAddress"
+          (input)="onInvoiceAddressChange()"
+          class="w-full" maxlength="250" />
+      </div>
+
+      <div class="col-span-12 md:col-span-6">
+        <label for="formInvoiceFullAddress" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:InvoiceFullAddress' | translate }}
+        </label>
+        <input pInputText id="formInvoiceFullAddress" [(ngModel)]="formData.invoiceFullAddress" [readonly]="true" class="w-full bg-gray-100" />
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button [label]="'Customer::Cancel' | translate" severity="secondary" (onClick)="dialogVisible = false"
+        [disabled]="loading" />
+      <p-button [label]="'Customer::Save' | translate" (onClick)="save()" [loading]="loading" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Messages -->
+<p-toast />
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog />

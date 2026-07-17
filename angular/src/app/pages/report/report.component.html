@@ -1,0 +1,51 @@
+<div>
+    <p-toast />
+
+    <p-panel [header]="'Report::SearchInfo' | translate" [toggleable]="true" [collapsed]="false" styleClass="mb-4">
+        <div class="grid grid-cols-1 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="flex flex-col gap-2">
+                    <label for="code" class="font-semibold">{{ 'Report::Code' | translate }}</label>
+                    <input pInputText id="code" [(ngModel)]="filtered.code" (keydown.enter)="onSearch()" class="w-full" />
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label for="name" class="font-semibold">{{ 'Report::ReportName' | translate }}</label>
+                    <input pInputText id="name" [(ngModel)]="filtered.name" (keydown.enter)="onSearch()" class="w-full" />
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label for="status" class="font-semibold">{{ 'Report::Status' | translate }}</label>
+                    <p-select [options]="statusOptions" [(ngModel)]="filtered.status" optionLabel="label"
+                        optionValue="value" [showClear]="true" [placeholder]="'Report::SelectStatus' | translate"
+                        styleClass="w-full" appendTo="body"></p-select>
+                </div>
+            </div>
+
+            <div class="flex gap-2 items-end justify-end">
+                <p-button [label]="'Report::Reset' | translate" icon="pi pi-refresh" (onClick)="onReset()"
+                    severity="secondary"></p-button>
+                <p-button [label]="'Report::Search' | translate" icon="pi pi-search" (onClick)="onSearch()"
+                    styleClass="p-button-primary"></p-button>
+                <p-button [label]="'Report::Create' | translate" icon="pi pi-plus" styleClass="p-button-primary mr-2"
+                    (onClick)="onCreate()"></p-button>
+                <p-button [label]="'Report::Export' | translate" icon="pi pi-file-export"
+                    styleClass="p-button-success mr-2" (onClick)="onExport()"></p-button>
+
+            </div>
+        </div>
+    </p-panel>
+
+
+    <div class="bg-white p-4 rounded-md border border-gray-200">
+        <p class="font-semibold mb-2">{{ 'Report::ReportList' | translate }}</p>
+        <app-v-table [columns]="columns" [data]="items" [actions]="actions" [totalCount]="totalCount"
+            [loading]="loading" [rows]="pageSize" [rowsPerPageOptions]="[10, 20, 50, 100]" [showGridlines]="true"
+            [stripedRows]="true" [rowHover]="true" size="small" [scrollable]="true"
+            [scrollHeight]="'calc(100vh - 450px)'" [resizableColumns]="true" (lazyLoad)="onPage($event)" />
+    </div>
+
+    <app-report-detail-modal #modal (saved)="refresh()"></app-report-detail-modal>
+    <app-report-export-dynamic-modal #exportDynamicModal></app-report-export-dynamic-modal>
+    <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+</div>

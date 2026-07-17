@@ -1,0 +1,134 @@
+.claim-task-detail-page {
+  background-color: #ffffff;
+  min-height: calc(100vh - 100px);
+
+  /* Tab View Customization */
+  :host ::ng-deep .custom-tabs {
+    .p-tablist {
+      margin-bottom: 0;
+      border-bottom: 1px solid #e5e7eb;
+
+      .p-tablist-nav {
+        border-bottom: 0;
+        gap: 0.25rem;
+      }
+
+      .p-tab {
+        border: 1px solid #e5e7eb;
+        border-bottom: none;
+        background-color: #f9fafb;
+        color: #4b5563;
+        font-weight: 600;
+        padding: 0.75rem 1.25rem;
+        border-top-left-radius: 6px;
+        border-top-right-radius: 6px;
+        transition: all 0.2s;
+
+        &:not(.p-tab-active):hover {
+          background-color: #f3f4f6;
+          color: #1f2937;
+        }
+
+        &.p-tab-active {
+          background-color: #F58220;
+          color: #ffffff;
+          border-color: #F58220;
+        }
+      }
+    }
+
+    .p-tabpanels {
+      background-color: #ffffff;
+      height: calc(100vh - 280px);
+      overflow-y: auto;
+
+      /* Tùy chỉnh thanh cuộn cho đẹp */
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 4px;
+      }
+    }
+  }
+
+  /* Info Section Styling */
+  .info-section {
+    margin-bottom: 0.5rem;
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1f2937;
+      text-decoration: underline;
+      margin-bottom: 0.5rem;
+    }
+
+    .data-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+
+      .label {
+        font-size: 0.8rem;
+        color: #6b7280;
+      }
+
+      .value {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1f2937;
+      }
+    }
+  }
+
+  /* Custom Button Styling */
+  :host ::ng-deep .custom-btn-orange {
+    background-color: #F58220 !important;
+    border-color: #F58220 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+
+    &:hover {
+      background-color: #e47211 !important;
+      border-color: #e47211 !important;
+    }
+
+    &.outlined {
+      background-color: transparent !important;
+      color: #F58220 !important;
+
+      &:hover {
+        background-color: #fff4ea !important;
+      }
+    }
+  }
+
+  /* Table Customization */
+  :host ::ng-deep .custom-table {
+
+    .p-datatable-header,
+    .p-datatable-thead>tr>th {
+      background-color: #f9fafb;
+      color: #4b5563;
+      font-weight: 600;
+      font-size: 0.85rem;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0.35rem 0.75rem;
+    }
+
+    .p-datatable-tbody>tr>td {
+      font-size: 0.85rem;
+      border-bottom: 1px solid #f3f4f6;
+      padding: 0.35rem 0.75rem;
+    }
+  }
+
+  /* Compact table rows for p-datatable-sm on this page */
+  :host ::ng-deep .p-datatable-sm .p-datatable-thead > tr > th,
+  :host ::ng-deep .p-datatable-sm .p-datatable-tbody > tr > td {
+    padding: 0.35rem 0.75rem;
+  }
+}

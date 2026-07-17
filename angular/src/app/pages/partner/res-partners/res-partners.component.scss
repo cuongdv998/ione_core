@@ -1,0 +1,19 @@
+:host ::ng-deep {
+  .p-dialog-content {
+    overflow: visible;
+  }
+  
+  .p-select-overlay,
+  .p-datepicker-panel {
+    z-index: 10000 !important; // Ensure dropdowns are above dialog
+  }
+  
+  .p-tabpanels {
+    overflow: visible;
+  }
+  
+  .p-tabpanel {
+    overflow: visible;
+  }
+}
+

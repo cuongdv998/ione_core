@@ -1,0 +1,22 @@
+// System Event Notifies Component Styles
+:host ::ng-deep {
+  .p-dialog .p-dialog-content {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(90vh - 8rem);
+  }
+  .p-dialog {
+    .p-select-overlay,
+    .p-datepicker {
+      z-index: 10000 !important;
+    }
+  }
+  .system-event-notify-dialog-body {
+    min-width: 0;
+    .p-inputtext,
+    .p-select,
+    .p-datepicker {
+      max-width: 100%;
+    }
+  }
+}

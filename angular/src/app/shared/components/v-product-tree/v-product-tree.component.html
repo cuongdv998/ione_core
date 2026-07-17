@@ -1,0 +1,31 @@
+<div class="v-product-tree">
+    <!-- Filter input -->
+    <div class="tree-filter mb-3">
+        <div class="w-full">
+            <span class="p-input-icon-left w-full">
+                <i class="pi pi-search"></i>
+                <input type="text" pInputText [(ngModel)]="filterText" class="w-full"
+                    (ngModelChange)="applyFilter()" />
+            </span>
+        </div>
+    </div>
+
+    <!-- Tree -->
+    <div class="tree-container" [class.loading]="loading">
+        <p-tree [value]="filteredNodes" [loading]="loading" selectionMode="single" [(selection)]="selectedNode"
+            (onNodeSelect)="onNodeSelect($event)" [filter]="false" class="w-full">
+            <ng-template pTemplate="default" let-node>
+                <span [class]="getNodeIconClass(node)" class="p-tree-node-icon" [class.inactive]="!node.isActive"></span>
+                <span class="p-tree-node-label" 
+                    [class.inactive]="!node.isActive"
+                    [class.category-node]="node.nodeType === 'category'"
+                    (contextmenu)="onContextMenu($event, node)">
+                    {{ node.label }}
+                </span>
+            </ng-template>
+        </p-tree>
+    </div>
+
+    <!-- Context Menu -->
+    <p-contextMenu #contextMenu [model]="contextMenuItems"></p-contextMenu>
+</div>

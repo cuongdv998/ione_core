@@ -1,0 +1,238 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="filter" class="block mb-2 font-medium">Tên đăng nhập/Email</label>
+          <input
+            pInputText
+            id="filter"
+            [(ngModel)]="searchForm.filter"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button
+            [label]="'AbpAuditLogging::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button
+            [label]="'AbpAuditLogging::Search' | translate"
+            icon="pi pi-search"
+            (onClick)="search()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'AbpIdentity::NewUser' | translate"
+            icon="pi pi-plus"
+            (onClick)="openCreateDialog()"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table
+        [columns]="columns"
+        [data]="users"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        size="small"
+        [scrollHeight]="'calc(100vh - 350px)'"
+        (lazyLoad)="loadUsers($event)"
+      />
+    </p-panel>
+  </div>
+
+  <!-- Dialog Create/Edit -->
+  <p-dialog
+    [(visible)]="userDialogVisible"
+    [header]="(userDialogMode === 'create' ? 'AbpIdentity::NewUser' : 'AbpIdentity::Edit') | translate"
+    [modal]="true"
+    [style]="{ width: '800px', maxHeight: '90vh' }"
+    [draggable]="false"
+    [resizable]="false"
+    (onHide)="activeTab = '0'"
+  >
+    <p-tabs [(value)]="activeTab">
+      <!-- Tab: Thông tin người dùng -->
+      <p-tablist>
+        <p-tab value="0">{{ 'AbpIdentity::UserInformations' | translate }}</p-tab>
+        <p-tab value="1" *ngIf="userDialogMode === 'edit' && (PERMISSIONS.MANAGE_ROLES | appPermission)">
+          {{ 'AbpIdentity::Roles' | translate }}
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="flex flex-col gap-4 p-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="userName" class="block mb-2 font-medium">
+                  {{ 'AbpIdentity::UserName' | translate }} <span class="text-red-500">*</span>
+                </label>
+                <input
+                  pInputText
+                  id="userName"
+                  [(ngModel)]="userFormData.userName"
+                  class="w-full"
+                  required
+                />
+              </div>
+
+              <div>
+                <label for="email" class="block mb-2 font-medium">
+                  {{ 'AbpIdentity::EmailAddress' | translate }} <span class="text-red-500">*</span>
+                </label>
+                <input
+                  pInputText
+                  id="email"
+                  type="email"
+                  [(ngModel)]="userFormData.email"
+                  class="w-full"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="name" class="block mb-2 font-medium">
+                  {{ 'AbpIdentity::DisplayName:Name' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="name"
+                  [(ngModel)]="userFormData.name"
+                  class="w-full"
+                />
+              </div>
+
+              <div>
+                <label for="surname" class="block mb-2 font-medium">
+                  {{ 'AbpIdentity::DisplayName:Surname' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="surname"
+                  [(ngModel)]="userFormData.surname"
+                  class="w-full"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="phoneNumber" class="block mb-2 font-medium">
+                  {{ 'AbpIdentity::PhoneNumber' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="phoneNumber"
+                  [(ngModel)]="userFormData.phoneNumber"
+                  class="w-full"
+                />
+              </div>
+
+              <div>
+                <label for="password" class="block mb-2 font-medium">
+                  {{ 'AbpIdentity::Password' | translate }}
+                  <span class="text-red-500" *ngIf="userDialogMode === 'create'">*</span>
+                </label>
+                <input
+                  pInputText
+                  id="password"
+                  type="password"
+                  [(ngModel)]="userFormData.password"
+                  class="w-full"
+                  [required]="userDialogMode === 'create'"
+                />
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <p-checkbox
+                inputId="isActive"
+                [(ngModel)]="userFormData.isActive"
+                [binary]="true"
+                [value]="true"
+              />
+              <label for="isActive">{{ 'AbpIdentity::DisplayName:IsActive' | translate }}</label>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <p-checkbox
+                inputId="lockoutEnabled"
+                [(ngModel)]="userFormData.lockoutEnabled"
+                [binary]="true"
+                [value]="true"
+              />
+              <label for="lockoutEnabled">{{ 'AbpIdentity::DisplayName:LockoutEnabled' | translate }}</label>
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- Tab: Vai trò -->
+        <p-tabpanel value="1" *ngIf="userDialogMode === 'edit' && (PERMISSIONS.MANAGE_ROLES | appPermission)">
+          <div class="p-4">
+            <div *ngIf="rolesLoading" class="flex justify-center items-center py-8">
+              <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            </div>
+
+            <div *ngIf="!rolesLoading && availableRoles.length > 0">
+              <div class="flex flex-col gap-2">
+                <div *ngFor="let role of availableRoles" class="flex items-center gap-2">
+                  <p-checkbox
+                    [inputId]="role.name"
+                    [(ngModel)]="selectedRoleNames"
+                    [value]="role.name"
+                  />
+                  <label [for]="role.name" class="cursor-pointer">
+                    {{ role.name }}
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="!rolesLoading && availableRoles.length === 0" class="text-center py-8 text-gray-500">
+              {{ 'AbpIdentity::NoRolesAvailable' | translate }}
+            </div>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+
+    <ng-template pTemplate="footer">
+      <p-button
+        [label]="'AbpUi::Cancel' | translate"
+        icon="pi pi-times"
+        severity="secondary"
+        (onClick)="userDialogVisible = false"
+      />
+      <p-button
+        [label]="'AbpUi::Save' | translate"
+        icon="pi pi-check"
+        (onClick)="saveUser()"
+        [disabled]="!userFormData.userName || !userFormData.email || (userDialogMode === 'create' && !userFormData.password)"
+      />
+    </ng-template>
+  </p-dialog>
+
+  <p-toast />
+  <p-confirmDialog />
+</div>
+

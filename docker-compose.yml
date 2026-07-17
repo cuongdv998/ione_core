@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  ione-api:
+    image: ione-api:${IMAGE_TAG}
+    container_name: ione-api
+    ports:
+      - "8081:80"
+      - "8082:443"
+    restart: unless-stopped
+    networks:
+      - ione-network
+    volumes:
+      - /home/ione/openiddict.pfx:/app/openiddict.pfx:ro
+      - /data/firebaseAuth.json:/app/firebaseAuth.json:ro
+    environment:
+      Firebase__CredentialPath: "/app/firebaseAuth.json"
+      App__SelfUrl: "${APP_SELF_URL:-https://ione-api.vnexco.com}"
+      App__AngularUrl: "${APP_ANGULAR_URL:-https://ione.vnexco.com}"
+      App__CorsOrigins: "${APP_CORS_ORIGINS:-https://ione.vnexco.com,https://ione-sale.vnexco.com,https://ione-demo.ibds.com.vn}"
+      App__RedirectAllowedUrls: "${APP_REDIRECT_URLS:-https://ione.vnexco.com}"
+      App__HealthCheckUrl: "${APP_HEALTH_URL:-https://ione-api.vnexco.com/health-status}"
+      
+      ASPNETCORE_URLS: "http://+:80"
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT:-Production}"
+      IONE_PYTHON: "/usr/bin/python3"
+      TZ: "Asia/Ho_Chi_Minh"
+      
+      # AuthServer / OpenIddict
+      AuthServer__Authority: "${AUTH_AUTHORITY:-https://ione-api.vnexco.com}"
+      AuthServer__RequireHttpsMetadata: "${AUTH_REQUIRE_HTTPS:-false}"
+      AuthServer__SwaggerClientId: "${AUTH_SWAGGER_CLIENTID:-iOne_Swagger}"
+      AuthServer__CertificatePassPhrase: "${AUTH_CERT_PASSPHRASE:-f4e2aebe-2402-411d-855e-c3314c44dea2}"
+      
+      # Database
+      ConnectionStrings__Default: "${DB_CONNECTION_STRING:-Host=ione_db;Port=5432;Database=ione;Username=ione;Password=ione}"
+      
+      # MinIO Configuration
+      MinIO__Endpoint: "${MINIO_ENDPOINT:-minio:9000}"
+      MinIO__AccessKey: "${MINIO_ACCESS_KEY:-ione}"
+      MinIO__SecretKey: "${MINIO_SECRET_KEY:-ione123456}"
+      MinIO__BucketName: "${MINIO_BUCKET_NAME:-ione-file}"
+      MinIO__UseSSL: "${MINIO_USE_SSL:-false}"
+
+networks:
+  ione-network:
+    external: true
+

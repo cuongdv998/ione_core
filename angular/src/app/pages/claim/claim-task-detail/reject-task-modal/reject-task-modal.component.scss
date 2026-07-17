@@ -1,0 +1,15 @@
+:host {
+  display: contents;
+}
+
+:host ::ng-deep .reject-execute-button:focus,
+:host ::ng-deep .reject-execute-button:focus-visible {
+  outline-width: var(--focus-ring-width) !important;
+  outline-style: var(--focus-ring-style) !important;
+  outline-color: var(--focus-ring-color) !important;
+  outline-offset: var(--focus-ring-offset) !important;
+  box-shadow: var(--focus-ring-shadow) !important;
+  transition:
+    box-shadow var(--transition-duration),
+    outline-color var(--transition-duration);
+}

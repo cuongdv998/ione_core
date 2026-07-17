@@ -1,0 +1,238 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Tìm theo Code -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="code" class="block mb-2 font-medium">{{ 'Master::ResEvent:Code' | translate }}</label>
+          <input pInputText id="code" [(ngModel)]="searchForm.code" class="w-full" />
+        </div>
+
+        <!-- Tìm theo Name -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="name" class="block mb-2 font-medium">{{ 'Master::ResEvent:Name' | translate }}</label>
+          <input pInputText id="name" [(ngModel)]="searchForm.name" class="w-full" />
+        </div>
+
+        <!-- Filter theo Status -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="status" class="block mb-2 font-medium">{{ 'Master::ResEvent:Status' | translate }}</label>
+          <p-select id="status" [(ngModel)]="searchForm.status" [options]="statusOptions"
+            [placeholder]="'Master::All' | translate" [showClear]="true" optionLabel="label" optionValue="value"
+            styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button [label]="'AbpAuditLogging::Reset' | translate" icon="pi pi-refresh" severity="secondary"
+            (onClick)="resetSearch()" />
+          <p-button [label]="'AbpAuditLogging::Search' | translate" icon="pi pi-search" (onClick)="search()" />
+          <p-button *ngIf="PERMISSIONS.CREATE | appPermission" [label]="'Master::ResEvent:New' | translate"
+            icon="pi pi-plus" (onClick)="openCreateDialog()" />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table [columns]="columns" [data]="events" [actions]="actions" [totalCount]="totalCount" [loading]="loading"
+        [rows]="pageSize" [rowsPerPageOptions]="[10, 20, 50, 100]" [showGridlines]="true" [stripedRows]="true"
+        [rowHover]="true" size="small" [scrollHeight]="'calc(100vh - 400px)'" (lazyLoad)="loadData($event)" />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create/Edit Event -->
+<p-dialog [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Master::ResEvent:New' : 'Master::ResEvent:Edit') | translate" [modal]="true"
+  [style]="{ width: '600px', maxHeight: '90vh' }" [draggable]="false" [resizable]="false"
+  [contentStyle]="{ overflow: 'visible' }">
+  <div class="flex flex-col gap-4 p-4">
+    <!-- Code field -->
+    <div>
+      <label for="formCode" class="block mb-2 font-medium">
+        {{ 'Master::ResEvent:Code' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input pInputText id="formCode" [(ngModel)]="formData.code" [disabled]="dialogMode === 'edit'" class="w-full" [class.bg-gray-200]="dialogMode === 'edit'"
+        (input)="onCodeInput($event)" maxlength="50" />
+      <small class="text-gray-500">{{ 'Master::ResEvent:CodeInvalid' | translate }}</small>
+      <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+        {{ 'Master::ResEvent:CodeCannotBeChanged' | translate }}
+      </small>
+    </div>
+
+    <!-- Name field -->
+    <div>
+      <label for="formName" class="block mb-2 font-medium">
+        {{ 'Master::ResEvent:Name' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input pInputText id="formName" [(ngModel)]="formData.name"
+        class="w-full" maxlength="50" />
+    </div>
+
+    <!-- Description field -->
+    <div>
+      <label for="formDescription" class="block mb-2 font-medium">
+        {{ 'Master::ResEvent:Description' | translate }}
+      </label>
+      <textarea pTextarea id="formDescription" [(ngModel)]="formData.description" class="w-full" [rows]="3" maxlength="500"></textarea>
+    </div>
+
+    <!-- Status field -->
+    <div>
+      <label for="formStatus" class="block mb-2 font-medium">
+        {{ 'Master::ResEvent:Status' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select id="formStatus" [(ngModel)]="formData.status" [options]="statusOptions"
+        [placeholder]="'Master::ResEvent:Status' | translate" optionLabel="label" optionValue="value"
+        styleClass="w-full" appendTo="body" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button [label]="'Master::Cancel' | translate" severity="secondary" (onClick)="dialogVisible = false"
+        [disabled]="loading" />
+      <p-button [label]="'Master::Save' | translate" (onClick)="save()" [loading]="loading" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Panel Templates -->
+<p-dialog [(visible)]="templatesPanelVisible" [header]="'Master::ResEvent:NotifyTemplates' | translate" [modal]="true"
+  [style]="{ width: '90vw', maxWidth: '1200px', maxHeight: '90vh' }" [draggable]="false" [resizable]="false"
+  [contentStyle]="{ overflow: 'visible' }">
+  <div class="flex flex-col gap-4 p-4">
+    <div class="flex justify-between items-center">
+      <div>
+        <p class="font-semibold">{{ selectedEventForTemplates?.name }}</p>
+        <p class="text-sm text-gray-500">{{ selectedEventForTemplates?.code }}</p>
+      </div>
+      <p-button *ngIf="TEMPLATE_PERMISSIONS.CREATE | appPermission"
+        [label]="'Master::ResEventNotifyTemplate:New' | translate" icon="pi pi-plus"
+        (onClick)="openCreateTemplateDialog()" />
+    </div>
+
+    <!-- Templates Table -->
+    <div *ngIf="templatesLoading" class="text-center py-8">
+      <i class="pi pi-spin pi-spinner text-2xl"></i>
+    </div>
+    <div *ngIf="!templatesLoading && templates.length === 0" class="text-center py-8 text-gray-500">
+      {{ 'Master::NoData' | translate }}
+    </div>
+    <div *ngIf="!templatesLoading && templates.length > 0" class="overflow-x-auto">
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="border p-2 text-left">{{ 'Master::ResEventNotifyTemplate:AppChannelCode' | translate }}</th>
+            <th class="border p-2 text-left">{{ 'Master::ResEventNotifyTemplate:AppChannelName' | translate }}</th>
+            <th class="border p-2 text-left">{{ 'Master::ResEventNotifyTemplate:RetryNumber' | translate }}</th>
+            <th class="border p-2 text-left">{{ 'Master::ResEventNotifyTemplate:Title' | translate }}</th>
+            <th class="border p-2 text-left">{{ 'Master::ResEventNotifyTemplate:Body' | translate }}</th>
+            <th class="border p-2 text-center" style="width: 120px;">{{ 'Master::Actions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let template of templates" class="hover:bg-gray-50">
+            <td class="border p-2">{{ template.appChannelCode }}</td>
+            <td class="border p-2">{{ template.appChannelName }}</td>
+            <td class="border p-2">{{ template.retryNumber }}</td>
+            <td class="border p-2">{{ template.title }}</td>
+            <td class="border p-2">{{ template.body }}</td>
+            <td class="border p-2 text-center">
+              <div class="flex gap-2 justify-center">
+                <p-button *ngIf="TEMPLATE_PERMISSIONS.UPDATE | appPermission" icon="pi pi-pencil" [text]="true"
+                  severity="secondary" (onClick)="openEditTemplateDialog(template)"
+                  [title]="'Master::Edit' | translate" />
+                <p-button *ngIf="TEMPLATE_PERMISSIONS.DELETE | appPermission" icon="pi pi-trash" [text]="true"
+                  severity="danger" (onClick)="deleteTemplate(template)" [title]="'Master::Delete' | translate" />
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Dialog Create/Edit Template -->
+<p-dialog [(visible)]="templateDialogVisible"
+  [header]="(templateDialogMode === 'create' ? 'Master::ResEventNotifyTemplate:New' : 'Master::ResEventNotifyTemplate:Edit') | translate"
+  [modal]="true" [style]="{ width: '700px', maxHeight: '90vh' }" [draggable]="false" [resizable]="false"
+  [contentStyle]="{ overflow: 'visible' }">
+  <div class="flex flex-col gap-4 p-4">
+    <!-- App Channel field -->
+    <div>
+      <label for="templateAppChannelId" class="block mb-2 font-medium">
+        {{ 'Master::ResEventNotifyTemplate:AppChannelId' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select id="templateAppChannelId" [(ngModel)]="templateFormData.appChannelId" [options]="appChannelOptions"
+        [placeholder]="'Master::ResEventNotifyTemplate:AppChannelId' | translate" optionLabel="label"
+        optionValue="value" styleClass="w-full" appendTo="body" [disabled]="templateDialogMode === 'edit'" />
+    </div>
+
+    <!-- Retry Number field -->
+    <div>
+      <label for="templateRetryNumber" class="block mb-2 font-medium">
+        {{ 'Master::ResEventNotifyTemplate:RetryNumber' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-inputNumber id="templateRetryNumber" [(ngModel)]="templateFormData.retryNumber" [min]="0" [max]="99"
+        [showButtons]="true" styleClass="w-full" />
+    </div>
+
+    <!-- Title field -->
+    <div>
+      <label for="templateTitle" class="block mb-2 font-medium">
+        {{ 'Master::ResEventNotifyTemplate:Title' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input pInputText id="templateTitle" [(ngModel)]="templateFormData.title" class="w-full" maxlength="250" />
+      <small class="text-gray-500">{{ 'Master::ResEventNotifyTemplate:Title' | translate }}:
+        <code>$&#123;param_name&#125;</code></small>
+    </div>
+
+    <!-- Body field -->
+    <div>
+      <label for="templateBody" class="block mb-2 font-medium">
+        {{ 'Master::ResEventNotifyTemplate:Body' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <textarea pTextarea id="templateBody" [(ngModel)]="templateFormData.body" class="w-full" [rows]="4"
+        maxlength="500"></textarea>
+      <small class="text-gray-500">{{ 'Master::ResEventNotifyTemplate:Body' | translate }}:
+        <code>$&#123;param_name&#125;</code></small>
+    </div>
+
+    <!-- Data field -->
+    <div>
+      <label for="templateData" class="block mb-2 font-medium">
+        {{ 'Master::ResEventNotifyTemplate:Data' | translate }}
+      </label>
+      <textarea pTextarea id="templateData" [(ngModel)]="templateFormData.data" class="w-full font-mono text-sm" [rows]="6"
+        maxlength="1000"></textarea>
+      <small class="text-gray-500">JSON format</small>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button [label]="'Master::Cancel' | translate" severity="secondary" (onClick)="templateDialogVisible = false"
+        [disabled]="templatesLoading" />
+      <p-button [label]="'Master::Save' | translate" (onClick)="saveTemplate()" [loading]="templatesLoading" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Messages -->
+<p-toast />
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog />

@@ -1,0 +1,129 @@
+<div class="grid grid-cols-12 gap-4">
+  <div class="col-span-12">
+    <p-panel header="My API Keys">
+      <p class="mb-4 text-color-secondary">
+        Create API keys for other systems to call this backend. Use the <strong>X-Api-Key</strong> header with the full key (prefix_secret).
+        Keys are shown only once at creation; store them securely.
+      </p>
+      <div class="mb-4">
+        <p-button label="Create API Key" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+      </div>
+      <p-table
+        [value]="keys"
+        [loading]="loading"
+        [rowHover]="true"
+        styleClass="p-datatable-sm p-datatable-gridlines"
+        [tableStyle]="{ 'min-width': '50rem' }"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Name</th>
+            <th>Prefix</th>
+            <th>Created</th>
+            <th>Expires</th>
+            <th>Active</th>
+            <th style="width: 8rem"></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-key>
+          <tr>
+            <td>{{ key.name }}</td>
+            <td><code>{{ key.prefix }}</code></td>
+            <td>{{ formatDate(key.creationTime) }}</td>
+            <td>{{ formatDate(key.expiresAt) }}</td>
+            <td>
+              <span [class]="key.isActive ? 'text-green-600' : 'text-red-600'">
+                {{ key.isActive ? 'Yes' : 'No' }}
+              </span>
+            </td>
+            <td>
+              <p-button
+                *ngIf="key.isActive"
+                label="Revoke"
+                icon="pi pi-times"
+                severity="danger"
+                [outlined]="true"
+                size="small"
+                (onClick)="revokeKey(key)"
+              />
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="text-center py-4 text-color-secondary">No API keys yet. Create one to get started.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-panel>
+  </div>
+</div>
+
+<!-- Create dialog -->
+<p-dialog
+  [(visible)]="createDialogVisible"
+  header="Create API Key"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="createForm = { name: '', expiresAt: null }"
+>
+  <div class="flex flex-col gap-4">
+    <div>
+      <label for="keyName" class="block mb-2 font-medium">Name</label>
+      <input
+        pInputText
+        id="keyName"
+        [(ngModel)]="createForm.name"
+        class="w-full"
+      />
+    </div>
+    <div>
+      <label for="keyExpires" class="block mb-2 font-medium">Expires at (optional)</label>
+      <p-datePicker
+        id="keyExpires"
+        [(ngModel)]="createForm.expiresAt"
+        [showTime]="false"
+        dateFormat="yy-mm-dd"
+        styleClass="w-full"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" (onClick)="createDialogVisible = false" />
+    <p-button label="Create" icon="pi pi-check" (onClick)="createKey()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Show key once after create -->
+<p-dialog
+  [(visible)]="createdKeyDialogVisible"
+  header="API Key Created"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  (onHide)="closeCreatedKeyDialog()"
+>
+  <div class="flex flex-col gap-3" *ngIf="createdKeyResult">
+    <p class="text-red-600 font-medium">Copy this key now. It will not be shown again.</p>
+    <div class="flex gap-2">
+      <input
+        pInputText
+        [value]="createdKeyResult.fullKey"
+        readonly
+        class="flex-1 font-mono text-sm"
+      />
+      <p-button icon="pi pi-copy" (onClick)="copyCreatedKey()" title="Copy" />
+    </div>
+    <p class="text-sm text-color-secondary">Use it in the <strong>X-Api-Key</strong> header when calling the API.</p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Done" icon="pi pi-check" (onClick)="closeCreatedKeyDialog()" />
+  </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

@@ -1,0 +1,15 @@
+// Insurer Dictionaries Component Styles
+// Fix scroll/dropdown in dialog (RULES: :host ::ng-deep, appendTo="body" on selects)
+:host ::ng-deep {
+  .p-dialog-content {
+    overflow: visible;
+  }
+  .p-dialog {
+    .p-select-overlay {
+      z-index: 10000 !important;
+    }
+    .p-datepicker-overlay {
+      z-index: 10000 !important;
+    }
+  }
+}

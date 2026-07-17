@@ -1,0 +1,59 @@
+/* Giữ nguyên thiết kế như claim-task-detail */
+.info-section {
+  margin-bottom: 0.5rem;
+
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    text-decoration: underline;
+    margin-bottom: 0.5rem;
+  }
+
+  .data-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+
+    .label {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    .value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+  }
+}
+
+:host ::ng-deep .custom-table {
+  .p-datatable-header,
+  .p-datatable-thead > tr > th {
+    background-color: #f9fafb;
+    color: #4b5563;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0.35rem 0.75rem;
+  }
+
+  .p-datatable-tbody > tr > td {
+    font-size: 0.85rem;
+    border-bottom: 1px solid #f3f4f6;
+    padding: 0.35rem 0.75rem;
+  }
+}
+
+:host ::ng-deep .custom-btn-orange {
+  background-color: #f58220 !important;
+  border-color: #f58220 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+
+  &:hover {
+    background-color: #e47211 !important;
+    border-color: #e47211 !important;
+  }
+}

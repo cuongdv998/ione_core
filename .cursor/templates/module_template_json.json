@@ -1,0 +1,89 @@
+{
+  "description": "End-to-end module generation template for ABP (Open Source) + Angular using Cursor.",
+  "placeholders": {
+    "<MODULE>": "Name of the business module (PascalCase)",
+    "<module>": "kebab-case version for Angular",
+    "<Entity>": "Main entity name",
+    "<EntityPlural>": "Plural form",
+    "<DTO>": "DTO name"
+  },
+  "backend": {
+    "Domain": {
+      "files": [
+        "src/<MODULE>/domain/<MODULE>/<Entity>.cs",
+        "src/<MODULE>/domain/<MODULE>/I<Entity>Repository.cs",
+        "src/<MODULE>/domain/<MODULE>/DomainEvents/<Entity>CreatedEvent.cs"
+      ],
+      "template": "Create an AggregateRoot entity <Entity> with private setters, constructor validation, and optional domain events."
+    },
+    "Domain.Shared": {
+      "files": [
+        "src/<MODULE>/domain.shared/<MODULE>/<MODULE>Permissions.cs",
+        "src/<MODULE>/domain.shared/<MODULE>/Dtos/<DTO>.cs"
+      ],
+      "template": "Add enums, constants, permissions and shared DTO definitions."
+    },
+    "Application.Contracts": {
+      "files": [
+        "src/<MODULE>/application.contracts/<MODULE>/Dtos/CreateUpdate<Entity>Dto.cs",
+        "src/<MODULE>/application.contracts/<MODULE>/I<Entity>AppService.cs"
+      ],
+      "template": "Add DTOs and service interface. No business logic."
+    },
+    "Application": {
+      "files": [
+        "src/<MODULE>/application/<MODULE>/<Entity>AppService.cs"
+      ],
+      "template": "Implement application service, inject repository, map DTOs with ObjectMapper, implement CRUD."
+    },
+    "EntityFrameworkCore": {
+      "files": [
+        "src/<MODULE>/entityframeworkcore/<MODULE>/EfCore<Entity>Repository.cs",
+        "src/<MODULE>/entityframeworkcore/<MODULE>/EntityConfigurations/<Entity>Configuration.cs"
+      ],
+      "template": "Implement repository + entity configuration using EF Core conventions."
+    },
+    "HttpApi": {
+      "files": [
+        "src/<MODULE>/httpapi/<MODULE>/<Entity>Controller.cs"
+      ],
+      "template": "Add controller exposing API endpoints using AppService."
+    }
+  },
+  "frontend": {
+    "structure": {
+      "root": "angular/src/app/features/<module>/",
+      "folders": [
+        "pages",
+        "components",
+        "services",
+        "state"
+      ]
+    },
+    "files": {
+      "page": "src/app/features/<module>/pages/<module>-page.component.ts",
+      "service": "src/app/features/<module>/services/<module>.service.ts",
+      "state": "src/app/features/<module>/state/<module>.state.ts",
+      "formComponent": "src/app/features/<module>/components/<module>-form.component.ts",
+      "tableComponent": "src/app/features/<module>/components/<module>-table.component.ts"
+    },
+    "template": "Generate Angular standalone components, use proxy services only, no hardcoded URLs."
+  },
+  "workflow": [
+    "1. Generate Domain layer (entities, repository interface, domain events)",
+    "2. Generate Domain.Shared permissions and enums",
+    "3. Generate Application.Contracts (DTO + AppService interface)",
+    "4. Generate Application service implementation",
+    "5. Generate EF Core repository + configuration",
+    "6. Generate HttpApi controller",
+    "7. Run ABP CLI to generate Angular proxy",
+    "8. Generate Angular feature (service, pages, components, state)",
+    "9. Connect Angular UI to proxy endpoints"
+  ],
+  "notes": [
+    "Cursor must follow ABP naming & folder conventions strictly.",
+    "Cursor should not modify unrelated files during generation.",
+    "Use standalone Angular components only.",
+    "Backend DTOs generated in Contracts must match Angular proxy DTOs."
+  ]
+}

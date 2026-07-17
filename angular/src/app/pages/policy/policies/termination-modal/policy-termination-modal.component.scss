@@ -1,0 +1,19 @@
+// Styles for termination modal component
+.readonly-field {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}
+
+// Page mode (no dialog wrapper)
+.termination-page-content {
+  overflow: auto;
+}
+
+.termination-page-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 1rem;
+}

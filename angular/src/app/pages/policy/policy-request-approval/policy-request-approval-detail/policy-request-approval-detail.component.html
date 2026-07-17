@@ -1,0 +1,136 @@
+<div class="policy-request-approval-detail">
+  <div class="page-header">
+    <div class="titles">
+      <h2 class="page-title">{{ 'Policy::Policy:View' | translate }}</h2>
+      <div class="subtitle" *ngIf="policyNo">
+        {{ 'Policy::Policy:PolicyNo' | translate }}: <strong>{{ policyNo }}</strong>
+      </div>
+    </div>
+    <div class="page-actions">
+      <p-button
+        icon="pi pi-arrow-left"
+        severity="secondary"
+        [outlined]="true"
+        [label]="'Policy::Back' | translate"
+        (onClick)="backToList()"
+      />
+      <ng-container *ngIf="canApprove">
+        <p-button
+          icon="pi pi-check"
+          [label]="'Policy::Policy:Approve' | translate"
+          (onClick)="approve()"
+          [disabled]="!id || loading || actionLoading || isApprovalActionDisabled"
+        />
+        <p-button
+          icon="pi pi-times"
+          severity="secondary"
+          [label]="'Policy::Policy:Reject' | translate"
+          (onClick)="openRejectReason()"
+          [disabled]="!id || loading || actionLoading || isApprovalActionDisabled"
+        />
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Termination section at top when request type is terminate -->
+    <div *ngIf="isTerminateRequest && !loading" class="flex flex-col gap-6 p-4 bg-white rounded-md border border-gray-200 mb-6">
+      <div class="border-b pb-4">
+        <h3 class="text-lg font-semibold mb-4 underline">{{ 'Policy::Policy:TerminationReason' | translate }}</h3>
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-12 md:col-span-6">
+            <label class="block mb-2 font-medium">
+              {{ 'Policy::Policy:TerminationReason' | translate }}
+            </label>
+            <p class="text-gray-700">{{ terminationReasonName }}</p>
+          </div>
+          <div class="col-span-12">
+            <label class="block mb-2 font-medium">
+              {{ 'Policy::Policy:TerminationReasonDescription' | translate }}
+            </label>
+            <p class="text-gray-700 whitespace-pre-wrap">{{ terminationReasonDescription }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Endorsement section at top when request type is endorsement -->
+    <div *ngIf="isEndorsementRequest && !loading" class="flex flex-col gap-6 p-4 bg-white rounded-md border border-gray-200 mb-6">
+      <div class="border-b pb-4">
+        <h3 class="text-lg font-semibold mb-4 underline">{{ 'Policy::Policy:EndorsementReasonSection' | translate }}</h3>
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-12 md:col-span-4">
+            <label class="block mb-2 font-medium">
+              {{ 'Policy::Policy:EndorsementReason' | translate }}
+            </label>
+            <p class="text-gray-700">{{ endorsementReasonName }}</p>
+          </div>
+          <div class="col-span-12 md:col-span-4">
+            <label class="block mb-2 font-medium">
+              {{ 'Policy::Policy:EndorsementType' | translate }}
+            </label>
+            <p class="text-gray-700">{{ endorsementTypeName }}</p>
+          </div>
+          <div class="col-span-12">
+            <label class="block mb-2 font-medium">
+              {{ 'Policy::Policy:Description' | translate }}
+            </label>
+            <p class="text-gray-700 whitespace-pre-wrap">{{ endorsementDescription }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Policy detail view (same structure as policy detail page) -->
+    <app-policy-form-page
+      *ngIf="policyIdForEmbed"
+      [policyIdForEmbed]="policyIdForEmbed"
+      [versionIdForEmbed]="versionIdForEmbed"
+      [embeddedViewMode]="true"
+      [hideHeader]="true"
+      [isTerminationView]="isTerminateRequest"
+      [returnToListPath]="'/pages/policy/request-approval'"
+      [workTaskStatusForFooter]="workTaskStatus"
+      (policyDetailLoaded)="onPolicyDetailLoaded($event)"
+    />
+  </div>
+</div>
+
+<!-- Reject reason modal -->
+<p-dialog
+  [(visible)]="rejectReasonModalVisible"
+  [header]="'Policy::PolicyRequestApproval:RejectReason' | translate"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="cancelRejectReason()"
+>
+  <div class="flex flex-col gap-4 py-2">
+    <div>
+      <label for="rejectReasonId" class="block mb-2 font-medium">{{ 'Policy::PolicyRequestApproval:Reason' | translate }} <span class="text-red-500">*</span></label>
+      <p-select
+        id="rejectReasonId"
+        [(ngModel)]="rejectReasonId"
+        [options]="rejectReasonOptions"
+        optionLabel="label"
+        optionValue="value"
+        [placeholder]="'Policy::PolicyRequestApproval:SelectReason' | translate"
+        [loading]="rejectReasonOptionsLoading"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div>
+      <label for="rejectReasonDescription" class="block mb-2 font-medium">{{ 'Policy::PolicyRequestApproval:ReasonDescription' | translate }} <span class="text-red-500">*</span></label>
+      <textarea pTextarea id="rejectReasonDescription" [(ngModel)]="rejectReasonDescription" [rows]="3" class="w-full" [placeholder]="'Policy::PolicyRequestApproval:ReasonDescriptionPlaceholder' | translate"></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button [label]="'Policy::Cancel' | translate" severity="secondary" (onClick)="cancelRejectReason()" />
+    <p-button [label]="'Policy::PolicyRequestApproval:Continue' | translate" icon="pi pi-check" (onClick)="confirmRejectReason()" />
+  </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

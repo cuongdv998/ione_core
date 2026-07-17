@@ -1,0 +1,676 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="onVisibleChange($event)"
+  [header]="(mode === 'create' ? 'Partner::ResPartner:New' : 'Partner::ResPartner:Edit') | translate"
+  [modal]="true"
+  [style]="{ width: '90vw', maxWidth: '1200px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflow: 'visible' }"
+>
+  <form #partnerForm="ngForm">
+    <p-tabs [(value)]="activeTabValue">
+      <p-tablist>
+        <p-tab value="0">{{ 'Partner::ResPartner:BasicInfo' | translate }}</p-tab>
+        <p-tab value="1">{{ 'Partner::ResPartner:Agreements' | translate }}</p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="flex flex-col gap-4 p-4 max-h-[60vh] overflow-y-auto">
+            <div class="grid grid-cols-12 gap-4">
+              <div class="col-span-12 md:col-span-6">
+                <label for="formCode" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:Code' | translate }}
+                  <span class="text-red-500">*</span>
+                </label>
+                <input
+                  pInputText
+                  id="formCode"
+                  [(ngModel)]="formData.code"
+                  name="code"
+                  [readonly]="mode === 'edit'"
+                  class="w-full"
+                  [class.bg-gray-100]="mode === 'edit'"
+                  (input)="onCodeInput($event)"
+                  maxlength="25"
+                  required
+                />
+                <small class="text-gray-500">{{ 'Partner::ResPartner:CodeInvalidFormat' | translate }}</small>
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formName" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:Name' | translate }}
+                  <span class="text-red-500">*</span>
+                </label>
+                <input
+                  pInputText
+                  id="formName"
+                  [(ngModel)]="formData.name"
+                  name="name"
+                  class="w-full"
+                  maxlength="250"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-4">
+              <div class="col-span-12 md:col-span-6">
+                <label for="formPartnerTypeId" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:PartnerType' | translate }}
+                  <span class="text-red-500">*</span>
+                </label>
+                <p-select
+                  id="formPartnerTypeId"
+                  [(ngModel)]="formData.partnerTypeId"
+                  name="partnerTypeId"
+                  [options]="partnerTypeOptions"
+                  [placeholder]="'Partner::ResPartner:PartnerType' | translate"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                  appendTo="body"
+                  [disabled]="isPartnerTypeLocked"
+                  required
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formPartnerRole" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:PartnerRole' | translate }}
+                </label>
+                <p-select
+                  id="formPartnerRole"
+                  [(ngModel)]="formData.partnerRole"
+                  name="partnerRole"
+                  [options]="partnerRoleOptions"
+                  [placeholder]="'Partner::ResPartner:PartnerRole' | translate"
+                  [showClear]="true"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                  appendTo="body"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-4">
+              <div class="col-span-12 md:col-span-6">
+                <label for="formOrganizationTypeId" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:OrganizationType' | translate }}
+                </label>
+                <p-select
+                  id="formOrganizationTypeId"
+                  [(ngModel)]="formData.organizationTypeId"
+                  name="organizationTypeId"
+                  [options]="organizationTypeOptions"
+                  [placeholder]="'Partner::ResPartner:OrganizationType' | translate"
+                  [showClear]="true"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                  appendTo="body"
+                  (onChange)="onOrganizationTypeChange()"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formChannelId" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:Channel' | translate }}
+                </label>
+                <p-select
+                  id="formChannelId"
+                  [(ngModel)]="formData.channelId"
+                  name="channelId"
+                  [options]="channelOptions"
+                  [placeholder]="'Partner::ResPartner:Channel' | translate"
+                  [showClear]="true"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                  appendTo="body"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-4">
+              <div class="col-span-12 md:col-span-6">
+                <label for="formProvinceId" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:Province' | translate }}
+                  <span class="text-red-500">*</span>
+                </label>
+                <p-select
+                  id="formProvinceId"
+                  [(ngModel)]="formData.provinceId"
+                  name="provinceId"
+                  [options]="provinceOptions"
+                  [placeholder]="'Partner::ResPartner:Province' | translate"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                  appendTo="body"
+                  (onChange)="onProvinceChange()"
+                  required
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formWardId" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:Ward' | translate }}
+                  <span class="text-red-500">*</span>
+                </label>
+                <p-select
+                  id="formWardId"
+                  [(ngModel)]="formData.wardId"
+                  name="wardId"
+                  [options]="wardOptions"
+                  [placeholder]="'Partner::ResPartner:Ward' | translate"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                  appendTo="body"
+                  (onChange)="onWardChange()"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-4">
+              <div class="col-span-12 md:col-span-6">
+                <label for="formAddress" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:Address' | translate }}
+                  <span class="text-red-500">*</span>
+                </label>
+                <input
+                  pInputText
+                  id="formAddress"
+                  [(ngModel)]="formData.address"
+                  name="address"
+                  (input)="onAddressChange()"
+                  class="w-full"
+                  maxlength="250"
+                  required
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formFullAddress" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:FullAddress' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formFullAddress"
+                  [(ngModel)]="formData.fullAddress"
+                  name="fullAddress"
+                  [readonly]="true"
+                  class="w-full bg-gray-100"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-4">
+              <div class="col-span-12 md:col-span-6">
+                <label for="formEmail" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:Email' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formEmail"
+                  [(ngModel)]="formData.email"
+                  name="email"
+                  type="email"
+                  class="w-full"
+                  maxlength="50"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formPhone" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:Phone' | translate }}
+                  <span class="text-red-500">*</span>
+                </label>
+                <input
+                  pInputText
+                  id="formPhone"
+                  [(ngModel)]="formData.phone"
+                  name="phone"
+                  class="w-full"
+                  maxlength="15"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-4">
+              <div class="col-span-12 md:col-span-6">
+                <label for="formStatus" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:Status' | translate }}
+                  <span class="text-red-500">*</span>
+                </label>
+                <p-select
+                  id="formStatus"
+                  [(ngModel)]="formData.status"
+                  name="status"
+                  [options]="statusOptions"
+                  [placeholder]="'Partner::ResPartner:Status' | translate"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                  appendTo="body"
+                  required
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formNote" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:Note' | translate }}
+                </label>
+                <textarea
+                  pTextarea
+                  id="formNote"
+                  [(ngModel)]="formData.note"
+                  name="note"
+                  class="w-full"
+                  rows="3"
+                  maxlength="500"
+                ></textarea>
+              </div>
+            </div>
+
+            <div *ngIf="isOrganizationTypeCN()" class="grid grid-cols-12 gap-4 border-t pt-4">
+              <div class="col-span-12">
+                <h3 class="text-lg font-semibold mb-2">{{ 'Partner::ResPartner:IndividualInfo' | translate }}</h3>
+              </div>
+              <div class="col-span-12 md:col-span-6">
+                <label for="formIdNo" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:IdNo' | translate }}
+                </label>
+                <input pInputText id="formIdNo" [(ngModel)]="formData.idNo" name="idNo" class="w-full" maxlength="25" />
+              </div>
+            </div>
+
+            <div *ngIf="isOrganizationTypeTC()" class="grid grid-cols-12 gap-4 border-t pt-4">
+              <div class="col-span-12">
+                <h3 class="text-lg font-semibold mb-2">{{ 'Partner::ResPartner:OrganizationInfo' | translate }}</h3>
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formTin" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:Tin' | translate }}
+                </label>
+                <input pInputText id="formTin" [(ngModel)]="formData.tin" name="tin" class="w-full" maxlength="50" />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formBusinessNo" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:BusinessNo' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formBusinessNo"
+                  [(ngModel)]="formData.businessNo"
+                  name="businessNo"
+                  class="w-full"
+                  maxlength="25"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formRepName" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:RepName' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formRepName"
+                  [(ngModel)]="formData.repName"
+                  name="repName"
+                  class="w-full"
+                  maxlength="250"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formRepEmail" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:RepEmail' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formRepEmail"
+                  [(ngModel)]="formData.repEmail"
+                  name="repEmail"
+                  type="email"
+                  class="w-full"
+                  maxlength="50"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formRepPhone" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:RepPhone' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formRepPhone"
+                  [(ngModel)]="formData.repPhone"
+                  name="repPhone"
+                  class="w-full"
+                  maxlength="15"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formRepIdNo" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:RepIdNo' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formRepIdNo"
+                  [(ngModel)]="formData.repIdNo"
+                  name="repIdNo"
+                  class="w-full"
+                  maxlength="25"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formRepTitle" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:RepTitle' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formRepTitle"
+                  [(ngModel)]="formData.repTitle"
+                  name="repTitle"
+                  class="w-full"
+                  maxlength="250"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formAuthorizer" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:Authorizer' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formAuthorizer"
+                  [(ngModel)]="formData.authorizer"
+                  name="authorizer"
+                  class="w-full"
+                  maxlength="50"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formAuthorizerPhone" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:AuthorizerPhone' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formAuthorizerPhone"
+                  [(ngModel)]="formData.authorizerPhone"
+                  name="authorizerPhone"
+                  class="w-full"
+                  maxlength="15"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formAuthorizerEmail" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:AuthorizerEmail' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formAuthorizerEmail"
+                  [(ngModel)]="formData.authorizerEmail"
+                  name="authorizerEmail"
+                  type="email"
+                  class="w-full"
+                  maxlength="50"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formAuthorizerNo" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:AuthorizerNo' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formAuthorizerNo"
+                  [(ngModel)]="formData.authorizerNo"
+                  name="authorizerNo"
+                  class="w-full"
+                  maxlength="25"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formAuthorizerDate" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:AuthorizerDate' | translate }}
+                </label>
+                <p-datepicker
+                  id="formAuthorizerDate"
+                  [(ngModel)]="formData.authorizerDate"
+                  name="authorizerDate"
+                  [showIcon]="true"
+                  [showButtonBar]="true"
+                  dateFormat="dd/mm/yy"
+                  styleClass="w-full"
+                  appendTo="body"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formAuthorizerTitle" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:AuthorizerTitle' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formAuthorizerTitle"
+                  [(ngModel)]="formData.authorizerTitle"
+                  name="authorizerTitle"
+                  class="w-full"
+                  maxlength="50"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-4 border-t pt-4">
+              <div class="col-span-12">
+                <h3 class="text-lg font-semibold mb-2">{{ 'Partner::ResPartner:InvoiceAddress' | translate }}</h3>
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formInvoiceProvinceId" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:InvoiceProvince' | translate }}
+                </label>
+                <p-select
+                  id="formInvoiceProvinceId"
+                  [(ngModel)]="formData.invoiceProvinceId"
+                  name="invoiceProvinceId"
+                  [options]="provinceOptions"
+                  [placeholder]="'Partner::ResPartner:InvoiceProvince' | translate"
+                  [showClear]="true"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                  appendTo="body"
+                  (onChange)="onInvoiceProvinceChange()"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formInvoiceWardId" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:InvoiceWard' | translate }}
+                </label>
+                <p-select
+                  id="formInvoiceWardId"
+                  [(ngModel)]="formData.invoiceWardId"
+                  name="invoiceWardId"
+                  [options]="invoiceWardOptions"
+                  [placeholder]="'Partner::ResPartner:InvoiceWard' | translate"
+                  [showClear]="true"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                  appendTo="body"
+                  (onChange)="onInvoiceWardChange()"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formInvoiceAddress" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:InvoiceAddress' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formInvoiceAddress"
+                  [(ngModel)]="formData.invoiceAddress"
+                  name="invoiceAddress"
+                  (input)="onInvoiceAddressChange()"
+                  class="w-full"
+                  maxlength="250"
+                />
+              </div>
+
+              <div class="col-span-12 md:col-span-6">
+                <label for="formInvoiceFullAddress" class="block mb-2 font-medium">
+                  {{ 'Partner::ResPartner:InvoiceFullAddress' | translate }}
+                </label>
+                <input
+                  pInputText
+                  id="formInvoiceFullAddress"
+                  [(ngModel)]="formData.invoiceFullAddress"
+                  name="invoiceFullAddress"
+                  [readonly]="true"
+                  class="w-full bg-gray-100"
+                />
+              </div>
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <p-tabpanel value="1">
+          <div class="flex flex-col gap-4 p-4 max-h-[60vh] overflow-y-auto">
+            <div class="flex justify-between items-center">
+              <h3 class="text-lg font-semibold">{{ 'Partner::ResPartner:Agreements' | translate }}</h3>
+              <p-button
+                [label]="'Partner::ResPartner:AddAgreement' | translate"
+                icon="pi pi-plus"
+                size="small"
+                [disabled]="saving"
+                (onClick)="addAgreement()"
+              />
+            </div>
+
+            <p-table
+              [value]="formData.agreements"
+              [columns]="agreementColumns"
+              [paginator]="false"
+              [scrollable]="true"
+              scrollHeight="400px"
+              styleClass="p-datatable-sm"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 200px">{{ 'Partner::ResPartnerAgreement:AgreementTermName' | translate }}</th>
+                  <th style="width: 150px">{{ 'Partner::ResPartnerAgreement:Value' | translate }}</th>
+                  <th style="width: 150px">{{ 'Partner::ResPartnerAgreement:EffectDate' | translate }}</th>
+                  <th style="width: 150px">{{ 'Partner::ResPartnerAgreement:ExpireDate' | translate }}</th>
+                  <th style="width: 100px">{{ 'AbpUi::Actions' | translate }}</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-agreement let-rowIndex="rowIndex">
+                <tr>
+                  <td>
+                    <p-select
+                      [(ngModel)]="agreement.agreementTermId"
+                      [name]="'agreementTermId_' + rowIndex"
+                      [options]="agreementTermOptions"
+                      [placeholder]="'Partner::ResPartnerAgreement:AgreementTerm' | translate"
+                      optionLabel="label"
+                      optionValue="value"
+                      styleClass="w-full"
+                      appendTo="body"
+                      required
+                    />
+                  </td>
+                  <td>
+                    <p-inputnumber
+                      [(ngModel)]="agreement.value"
+                      [name]="'agreementValue_' + rowIndex"
+                      styleClass="w-full"
+                      [min]="0"
+                      mode="decimal"
+                      locale="vi-VN"
+                      [minFractionDigits]="0"
+                      [maxFractionDigits]="0"
+                    />
+                  </td>
+                  <td>
+                    <p-datepicker
+                      [(ngModel)]="agreement.effectDate"
+                      [name]="'agreementEffectDate_' + rowIndex"
+                      [showIcon]="true"
+                      [showButtonBar]="true"
+                      dateFormat="dd/mm/yy"
+                      styleClass="w-full"
+                      appendTo="body"
+                      required
+                      [maxDate]="agreement.expireDate"
+                    />
+                  </td>
+                  <td>
+                    <p-datepicker
+                      [(ngModel)]="agreement.expireDate"
+                      [name]="'agreementExpireDate_' + rowIndex"
+                      [showIcon]="true"
+                      [showButtonBar]="true"
+                      dateFormat="dd/mm/yy"
+                      styleClass="w-full"
+                      appendTo="body"
+                      [minDate]="agreement.effectDate"
+                    />
+                  </td>
+                  <td>
+                    <p-button
+                      icon="pi pi-trash"
+                      severity="danger"
+                      size="small"
+                      [text]="true"
+                      [disabled]="saving"
+                      (onClick)="removeAgreementByIndex(rowIndex, $event)"
+                    />
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="5" class="text-center py-4">
+                    {{ 'Partner::ResPartner:NoAgreements' | translate }}
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Partner::Cancel' | translate"
+        severity="secondary"
+        (onClick)="closeDialog()"
+        [disabled]="saving"
+      />
+      <p-button [label]="'Partner::Save' | translate" (onClick)="save()" [loading]="saving" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-toast />

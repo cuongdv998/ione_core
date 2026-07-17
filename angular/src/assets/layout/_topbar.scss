@@ -1,0 +1,193 @@
+@use 'mixins' as *;
+
+.layout-topbar {
+    position: fixed;
+    height: 4rem;
+    z-index: 997;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0 2rem;
+    background-color: #ffffff;
+    transition:
+        margin-left var(--layout-section-transition-duration),
+        width var(--layout-section-transition-duration);
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+    .app-dark & {
+        background-color: var(--surface-overlay);
+    }
+
+    .layout-topbar-logo-container {
+        display: none;
+        align-items: center;
+        width: 22rem;
+        flex-shrink: 0;
+
+        .layout-overlay & {
+            display: flex;
+        }
+    }
+
+    .layout-topbar-logo {
+        display: flex;
+        align-items: center;
+
+        img {
+            height: 3rem;
+            width: auto;
+        }
+    }
+
+    .layout-topbar-start {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .layout-topbar-system-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #0f172a;
+        white-space: nowrap;
+        
+        .app-dark & {
+            color: #ffffff;
+        }
+    }
+
+    .layout-topbar-action {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        color: #334155;
+        border-radius: 50%;
+        width: 2.5rem;
+        height: 2.5rem;
+        transition: background-color var(--element-transition-duration);
+        cursor: pointer;
+
+        .app-dark & {
+            color: #ffffff;
+        }
+
+        &:hover {
+            background-color: var(--surface-hover);
+        }
+
+        &:focus-visible {
+            @include focused();
+        }
+
+        i {
+            font-size: 1.25rem;
+            color: inherit;
+        }
+
+        span {
+            font-size: 1rem;
+            display: none;
+            color: inherit;
+        }
+
+        &.layout-topbar-action-highlight {
+            display: none;
+            background-color: var(--primary-color);
+            color: var(--primary-contrast-color);
+            
+            i {
+                color: var(--primary-contrast-color);
+            }
+        }
+    }
+
+    .layout-menu-button {
+        margin-right: 0.5rem;
+    }
+
+    .layout-topbar-menu-button {
+        display: none;
+    }
+
+    .layout-topbar-actions {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .layout-topbar-menu-content {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .layout-config-menu {
+        display: flex;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 991px) {
+    .layout-topbar {
+        padding: 0 2rem;
+
+        .layout-topbar-logo-container {
+            display: flex;
+            width: auto;
+        }
+
+        .layout-menu-button {
+            margin-left: 0;
+            margin-right: 0.5rem;
+        }
+
+        .layout-topbar-menu-button {
+            display: inline-flex;
+        }
+
+        .layout-topbar-menu {
+            position: absolute;
+            background-color: var(--surface-overlay);
+            transform-origin: top;
+            box-shadow:
+                0px 3px 5px rgba(0, 0, 0, 0.02),
+                0px 0px 2px rgba(0, 0, 0, 0.05),
+                0px 1px 4px rgba(0, 0, 0, 0.08);
+            border-radius: var(--content-border-radius);
+            padding: 1rem;
+            right: 2rem;
+            top: 4rem;
+            min-width: 15rem;
+            border: 1px solid var(--surface-border);
+
+            .layout-topbar-menu-content {
+                gap: 0.5rem;
+            }
+
+            .layout-topbar-action {
+                display: flex;
+                width: 100%;
+                height: auto;
+                justify-content: flex-start;
+                border-radius: var(--content-border-radius);
+                padding: 0.5rem 1rem;
+
+                i {
+                    font-size: 1rem;
+                    margin-right: 0.5rem;
+                }
+
+                span {
+                    font-weight: medium;
+                    display: block;
+                }
+            }
+        }
+
+        .layout-topbar-menu-content {
+            flex-direction: column;
+        }
+    }
+}

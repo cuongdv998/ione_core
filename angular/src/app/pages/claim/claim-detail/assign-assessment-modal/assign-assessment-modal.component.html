@@ -1,0 +1,55 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="onVisibleChange($event)"
+  [header]="'Claim::AssignAssessment' | translate"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="close()"
+>
+  @if (loading) {
+    <div class="flex justify-center p-6">
+      <i class="pi pi-spin pi-spinner text-3xl"></i>
+    </div>
+  } @else {
+    <div class="grid grid-cols-12 gap-4 p-2">
+      <div class="col-span-12">
+        <label for="processDeptId" class="block mb-2 font-medium">{{ 'Claim::ProcessDeptId' | translate }}</label>
+        <p-select
+          id="processDeptId"
+          [(ngModel)]="processDeptId"
+          [options]="departmentOptions"
+          [placeholder]="'Claim::SelectDepartment' | translate"
+          [showClear]="true"
+          [loading]="loadingDepartments"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+          (onChange)="onDepartmentChange()"
+        />
+      </div>
+      <div class="col-span-12">
+        <label for="processEmpId" class="block mb-2 font-medium">{{ 'Claim::ProcessEmpId' | translate }}</label>
+        <p-select
+          id="processEmpId"
+          [(ngModel)]="processEmpId"
+          [options]="employeeOptions"
+          [placeholder]="'Claim::SelectEmployee' | translate"
+          [showClear]="true"
+          [loading]="loadingEmployees"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button [label]="'Claim::Cancel' | translate" severity="secondary" (onClick)="close()" [disabled]="saving" />
+    <p-button [label]="'Claim::Save' | translate" (onClick)="submit()" [loading]="saving" [disabled]="loading" />
+  </ng-template>
+</p-dialog>
+<p-toast />

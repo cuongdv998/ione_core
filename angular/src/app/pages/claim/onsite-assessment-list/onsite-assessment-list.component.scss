@@ -1,0 +1,49 @@
+:host {
+  display: block;
+}
+
+:host ::ng-deep p-datepicker,
+:host ::ng-deep p-datepicker .p-datepicker,
+:host ::ng-deep p-datepicker .p-inputtext {
+  width: 100%;
+}
+
+:host ::ng-deep app-v-table .action-col {
+  width: 70px !important;
+  min-width: 70px !important;
+  max-width: 70px !important;
+  overflow: hidden !important;
+}
+
+:host ::ng-deep app-v-table .action-col > ng-container,
+:host ::ng-deep app-v-table .action-col {
+  white-space: nowrap;
+}
+
+:host ::ng-deep app-v-table .action-col td,
+:host ::ng-deep app-v-table td.action-col {
+  overflow: hidden !important;
+}
+
+:host ::ng-deep .quick-search-shell .quick-search-complete {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: stretch;
+  width: 100%;
+}
+
+:host ::ng-deep .quick-search-shell .quick-search-complete .p-autocomplete-input,
+:host ::ng-deep .quick-search-shell .quick-search-complete .p-inputtext {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent;
+}

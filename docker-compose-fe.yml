@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  ione-angular:
+    image: ione-angular:${IMAGE_TAG}
+    container_name: ione-angular
+    ports:
+      - "8083:80"
+    restart: unless-stopped
+    networks:
+      - ione-network
+
+networks:
+  ione-network:
+    driver: bridge
+

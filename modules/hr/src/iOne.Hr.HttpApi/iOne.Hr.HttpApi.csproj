@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\..\common.props" />
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>iOne.Hr</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\iOne.Hr.Application.Contracts\iOne.Hr.Application.Contracts.csproj" />
+    <ProjectReference Include="..\iOne.Hr.Application\iOne.Hr.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.PermissionManagement.HttpApi" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.FeatureManagement.HttpApi" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.SettingManagement.HttpApi" Version="9.3.6" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Volo.Abp.Account\src\Volo.Abp.Account.HttpApi\Volo.Abp.Account.HttpApi.csproj" />
+    <ProjectReference Include="..\..\..\Volo.Abp.Identity\src\Volo.Abp.Identity.HttpApi\Volo.Abp.Identity.HttpApi.csproj" />
+    <ProjectReference Include="..\..\..\Volo.Abp.AuditLogging\src\Volo.Abp.AuditLogging.HttpApi\Volo.Abp.AuditLogging.HttpApi.csproj" />
+  </ItemGroup>
+</Project>
+

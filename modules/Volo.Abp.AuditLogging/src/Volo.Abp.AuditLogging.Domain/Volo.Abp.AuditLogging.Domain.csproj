@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>Volo.Abp.AuditLogging.Domain</AssemblyName>
+    <PackageId>Volo.Abp.AuditLogging.Domain</PackageId>
+    <RootNamespace />
+    <Version>9.3.6</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Volo.Abp.AuditLogging.Domain.Shared\Volo.Abp.AuditLogging.Domain.Shared.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Ddd.Domain" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.Auditing" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.ExceptionHandling" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.Json" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.ObjectExtending" Version="9.3.6" />
+  </ItemGroup>
+
+</Project>

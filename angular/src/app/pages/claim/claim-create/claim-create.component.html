@@ -1,0 +1,888 @@
+<ng-template #actionButtons>
+  <div class="flex justify-end gap-2">
+    <p-button
+      *ngIf="isPageMode && (isViewMode || isEditMode)"
+      [label]="'Claim::Back' | translate"
+      severity="secondary"
+      (onClick)="goBack()"
+      [disabled]="loading"
+    />
+    <p-button
+      [label]="'Claim::Cancel' | translate"
+      severity="secondary"
+      (onClick)="closeDialog()"
+      [disabled]="loading"
+    />
+    <p-button
+      *ngIf="isEditMode"
+      [label]="'Claim::Update' | translate"
+      (onClick)="saveUpdate()"
+      [loading]="loading"
+    />
+    <p-button
+      *ngIf="isEditMode"
+      [label]="'Claim::SaveAndSendAssessment' | translate"
+      (onClick)="saveUpdateAndSendAssessment()"
+      [loading]="loading"
+      [disabled]="!canSaveAndSendAssessment || loading"
+    />
+    <p-button
+      *ngIf="!isViewMode && !isEditMode"
+      [label]="'Claim::SaveInfo' | translate"
+      (onClick)="saveDraft()"
+      [loading]="loading"
+    />
+    <p-button
+      *ngIf="!isViewMode && !isEditMode"
+      [label]="'Claim::SaveAndSendAssessment' | translate"
+      (onClick)="saveAndSendAssessment()"
+      [loading]="loading"
+      [disabled]="!canSaveAndSendAssessment || loading"
+    />
+  </div>
+</ng-template>
+
+<ng-template #tabsContent>
+  <p-tabs [(value)]="activeTab">
+    <p-tablist>
+      <p-tab value="0">{{ 'Claim::ClaimInfo' | translate }}</p-tab>
+      <p-tab value="1" [disabled]="true">{{ 'Claim::IncidentImages' | translate }}</p-tab>
+      <p-tab value="2" [disabled]="true">{{ 'Claim::ProcessingProgress' | translate }}</p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+      <!-- Tab 1: Claim Information -->
+      <p-tabpanel value="0">
+        <fieldset [disabled]="isViewMode">
+        <div class="flex flex-col gap-2 p-4" [ngClass]="isPageMode ? '' : 'max-h-[70vh] overflow-y-auto'">
+          <!-- General Claim Details -->
+          <div class="border-b pb-4">
+            <h3 class="text-lg font-semibold mb-4 underline">{{ 'Claim::GeneralInfo' | translate }}</h3>
+            <div class="grid grid-cols-12 gap-2">
+            <div class="col-span-12 md:col-span-3">
+              <label for="notifyDate" class="block mb-2 font-medium">
+                {{ 'Claim::NotifyDate' | translate }}
+              </label>
+              <p-datepicker
+                id="notifyDate"
+                [ngModel]="notifyDate"
+                [disabled]="true"
+                [showIcon]="true"
+                [showTime]="true"
+                dateFormat="dd/mm/yy"
+                styleClass="w-full"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="processClaimType" class="block mb-2 font-medium">
+                {{ 'Claim::ProcessClaimType' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <p-select
+                id="processClaimType"
+                [(ngModel)]="formData.processClaimType"
+                [options]="processClaimTypeOptions"
+                [disabled]="isViewMode"
+                [filter]="true"
+                filterBy="label"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                appendTo="body"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="processDeptId" class="block mb-2 font-medium">
+                {{ 'Claim::ProcessDeptId' | translate }}
+              </label>
+              <p-select
+                id="processDeptId"
+                [(ngModel)]="formData.processDeptId"
+                (ngModelChange)="onProcessDeptChange($event, true)"
+                [options]="departmentOptions"
+                [filter]="true"
+                filterBy="label"
+                [showClear]="true"
+                [loading]="loadingDepartments"
+                [disabled]="isViewMode"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                appendTo="body"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="processEmpId" class="block mb-2 font-medium">
+                {{ 'Claim::ProcessEmpId' | translate }}
+              </label>
+              <p-select
+                id="processEmpId"
+                [(ngModel)]="formData.processEmpId"
+                (ngModelChange)="onProcessEmpChange($event)"
+                [options]="employeeOptions"
+                [filter]="true"
+                filterBy="label"
+                [showClear]="true"
+                [loading]="loadingEmployees"
+                [disabled]="isViewMode"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                appendTo="body"
+              />
+            </div>
+          </div>
+          </div>
+
+          <!-- Notifier Information -->
+          <div class="border-b pb-4">
+            <h3 class="text-lg font-semibold mb-4 underline">{{ 'Claim::NotifierInfo' | translate }}</h3>
+            <div class="grid grid-cols-12 gap-2">
+            <div class="col-span-12 md:col-span-3">
+              <label for="notifierName" class="block mb-2 font-medium">
+                {{ 'Claim::NotifierName' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <input
+                pInputText
+                id="notifierName"
+                [(ngModel)]="formData.notifierName"
+                class="w-full"
+                maxlength="250"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="notifierPhone" class="block mb-2 font-medium">
+                {{ 'Claim::NotifierPhone' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <input
+                pInputText
+                id="notifierPhone"
+                [(ngModel)]="formData.notifierPhone"
+                class="w-full"
+                maxlength="15"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="notifierEmail" class="block mb-2 font-medium">
+                {{ 'Claim::NotifierEmail' | translate }}
+              </label>
+              <input
+                pInputText
+                id="notifierEmail"
+                type="email"
+                [(ngModel)]="formData.notifierEmail"
+                class="w-full"
+                maxlength="50"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="notifierInRelationship" class="block mb-2 font-medium">
+                {{ 'Claim::NotifierInRelationship' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <p-select
+                id="notifierInRelationship"
+                [(ngModel)]="formData.notifierInRelationship"
+                [options]="relationshipOptions"
+                [filter]="true"
+                filterBy="label"
+                [loading]="loadingRelationships"
+                [disabled]="isViewMode"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                appendTo="body"
+              />
+            </div>
+          </div>
+          </div>
+
+          <!-- Contact Information -->
+          <div class="border-b pb-4">
+            <h3 class="text-lg font-semibold mb-4 underline">{{ 'Claim::ContactInfo' | translate }}</h3>
+            <div class="grid grid-cols-12 gap-2">
+            <div class="col-span-12 md:col-span-3">
+              <label for="contactName" class="block mb-2 font-medium">
+                {{ 'Claim::ContactName' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <div class="flex gap-1 align-items-center">
+                <input
+                  pInputText
+                  id="contactName"
+                  [(ngModel)]="formData.contactName"
+                  class="flex-1 min-w-0"
+                  maxlength="250"
+                />
+                <p-button
+                  *ngIf="!isViewMode"
+                  icon="pi pi-copy"
+                  [text]="true"
+                  [rounded]="true"
+                  (onClick)="copyNotifierToContact()"
+                  [pTooltip]="'Claim::CopyFromNotifier' | translate"
+                  [attr.aria-label]="'Claim::CopyFromNotifier' | translate"
+                />
+              </div>
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="contactPhone" class="block mb-2 font-medium">
+                {{ 'Claim::ContactPhone' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <input
+                pInputText
+                id="contactPhone"
+                [(ngModel)]="formData.contactPhone"
+                class="w-full"
+                maxlength="15"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="contactEmail" class="block mb-2 font-medium">
+                {{ 'Claim::ContactEmail' | translate }}
+              </label>
+              <input
+                pInputText
+                id="contactEmail"
+                type="email"
+                [(ngModel)]="formData.contactEmail"
+                class="w-full"
+                maxlength="50"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="contactInRelationship" class="block mb-2 font-medium">
+                {{ 'Claim::ContactInRelationship' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <p-select
+                id="contactInRelationship"
+                [(ngModel)]="formData.contactInRelationship"
+                [options]="relationshipOptions"
+                [filter]="true"
+                filterBy="label"
+                [loading]="loadingRelationships"
+                [disabled]="isViewMode"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                appendTo="body"
+              />
+            </div>
+          </div>
+          </div>
+
+          <!-- Incident Details -->
+          <div class="border-b pb-4">
+            <h3 class="text-lg font-semibold mb-4 underline">{{ 'Claim::IncidentDetails' | translate }}</h3>
+            <div class="grid grid-cols-12 gap-2">
+            <div class="col-span-12 md:col-span-3">
+              <label for="incidentDate" class="block mb-2 font-medium">
+                {{ 'Claim::IncidentDate' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <p-datepicker
+                id="incidentDate"
+                [(ngModel)]="formData.incidentDate"
+                (ngModelChange)="onIncidentDateChange()"
+                [showIcon]="true"
+                [showTime]="true"
+                dateFormat="dd/mm/yy"
+                styleClass="w-full"
+                (blur)="onPolicySearchBlur()"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="certificateNo" class="block mb-2 font-medium">
+                {{ 'Claim::CertificateNo' | translate }}
+              </label>
+              <input
+                pInputText
+                id="certificateNo"
+                [(ngModel)]="formData.certificateNo"
+                class="w-full"
+                maxlength="50"
+                (blur)="onPolicySearchBlur()"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="insurerId" class="block mb-2 font-medium">
+                {{ 'Claim::InsurerName' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <p-select
+                id="insurerId"
+                [(ngModel)]="formData.insurerId"
+                [options]="insurerOptions"
+                [filter]="true"
+                filterBy="label"
+                [loading]="loadingInsurers"
+                [disabled]="isViewMode"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                appendTo="body"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label class="block mb-2 font-medium">
+                {{ 'Claim::VehicleInfo' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <div class="grid grid-cols-3 gap-2">
+                <input
+                  pInputText
+                  [(ngModel)]="formData.carPlate"
+                  (input)="onVehicleInput($event, 'carPlate')"
+                  class="w-full"
+                  maxlength="15"
+                  (blur)="onPolicySearchBlur()"
+                />
+                <input
+                  pInputText
+                  [(ngModel)]="formData.vin"
+                  (input)="onVehicleInput($event, 'vin')"
+                  class="w-full"
+                  maxlength="25"
+                  (blur)="onPolicySearchBlur()"
+                />
+                <div class="flex gap-2">
+                  <input
+                    pInputText
+                    [(ngModel)]="formData.engineNumber"
+                    (input)="onVehicleInput($event, 'engineNumber')"
+                    class="w-full"
+                    maxlength="25"
+                    (blur)="onPolicySearchBlur()"
+                  />
+                  <i
+                    class="pi pi-eye mt-2 cursor-pointer"
+                    role="button"
+                    tabindex="0"
+                    (click)="onPolicySearchClick()"
+                    (keydown.enter)="onPolicySearchClick()"
+                  ></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="incidentProvinceId" class="block mb-2 font-medium">
+                {{ 'Claim::IncidentProvince' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <p-select
+                id="incidentProvinceId"
+                [(ngModel)]="formData.incidentProvinceId"
+                [options]="provinceOptions"
+                [filter]="true"
+                filterBy="label"
+                [showClear]="true"
+                [loading]="loadingProvinces"
+                [disabled]="isViewMode"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                appendTo="body"
+                (onChange)="onProvinceChange()"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="incidentWardId" class="block mb-2 font-medium">
+                {{ 'Claim::IncidentWard' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <p-select
+                id="incidentWardId"
+                [(ngModel)]="formData.incidentWardId"
+                [options]="wardOptions"
+                [filter]="true"
+                filterBy="label"
+                [showClear]="true"
+                [loading]="loadingWards"
+                [disabled]="isViewMode || !formData.incidentProvinceId"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                appendTo="body"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-6">
+              <label for="incidentAddress" class="block mb-2 font-medium">
+                {{ 'Claim::IncidentAddress' | translate }}
+              </label>
+              <input
+                pInputText
+                id="incidentAddress"
+                [(ngModel)]="formData.incidentAddress"
+                class="w-full"
+                maxlength="250"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label class="block mb-2 font-medium">
+                {{ 'Claim::OnLocation' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <div class="flex gap-4">
+                <div class="flex items-center">
+                  <p-radioButton
+                    inputId="onLocationY"
+                    [(ngModel)]="formData.onLocation"
+                    value="Y"
+                    name="onLocation"
+                  />
+                  <label for="onLocationY" class="ml-2">{{ 'Claim::Yes' | translate }}</label>
+                </div>
+                <div class="flex items-center">
+                  <p-radioButton
+                    inputId="onLocationN"
+                    [(ngModel)]="formData.onLocation"
+                    value="N"
+                    name="onLocation"
+                  />
+                  <label for="onLocationN" class="ml-2">{{ 'Claim::No' | translate }}</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="incidentCauseId" class="block mb-2 font-medium">
+                {{ 'Claim::IncidentCause' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <p-select
+                id="incidentCauseId"
+                [(ngModel)]="formData.incidentCauseId"
+                [options]="incidentCauseOptions"
+                [filter]="true"
+                filterBy="label"
+                [loading]="loadingIncidentCauses"
+                [disabled]="isViewMode"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                appendTo="body"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-6">
+              <label for="incidentDescription" class="block mb-2 font-medium">
+                {{ 'Claim::IncidentDescription' | translate }}
+              </label>
+              <textarea
+                pTextarea
+                id="incidentDescription"
+                [(ngModel)]="formData.incidentDescription"
+                class="w-full"
+                [rows]="3"
+                maxlength="500"
+              ></textarea>
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="incidentResult" class="block mb-2 font-medium">
+                {{ 'Claim::IncidentResult' | translate }} <span class="text-red-500">*</span>
+              </label>
+              <input
+                pInputText
+                id="incidentResult"
+                [(ngModel)]="formData.incidentResult"
+                class="w-full"
+                maxlength="500"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3 mt-4" style="margin-top: 30px;">
+              <p-rating
+                [(ngModel)]="formData.priority"
+                [stars]="3"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="assessmentDate" class="block mb-2 font-medium">
+                {{ 'Claim::AssessmentDate' | translate }}
+              </label>
+              <p-datepicker
+                id="assessmentDate"
+                [(ngModel)]="formData.assessmentDate"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                [showTime]="true"
+                styleClass="w-full"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="assessmentPartnerId" class="block mb-2 font-medium">
+                {{ 'Claim::AssessmentPartner' | translate }}
+              </label>
+              <p-select
+                id="assessmentPartnerId"
+                [(ngModel)]="formData.assessmentPartnerId"
+                [options]="garageOptions"
+                [filter]="true"
+                filterBy="label"
+                [loading]="loadingGarages"
+                [disabled]="isViewMode"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                appendTo="body"
+              />
+            </div>
+          </div>
+          </div>
+
+          <!-- Additional Information -->
+          <div class="border-b pb-4">
+            <h3 class="text-lg font-semibold mb-4 underline">{{ 'Claim::AdditionalInfo' | translate }}</h3>
+            <div class="grid grid-cols-12 gap-2">
+            <div class="col-span-12 md:col-span-3">
+              <label for="personOnCar" class="block mb-2 font-medium">
+                {{ 'Claim::PersonOnCar' | translate }}
+              </label>
+              <p-inputNumber
+                id="personOnCar"
+                [(ngModel)]="formData.personOnCar"
+                [min]="0"
+                [max]="999"
+                [showButtons]="false"
+                styleClass="w-full"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="driverName" class="block mb-2 font-medium">
+                {{ 'Claim::DriverName' | translate }}
+              </label>
+              <input
+                pInputText
+                id="driverName"
+                [(ngModel)]="formData.driverName"
+                class="w-full"
+                maxlength="250"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="driverSex" class="block mb-2 font-medium">
+                {{ 'Claim::DriverSex' | translate }}
+              </label>
+              <p-select
+                id="driverSex"
+                [(ngModel)]="formData.driverSex"
+                [options]="driverSexOptions"
+                [filter]="true"
+                filterBy="label"
+                [showClear]="true"
+                [disabled]="isViewMode"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                appendTo="body"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="driverPhone" class="block mb-2 font-medium">
+                {{ 'Claim::DriverPhone' | translate }}
+              </label>
+              <input
+                pInputText
+                id="driverPhone"
+                [(ngModel)]="formData.driverPhone"
+                class="w-full"
+                maxlength="15"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="driverIdNo" class="block mb-2 font-medium">
+                {{ 'Claim::DriverIdNo' | translate }}
+              </label>
+              <input
+                pInputText
+                id="driverIdNo"
+                [(ngModel)]="formData.driverIdNo"
+                class="w-full"
+                maxlength="15"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="driverLicenseNo" class="block mb-2 font-medium">
+                {{ 'Claim::DriverLicenseNo' | translate }}
+              </label>
+              <input
+                pInputText
+                id="driverLicenseNo"
+                [(ngModel)]="formData.driverLicenseNo"
+                class="w-full"
+                maxlength="50"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="driverLicenseEffectDate" class="block mb-2 font-medium">
+                {{ 'Claim::DriverLicenseEffectDate' | translate }}
+              </label>
+              <p-datepicker
+                id="driverLicenseEffectDate"
+                [(ngModel)]="formData.driverLicenseEffectDate"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                styleClass="w-full"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="driverLicenseExpireDate" class="block mb-2 font-medium">
+                {{ 'Claim::DriverLicenseExpireDate' | translate }}
+              </label>
+              <p-datepicker
+                id="driverLicenseExpireDate"
+                [(ngModel)]="formData.driverLicenseExpireDate"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                styleClass="w-full"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="driverLicenseLevel" class="block mb-2 font-medium">
+                {{ 'Claim::DriverLicenseLevel' | translate }}
+              </label>
+              <p-select
+                id="driverLicenseLevel"
+                [(ngModel)]="formData.driverLicenseLevel"
+                [options]="driverLicenseLevelOptions"
+                [filter]="true"
+                filterBy="label"
+                [showClear]="true"
+                [loading]="loadingDriverLicenseLevels"
+                [disabled]="isViewMode"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                appendTo="body"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="driverRegistryNo" class="block mb-2 font-medium">
+                {{ 'Claim::DriverRegistryNo' | translate }}
+              </label>
+              <input
+                pInputText
+                id="driverRegistryNo"
+                [(ngModel)]="formData.driverRegistryNo"
+                class="w-full"
+                maxlength="50"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="driverRegistryEffectDate" class="block mb-2 font-medium">
+                {{ 'Claim::DriverRegistryEffectDate' | translate }}
+              </label>
+              <p-datepicker
+                id="driverRegistryEffectDate"
+                [(ngModel)]="formData.driverRegistryEffectDate"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                styleClass="w-full"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+              <label for="driverRegistryExpireDate" class="block mb-2 font-medium">
+                {{ 'Claim::DriverRegistryExpireDate' | translate }}
+              </label>
+              <p-datepicker
+                id="driverRegistryExpireDate"
+                [(ngModel)]="formData.driverRegistryExpireDate"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                styleClass="w-full"
+              />
+            </div>
+
+            <div class="col-span-12 md:col-span-6">
+              <label for="note" class="block mb-2 font-medium">
+                {{ 'Claim::Note' | translate }}
+              </label>
+              <textarea
+                pTextarea
+                id="note"
+                [(ngModel)]="formData.note"
+                class="w-full"
+                [rows]="3"
+                maxlength="500"
+              ></textarea>
+            </div>
+
+            <div class="col-span-12 md:col-span-6">
+              <label class="block mb-2 font-medium">
+                {{ 'Claim::SnapshotLink' | translate }}
+              </label>
+              <div class="flex gap-2">
+                <input
+                  pInputText
+                  [value]="snapshotLink || ''"
+                  [readonly]="true"
+                  class="flex-1"
+                />
+                <p-button
+                  icon="pi pi-copy"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="secondary"
+                  (onClick)="copySnapshotLink()"
+                  [disabled]="!snapshotLink"
+                  [pTooltip]="'Claim::CopyLink' | translate"
+                  tooltipStyleClass="claim-create-single-line-tooltip"
+                />
+              </div>
+            </div>
+          </div>
+          </div>
+
+          <!-- Insurance Information Table -->
+          <div class="pb-4">
+            <div #insuranceInfoSection class="col-span-12" tabindex="-1">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold underline">{{ 'Claim::InsuranceInfo' | translate }}</h3>
+                <p-button
+                  icon="pi pi-refresh"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="secondary"
+                  (onClick)="refreshPolicies()"
+                  [pTooltip]="'Claim::Refresh' | translate"
+                />
+              </div>
+              <p-table
+                [value]="filteredPolicies"
+                [loading]="policiesLoading"
+                [paginator]="false"
+                styleClass="p-datatable-sm"
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>{{ 'Claim::STT' | translate }}</th>
+                    <th>{{ 'Claim::LobName' | translate }}</th>
+                    <th>{{ 'Claim::ContractId' | translate }}</th>
+                    <th>{{ 'Claim::CertificateNo' | translate }}</th>
+                    <th>{{ 'Claim::Products' | translate }}</th>
+                    <th>{{ 'Claim::CarPlate' | translate }}</th>
+                    <th>{{ 'Claim::OwnerName' | translate }}</th>
+                    <th>{{ 'Claim::InsurancePeriod' | translate }}</th>
+                    <th>{{ 'Claim::Status' | translate }}</th>
+                    <th>{{ 'Claim::Action' | translate }}</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-policy let-rowIndex="rowIndex">
+                  <tr>
+                    <td>{{ rowIndex + 1 }}</td>
+                    <td>{{ policy.lobName }}</td>
+                    <td>{{ policy.contractId }}</td>
+                    <td>{{ policy.certificateNo }}</td>
+                    <td>{{ policy.products?.join(', ') }}</td>
+                    <td>{{ policy.carPlate }}</td>
+                    <td>{{ policy.ownerName }}</td>
+                    <td>
+                      {{ policy.effectDate | date:'dd/MM/yyyy' }} - {{ policy.expireDate | date:'dd/MM/yyyy' }}
+                    </td>
+                    <td>{{ formatPolicyStatus(policy.status) }}</td>
+                    <td>
+                      <p-menu
+                        #policyMenu
+                        [popup]="true"
+                        appendTo="body"
+                        [model]="getPolicyMenuItems(policy)"
+                      ></p-menu>
+                      <button
+                        pButton
+                        type="button"
+                        icon="pi pi-ellipsis-h"
+                        severity="secondary"
+                        class="p-button-text p-button-rounded p-button-sm"
+                        [pTooltip]="'Claim::Action' | translate"
+                        tooltipPosition="top"
+                        (mousedown)="$event.preventDefault(); $event.stopPropagation()"
+                        (click)="$event.preventDefault(); $event.stopPropagation(); policyMenu.toggle($event)"
+                      ></button>
+                    </td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="10" class="text-center py-2">
+                      {{ 'Claim::NoPoliciesFound' | translate }}
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </div>
+        </div>
+        </fieldset>
+      </p-tabpanel>
+
+      <!-- Tab 2: Incident Images (disabled) -->
+      <p-tabpanel value="1">
+        <div class="p-4">
+          <p>{{ 'Claim::IncidentImagesComingSoon' | translate }}</p>
+        </div>
+      </p-tabpanel>
+
+      <!-- Tab 3: Processing Progress (disabled) -->
+      <p-tabpanel value="2">
+        <div class="p-4">
+          <p>{{ 'Claim::ProcessingProgressComingSoon' | translate }}</p>
+        </div>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+</ng-template>
+
+<ng-container *ngIf="isPageMode; else dialogMode">
+  <div class="flex flex-col min-h-screen">
+    <div class="flex-1">
+      <ng-container *ngTemplateOutlet="tabsContent"></ng-container>
+    </div>
+
+    <div class="bg-white border-t p-3 flex-shrink-0 sticky bottom-0 z-10">
+      <ng-container *ngTemplateOutlet="actionButtons"></ng-container>
+    </div>
+  </div>
+</ng-container>
+
+<ng-template #dialogMode>
+  <!-- Dialog Create Claim -->
+  <p-dialog
+    [(visible)]="dialogVisible"
+    [header]="'Claim::AddClaim' | translate"
+    [modal]="true"
+    [style]="{ width: '95vw', maxWidth: '1400px', maxHeight: '95vh' }"
+    [draggable]="false"
+    [resizable]="false"
+    [contentStyle]="{ overflow: 'visible' }"
+    (onHide)="closeDialog()"
+  >
+    <ng-container *ngTemplateOutlet="tabsContent"></ng-container>
+
+    <ng-template pTemplate="footer">
+      <ng-container *ngTemplateOutlet="actionButtons"></ng-container>
+    </ng-template>
+  </p-dialog>
+</ng-template>
+
+<!-- Toast Messages -->
+<p-toast />

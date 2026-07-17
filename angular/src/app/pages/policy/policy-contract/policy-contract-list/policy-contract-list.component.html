@@ -1,0 +1,226 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Row 1: Khách hàng, Số hợp đồng, Loại hợp đồng -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="customerId" class="block mb-2 font-medium">{{ 'Policy::Policy:Customer' | translate }}</label>
+          <p-select
+            id="customerId"
+            [(ngModel)]="searchForm.customerId"
+            [options]="customerOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            [loading]="loadingCustomers"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="code" class="block mb-2 font-medium">{{ 'Policy::Policy:ContractNo' | translate }}</label>
+          <input
+            pInputText
+            id="code"
+            [(ngModel)]="searchForm.code"
+            class="w-full"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="type" class="block mb-2 font-medium">{{ 'Policy::Policy:ContractType' | translate }}</label>
+          <p-select
+            id="type"
+            [(ngModel)]="searchForm.type"
+            [options]="typeOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Row 2: Trạng thái hợp đồng, Số Giấy chứng nhận, Số đơn BH -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="status" class="block mb-2 font-medium">{{ 'Policy::Policy:ContractStatus' | translate }}</label>
+          <p-select
+            id="status"
+            [(ngModel)]="searchForm.status"
+            [options]="statusOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="certificateCode" class="block mb-2 font-medium">{{ 'Policy::Policy:CertificateNo' | translate }}</label>
+          <input
+            pInputText
+            id="certificateCode"
+            [(ngModel)]="searchForm.certificateCode"
+            class="w-full"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="policyNo" class="block mb-2 font-medium">{{ 'Policy::Policy:PolicyNo' | translate }}</label>
+          <input
+            pInputText
+            id="policyNo"
+            [(ngModel)]="searchForm.policyNo"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Row 3: Người khai thác, Ngày hiệu lực (từ), Ngày hiệu lực (đến) -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="sellerId" class="block mb-2 font-medium">{{ 'Policy::Policy:ImplementerName' | translate }}</label>
+          <p-select
+            id="sellerId"
+            [(ngModel)]="searchForm.sellerId"
+            [options]="employeeOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            [loading]="loadingEmployees"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="effectDateFrom" class="block mb-2 font-medium">{{ 'Policy::Policy:EffectiveDateFrom' | translate }}</label>
+          <p-datepicker
+            inputId="effectDateFrom"
+            [(ngModel)]="searchForm.effectDateFrom"
+            [showIcon]="true"
+            dateFormat="dd/mm/yy"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="effectDateTo" class="block mb-2 font-medium">{{ 'Policy::Policy:EffectiveDateTo' | translate }}</label>
+          <p-datepicker
+            inputId="effectDateTo"
+            [(ngModel)]="searchForm.effectDateTo"
+            [showIcon]="true"
+            dateFormat="dd/mm/yy"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Row 4: Ngày hết hạn (từ), Ngày hết hạn (đến), Đối tác BH gốc -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="expireDateFrom" class="block mb-2 font-medium">{{ 'Policy::Policy:ExpiryDateFrom' | translate }}</label>
+          <p-datepicker
+            inputId="expireDateFrom"
+            [(ngModel)]="searchForm.expireDateFrom"
+            [showIcon]="true"
+            dateFormat="dd/mm/yy"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="expireDateTo" class="block mb-2 font-medium">{{ 'Policy::Policy:ExpiryDateTo' | translate }}</label>
+          <p-datepicker
+            inputId="expireDateTo"
+            [(ngModel)]="searchForm.expireDateTo"
+            [showIcon]="true"
+            dateFormat="dd/mm/yy"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="insurerId" class="block mb-2 font-medium">{{ 'Policy::Policy:PrimaryInsurancePartner' | translate }}</label>
+          <p-select
+            id="insurerId"
+            [(ngModel)]="searchForm.insurerId"
+            [options]="insurerOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            [loading]="loadingInsurers"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button
+            [label]="'AbpAuditLogging::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button
+            [label]="'AbpAuditLogging::Search' | translate"
+            icon="pi pi-search"
+            (onClick)="search()"
+          />
+          <p-button
+            [label]="'Policy::Policy:AddContract' | translate"
+            icon="pi pi-plus"
+            (onClick)="addContract()"
+          />
+          <p-button
+            [label]="'Policy::Policy:ExportFile' | translate"
+            icon="pi pi-download"
+            severity="secondary"
+            (onClick)="exportFile()"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table
+        [columns]="columns"
+        [data]="contracts"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        [actionLabelKey]="'Policy::Policy:Action'"
+        size="small"
+        [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadData($event)"
+      />
+    </p-panel>
+  </div>
+</div>
+
+<app-contract-termination-modal
+  [contractId]="selectedContractId"
+  [(visible)]="terminateModalVisible"
+  (submitted)="onTerminateSubmitted()"
+/>
+
+<!-- Toast Messages -->
+<p-toast />
+<p-confirmDialog />

@@ -1,0 +1,13 @@
+// Res Business Authorities Component Styles
+
+:host ::ng-deep {
+  .p-dialog-content {
+    overflow: visible !important;
+  }
+
+  .p-dialog {
+    .p-select-overlay {
+      z-index: 10000 !important;
+    }
+  }
+}

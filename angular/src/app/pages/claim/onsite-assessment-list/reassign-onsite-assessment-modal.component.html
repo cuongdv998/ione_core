@@ -1,0 +1,85 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="onVisibleChange($event)"
+  header="Giao lại giám định hiện trường"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="false"
+>
+  <div class="grid grid-cols-12 gap-4 p-2">
+    <div class="col-span-12 md:col-span-6">
+      <label for="reassignOnsiteOrg" class="block mb-2 font-medium">
+        Đơn vị giám định <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="reassignOnsiteOrg"
+        [(ngModel)]="assigneeOrganizationId"
+        [options]="departmentOptions"
+        [placeholder]="'Claim::SelectDepartment' | translate"
+        [showClear]="true"
+        [filter]="true"
+        [loading]="loadingDepartments"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+        (onChange)="onDepartmentChange()"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-6">
+      <label for="reassignOnsiteEmp" class="block mb-2 font-medium">
+        Người giám định <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="reassignOnsiteEmp"
+        [(ngModel)]="assigneeId"
+        [options]="employeeOptions"
+        [placeholder]="'Claim::SelectEmployee' | translate"
+        [showClear]="true"
+        [filter]="true"
+        [loading]="loadingEmployees"
+        [disabled]="!assigneeOrganizationId"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-6">
+      <label for="reassignOnsiteStartDate" class="block mb-2 font-medium">
+        Ngày giám định <span class="text-red-500">*</span>
+      </label>
+      <p-datepicker
+        inputId="reassignOnsiteStartDate"
+        [(ngModel)]="startDate"
+        [showIcon]="true"
+        [showTime]="true"
+        dateFormat="dd/mm/yy"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-6">
+      <label for="reassignOnsiteEndDate" class="block mb-2 font-medium">
+        Ngày dự kiến hoàn thành <span class="text-red-500">*</span>
+      </label>
+      <p-datepicker
+        inputId="reassignOnsiteEndDate"
+        [(ngModel)]="endDate"
+        [showIcon]="true"
+        [showTime]="true"
+        dateFormat="dd/mm/yy"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Hủy bỏ" severity="secondary" (onClick)="confirmClose()" [disabled]="saving" />
+    <p-button label="Giao lại" (onClick)="submit()" [loading]="saving" />
+  </ng-template>
+</p-dialog>
+<p-confirmDialog />
+<p-toast />

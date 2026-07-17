@@ -1,0 +1,48 @@
+<p-dialog [(visible)]="visible" [header]="'Report::ExportDynamic' | translate" [modal]="true" [style]="{width: '50vw'}"
+    [draggable]="false" [resizable]="false" (onHide)="close()">
+    <div class="flex flex-col gap-4">
+        <!-- Dynamic Form -->
+        <form [formGroup]="form" *ngIf="parameters.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div *ngFor="let param of parameters" class="flex flex-col gap-2">
+                <label [for]="param.code" class="font-bold">{{ param.name }}</label>
+
+                <ng-container [ngSwitch]="param.dataType">
+                    <!-- String -->
+                    <input *ngSwitchCase="'string'" pInputText [id]="param.code" [formControlName]="param.code!"
+                        class="w-full" />
+
+                    <!-- Number -->
+                    <p-inputNumber *ngSwitchCase="'number'" [id]="param.code" [formControlName]="param.code!"
+                        mode="decimal" class="w-full" styleClass="w-full"></p-inputNumber>
+
+                    <!-- Date -->
+                    <p-datepicker *ngSwitchCase="'date'" [id]="param.code" [formControlName]="param.code!"
+                        class="w-full" styleClass="w-full" dateFormat="dd/mm/yy" appendTo="body"
+                        [showIcon]="true"></p-datepicker>
+
+                    <!-- Boolean -->
+                    <div *ngSwitchCase="'boolean'" class="flex items-center">
+                        <p-checkbox [id]="param.code" [formControlName]="param.code!" [binary]="true"></p-checkbox>
+                    </div>
+
+                    <!-- Default -->
+                    <input *ngSwitchDefault pInputText [id]="param.code" [formControlName]="param.code!"
+                        class="w-full" />
+                </ng-container>
+            </div>
+        </form>
+
+        <div *ngIf="selectedTemplateId && parameters.length === 0 && !loading" class="text-gray-500 italic">
+            {{ 'Report::Message:NoParameters' | translate }}
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <p-button [label]="'AbpUi::Cancel' | translate" icon="pi pi-times" (onClick)="close()"
+            severity="secondary"></p-button>
+        <p-button [label]="'Report::Export' | translate" icon="pi pi-check" (onClick)="onSave()" [loading]="loading"
+            severity="success"></p-button>
+    </ng-template>
+</p-dialog>
+
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>

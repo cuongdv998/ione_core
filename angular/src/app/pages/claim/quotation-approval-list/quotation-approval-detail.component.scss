@@ -1,0 +1,56 @@
+.quotation-approval-detail-page {
+  background: #fff;
+  min-height: calc(100vh - 120px);
+}
+
+.detail-container {
+  background: #fff;
+  position: relative;
+}
+
+.detail-header-estimate-wrap {
+  display: flex;
+  justify-content: flex-end;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+}
+
+.detail-header-estimate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-header-estimate__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.detail-header-estimate__value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .pasc-sub-dialog .p-dialog-header {
+  background: var(--p-highlight-background);
+}
+
+:host ::ng-deep .pasc-sub-dialog .p-dialog-title {
+  font-weight: 600;
+}
+
+/* Căn giữa header bảng (HTML `.rp-table` + PrimeNG Datatable trong tab con) — không áp vào dialog appendTo body */
+:host ::ng-deep .detail-container table.rp-table th,
+:host ::ng-deep .detail-container .rp-table th {
+  text-align: center;
+}
+
+:host ::ng-deep .detail-container .p-datatable-thead > tr > th {
+  text-align: center;
+}

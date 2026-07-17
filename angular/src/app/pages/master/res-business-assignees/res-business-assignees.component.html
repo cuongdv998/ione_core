@@ -1,0 +1,197 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="searchOrganizationId" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:OrganizationId' | translate }}</label>
+          <p-select
+            id="searchOrganizationId"
+            [(ngModel)]="searchForm.organizationId"
+            [options]="organizationOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="businessCode" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:BusinessCode' | translate }}</label>
+          <p-select
+            id="businessCode"
+            [(ngModel)]="searchForm.businessCode"
+            [options]="businessCodeOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="authorityCode" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:AuthorityCode' | translate }}</label>
+          <p-select
+            id="authorityCode"
+            [(ngModel)]="searchForm.authorityCode"
+            [options]="authorityCodeOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="assigneeType" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:AssigneeType' | translate }}</label>
+          <p-select
+            id="assigneeType"
+            [(ngModel)]="searchForm.assigneeType"
+            [options]="assigneeTypeOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="departmentId" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:DepartmentId' | translate }}</label>
+          <p-select
+            id="departmentId"
+            [(ngModel)]="searchForm.departmentId"
+            [options]="departmentOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="status" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:Status' | translate }}</label>
+          <p-select
+            id="status"
+            [(ngModel)]="searchForm.status"
+            [options]="statusOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button [label]="'AbpAuditLogging::Reset' | translate" icon="pi pi-refresh" severity="secondary" (onClick)="resetSearch()" />
+          <p-button [label]="'AbpAuditLogging::Search' | translate" icon="pi pi-search" (onClick)="search()" />
+          <p-button *ngIf="PERMISSIONS.CREATE | appPermission" [label]="'Master::ResBusinessAssignee:New' | translate" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table
+        [columns]="columns"
+        [data]="items"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        size="small"
+        [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadData($event)"
+      />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Thêm / Sửa (cùng giao diện, trường không sửa được thì disable) -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Master::ResBusinessAssignee:New' : 'Master::ResBusinessAssignee:Edit') | translate"
+  [modal]="true"
+  [style]="{ width: '640px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflow: 'auto', maxHeight: 'calc(90vh - 8rem)' }"
+>
+  <div class="flex flex-col gap-4 p-4">
+    <!-- 1. Tổ chức -->
+    <div>
+      <label for="formOrganizationId" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:OrganizationId' | translate }}</label>
+      <p-select id="formOrganizationId" [(ngModel)]="formData.organizationId" [options]="organizationOptions" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" [showClear]="true" [placeholder]="'Master::ResBusinessAssignee:OrganizationId' | translate" [disabled]="dialogMode === 'edit'" />
+    </div>
+    <!-- 2. Mã nghiệp vụ -->
+    <div>
+      <label for="formBusinessCode" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:BusinessCode' | translate }} <span class="text-red-500" *ngIf="dialogMode === 'create'">*</span></label>
+      <p-select id="formBusinessCode" [(ngModel)]="formData.businessCode" [options]="businessCodeOptions" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" [placeholder]="'Master::ResBusinessAssignee:BusinessCode' | translate" [disabled]="dialogMode === 'edit'" />
+    </div>
+    <!-- 3. Mã thẩm quyền -->
+    <div>
+      <label for="formAuthorityCode" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:AuthorityCode' | translate }} <span class="text-red-500" *ngIf="dialogMode === 'create'">*</span></label>
+      <p-select id="formAuthorityCode" [(ngModel)]="formData.authorityCode" [options]="authorityCodeOptions" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" [placeholder]="'Master::ResBusinessAssignee:AuthorityCode' | translate" [disabled]="dialogMode === 'edit'" />
+    </div>
+    <!-- 4. Loại người thực hiện -->
+    <div>
+      <label for="formAssigneeType" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:AssigneeType' | translate }} <span class="text-red-500" *ngIf="dialogMode === 'create'">*</span></label>
+      <p-select id="formAssigneeType" [(ngModel)]="formData.assigneeType" [options]="assigneeTypeOptions" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" [placeholder]="'Master::ResBusinessAssignee:AssigneeType' | translate" [disabled]="dialogMode === 'edit'" />
+    </div>
+    <!-- 5. Ngày hiệu lực -->
+    <div>
+      <label for="formEffectDate" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:EffectDate' | translate }} <span class="text-red-500" *ngIf="dialogMode === 'create'">*</span></label>
+      <p-datepicker id="formEffectDate" [(ngModel)]="effectDatePicker" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" appendTo="body" [disabled]="dialogMode === 'edit'" />
+    </div>
+    <!-- 6. Ngày hết hạn (sửa được khi edit) -->
+    <div>
+      <label for="formExpireDate" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:ExpireDate' | translate }}</label>
+      <p-datepicker id="formExpireDate" [(ngModel)]="expireDatePicker" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true" styleClass="w-full" appendTo="body" />
+    </div>
+    <!-- 7. Cấp phòng ban - hiện khi Đích danh hoặc Theo vai trò -->
+    <div *ngIf="formData.assigneeType === 0 || formData.assigneeType === 1">
+      <label for="formDepartmentLevel" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:DepartmentLevel' | translate }}</label>
+      <p-select id="formDepartmentLevel" [(ngModel)]="formData.departmentLevel" [options]="departmentLevelOptions" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" [showClear]="true" [placeholder]="'Master::ResBusinessAssignee:DepartmentLevel' | translate" [disabled]="dialogMode === 'edit'" />
+    </div>
+    <!-- 8. Phòng ban - hiện khi Đích danh hoặc Theo vai trò -->
+    <div *ngIf="formData.assigneeType === 0 || formData.assigneeType === 1">
+      <label for="formDepartmentId" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:DepartmentId' | translate }}</label>
+      <p-select id="formDepartmentId" [(ngModel)]="formData.departmentId" [options]="departmentOptions" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" [showClear]="true" (onChange)="onDepartmentIdChange()" [placeholder]="'Master::ResBusinessAssignee:DepartmentId' | translate" [disabled]="dialogMode === 'edit'" />
+    </div>
+    <!-- 9. Vai trò người thực hiện - hiện khi Đích danh hoặc Theo vai trò -->
+    <div *ngIf="formData.assigneeType === 0 || formData.assigneeType === 1">
+      <label for="formAssigneeRole" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:AssigneeRole' | translate }}</label>
+      <p-select id="formAssigneeRole" [(ngModel)]="formData.assigneeRole" [options]="assigneeRoleOptions" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" [showClear]="true" [placeholder]="'Master::ResBusinessAssignee:AssigneeRole' | translate" [disabled]="dialogMode === 'edit'" />
+    </div>
+    <!-- 10. Nhân viên duyệt - chỉ hiện khi Đích danh; khi edit chỉ sửa được nếu Đích danh -->
+    <div *ngIf="formData.assigneeType === 0">
+      <label for="formAssigneeId" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:AssigneeId' | translate }}</label>
+      <p-select id="formAssigneeId" [(ngModel)]="formData.assigneeId" [options]="assigneeOptions" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" [showClear]="true" [placeholder]="'Master::ResBusinessAssignee:AssigneeId' | translate" />
+    </div>
+    <!-- 11. Trạng thái -->
+    <div>
+      <label for="formStatus" class="block mb-2 font-medium">{{ 'Master::ResBusinessAssignee:Status' | translate }}</label>
+      <p-select id="formStatus" [(ngModel)]="formData.status" [options]="statusOptions" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" [placeholder]="'Master::ResBusinessAssignee:Status' | translate" [disabled]="dialogMode === 'edit'" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button [label]="'Master::Cancel' | translate" severity="secondary" (onClick)="dialogVisible = false" [disabled]="loading" />
+      <p-button [label]="'Master::Save' | translate" (onClick)="save()" [loading]="loading" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

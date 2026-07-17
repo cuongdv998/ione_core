@@ -1,0 +1,100 @@
+<div class="evaluation-tab-wrap">
+  @if (loading) {
+    <div class="flex justify-center p-8"><i class="pi pi-spin pi-spinner text-3xl"></i></div>
+  } @else {
+    <div class="evaluation-card">
+      <h4 class="evaluation-title">Nhận xét đánh giá của GĐV</h4>
+
+      <div class="evaluation-grid">
+        @for (item of model.items; track item.evaluateItemId) {
+          <div class="evaluation-row">
+            <div class="evaluation-label">
+              {{ item.name }} <span class="required-mark">*</span>
+            </div>
+            <div class="evaluation-options">
+              <div class="option-item">
+                <p-radioButton
+                  [inputId]="'item-y-' + item.evaluateItemId"
+                  name="{{ 'item-' + item.evaluateItemId }}"
+                  value="Y"
+                  [(ngModel)]="item.result"
+                  (ngModelChange)="onItemResultChange(item.evaluateItemId)"
+                  [disabled]="!editable"
+                />
+                <label [for]="'item-y-' + item.evaluateItemId">Đúng</label>
+              </div>
+              <div class="option-item">
+                <p-radioButton
+                  [inputId]="'item-n-' + item.evaluateItemId"
+                  name="{{ 'item-' + item.evaluateItemId }}"
+                  value="N"
+                  [(ngModel)]="item.result"
+                  (ngModelChange)="onItemResultChange(item.evaluateItemId)"
+                  [disabled]="!editable"
+                />
+                <label [for]="'item-n-' + item.evaluateItemId">Không đúng</label>
+              </div>
+            </div>
+            @if (isInvalid('item-' + item.evaluateItemId)) {
+              <small class="field-error">{{ getError('item-' + item.evaluateItemId) }}</small>
+            }
+          </div>
+        }
+
+        <div class="evaluation-row">
+          <div class="evaluation-label">
+            Kết luận <span class="required-mark">*</span>
+          </div>
+          <div class="evaluation-options">
+            <div class="option-item">
+              <p-radioButton
+                inputId="evaluation-result-y"
+                name="evaluation-result"
+                value="Y"
+                [(ngModel)]="model.result"
+                (ngModelChange)="onConclusionChange()"
+                [disabled]="!editable"
+              />
+              <label for="evaluation-result-y">Thuộc phạm vi BH</label>
+            </div>
+            <div class="option-item">
+              <p-radioButton
+                inputId="evaluation-result-n"
+                name="evaluation-result"
+                value="N"
+                [(ngModel)]="model.result"
+                (ngModelChange)="onConclusionChange()"
+                [disabled]="!editable"
+              />
+              <label for="evaluation-result-n">Không thuộc phạm vi BH</label>
+            </div>
+          </div>
+          @if (isInvalid('result')) {
+            <small class="field-error">{{ getError('result') }}</small>
+          }
+        </div>
+
+        <div class="evaluation-row note-row">
+          <div class="evaluation-label">Ghi chú</div>
+          <div class="evaluation-note">
+            <textarea
+              pTextarea
+              rows="3"
+              class="w-full"
+              [(ngModel)]="model.description"
+              [disabled]="!editable"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="evaluation-action-bar">
+      <p-button label="Đóng" severity="secondary" (onClick)="close()" />
+      <p-button label="Lưu" class="btn-orange" [loading]="saving" [disabled]="!editable" (onClick)="save()" />
+    </div>
+  }
+</div>
+
+<p-confirmDialog />
+<p-toast />

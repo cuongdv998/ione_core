@@ -1,0 +1,497 @@
+<div class="repair-plan-wrap">
+  @if (loading) {
+    <div class="flex justify-center p-8"><i class="pi pi-spin pi-spinner text-3xl"></i></div>
+  } @else if (isPascProductEligible === false) {
+    <div class="p-8 text-center text-gray-700 max-w-xl mx-auto">
+      <p>Phương án sửa chữa (PASC) chỉ áp dụng cho hồ sơ sản phẩm vật chất xe (VCX).</p>
+      <p-button label="Đóng" class="mt-4" severity="secondary" (onClick)="close()" />
+    </div>
+  } @else {
+    <div class="repair-plan-content" [class.repair-plan-readonly]="formUiLocked">
+
+      <!-- SECTION 1: DANH SÁCH BÁO GIÁ -->
+      <div class="rp-section">
+        <div class="rp-section-header">
+          <span class="rp-section-title">Danh sách báo giá</span>
+          @if (!formUiLocked) {
+            <p-button label="Thêm" icon="pi pi-plus" (onClick)="addQuotation()" />
+          }
+        </div>
+
+        <input
+          #quotationFileInput
+          type="file"
+          class="hidden"
+          accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls"
+          (change)="onQuotationFileSelected($event)"
+        />
+
+        <div class="rp-table-wrap">
+          <table class="rp-table quotation-table">
+            <thead>
+              <tr>
+                <th class="col-radio">Chọn</th>
+                <th class="col-garage">Tên đơn vị báo giá <span class="req">*</span></th>
+                <th class="col-objtype">Đối tượng BH <span class="req">*</span></th>
+                <th class="col-date">Ngày báo giá <span class="req">*</span></th>
+                <th class="col-amount">Tổng tiền <span class="req">*</span></th>
+                <th class="col-file">Báo giá (File) <span class="req">*</span></th>
+                <th class="col-action"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (form.quotations.length === 0) {
+                <tr>
+                  <td colspan="7" class="text-center text-gray-400 py-4">Chưa có báo giá. Nhấn [Thêm] để bắt đầu.</td>
+                </tr>
+              }
+              @for (row of form.quotations; track row.id; let qi = $index) {
+                <tr [class.selected-row]="row.id === form.selectedQuotationId">
+                  <td class="col-radio text-center">
+                    <p-radioButton
+                      [name]="'selectedQuotation'"
+                      [value]="row.id"
+                      [(ngModel)]="form.selectedQuotationId"
+                    />
+                  </td>
+                  <td class="col-garage">
+                    <div class="garage-cell">
+                      <p-select
+                        [(ngModel)]="row.partnerId"
+                        [options]="garageOptions"
+                        optionValue="id"
+                        optionLabel="name"
+                        placeholder="Chọn garage"
+                        [showClear]="true"
+                        [filter]="true"
+                        filterPlaceholder="Tìm garage..."
+                        styleClass="w-full"
+                        appendTo="body"
+                        (onChange)="onGarageChange(row, $event.value)"
+                        (onClear)="onGarageSelected(row, null)"
+                      />
+                      @if (!formUiLocked) {
+                        <button
+                          type="button"
+                          class="add-garage-btn"
+                          title="Thêm mới garage"
+                          (click)="openAddGarageDialog()"
+                        >
+                          <i class="pi pi-plus"></i>
+                        </button>
+                      }
+                    </div>
+                  </td>
+                  <td class="col-objtype">
+                    <p-select
+                      [(ngModel)]="row.incidentObjectId"
+                      [options]="incidentObjectOptions"
+                      optionValue="id"
+                      optionLabel="label"
+                      placeholder="Chọn đối tượng BH"
+                      [showClear]="true"
+                      styleClass="w-full"
+                      appendTo="body"
+                    />
+                  </td>
+                  <td class="col-date">
+                    <p-datepicker
+                      [(ngModel)]="row.quotationDate"
+                      [showIcon]="true"
+                      dateFormat="dd/mm/yy"
+                      styleClass="w-full"
+                      appendTo="body"
+                    />
+                  </td>
+                  <td class="col-amount">
+                    <p-inputNumber
+                      [(ngModel)]="row.totalAmount"
+                      [useGrouping]="true"
+                      locale="vi-VN"
+                      styleClass="w-full"
+                      [min]="0"
+                    />
+                  </td>
+                  <td class="col-file">
+                    <div class="file-cell">
+                      @if (row.uploading) {
+                        <span class="file-uploading">
+                          <i class="pi pi-spin pi-spinner"></i> Đang tải...
+                        </span>
+                      } @else if (row.fileName) {
+                        <button type="button" class="file-link" (click)="downloadQuotationFile(row)" [title]="row.fileName">
+                          {{ row.fileName }}
+                        </button>
+                      } @else {
+                        <span class="file-empty">Chưa có file</span>
+                      }
+                      @if (!formUiLocked) {
+                        <button
+                          type="button"
+                          class="file-upload-btn"
+                          title="Tải lên file"
+                          (click)="triggerQuotationUpload(row.id, quotationFileInput)"
+                        >
+                          <i class="pi pi-upload"></i>
+                        </button>
+                      }
+                    </div>
+                  </td>
+                  <td class="col-action text-center">
+                    @if (!formUiLocked) {
+                      <p-button
+                        icon="pi pi-trash"
+                        [text]="true"
+                        severity="danger"
+                        (onClick)="confirmDeleteQuotation(row.id)"
+                      />
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECTION 2: CHI TIẾT HẠNG MỤC -->
+      <div class="rp-section">
+        <div class="rp-section-header">
+          <span class="rp-section-title">Chi tiết hạng mục</span>
+        </div>
+
+        <div class="rp-table-wrap">
+          <table class="rp-table detail-table">
+            <thead>
+              <tr>
+                <th rowspan="2" class="col-stt">STT</th>
+                <th rowspan="2" class="col-item">Hạng mục</th>
+                <th rowspan="2" class="col-plan">Phương án</th>
+                <th rowspan="2" class="col-qty">Số lượng</th>
+                <th rowspan="2" class="col-costtype">Loại chi phí</th>
+                <th rowspan="2" class="col-num">Báo giá Gara</th>
+                <th rowspan="2" class="col-num">GĐV đề xuất</th>
+                <th rowspan="2" class="col-num">Giá duyệt</th>
+                <th colspan="2" class="text-center">Giảm giá</th>
+                <th rowspan="2" class="col-num">Thành tiền</th>
+                <th rowspan="2" class="col-num">% Khấu hao</th>
+                <th rowspan="2" class="col-num">Tiền khấu hao</th>
+              </tr>
+              <tr>
+                <th class="col-num">% Giảm giá</th>
+                <th class="col-num">Tiền giảm giá</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (form.items.length === 0) {
+                <tr>
+                  <td colspan="13" class="text-center text-gray-400 py-4">
+                    Chưa có hạng mục. Dữ liệu lấy từ Giám định chi tiết.
+                  </td>
+                </tr>
+              }
+              @for (item of form.items; track item.id) {
+                @for (cost of item.costRows; track cost.costType; let ci = $index) {
+                  <tr [class.item-first-row]="ci === 0" [class.item-other-row]="ci > 0">
+                    @if (ci === 0) {
+                      <td [attr.rowspan]="item.costRows.length" class="col-stt text-center">{{ item.stt }}</td>
+                      <td [attr.rowspan]="item.costRows.length" class="col-item">{{ item.itemName }}</td>
+                      <td [attr.rowspan]="item.costRows.length" class="col-plan">{{ item.planName }}</td>
+                      <td [attr.rowspan]="item.costRows.length" class="col-qty text-center">{{ item.quantity }}</td>
+                    }
+                    <td class="col-costtype">{{ cost.costTypeName }}</td>
+                    <td class="col-num">
+                      <p-inputNumber
+                        [(ngModel)]="cost.garageAmount"
+                        [useGrouping]="true"
+                        locale="vi-VN"
+                        styleClass="w-full"
+                        [min]="0"
+                      />
+                    </td>
+                    <td class="col-num">
+                      <p-inputNumber
+                        [(ngModel)]="cost.proposedAmount"
+                        [useGrouping]="true"
+                        locale="vi-VN"
+                        styleClass="w-full"
+                        [min]="0"
+                        (ngModelChange)="onProposedAmountChange(cost)"
+                      />
+                    </td>
+                    <td class="col-num readonly-cell">
+                      {{ cost.approvedAmount != null ? formatCurrency(cost.approvedAmount) : '-' }}
+                    </td>
+                    <td class="col-num">
+                      <p-inputNumber
+                        [(ngModel)]="cost.discountPercent"
+                        [useGrouping]="false"
+                        styleClass="w-full"
+                        [min]="0"
+                        [max]="100"
+                        suffix="%"
+                        (ngModelChange)="onCostDiscountPercentChange(cost)"
+                      />
+                    </td>
+                    <td class="col-num">
+                      <p-inputNumber
+                        [(ngModel)]="cost.discountAmount"
+                        [useGrouping]="true"
+                        locale="vi-VN"
+                        styleClass="w-full"
+                        [min]="0"
+                        (ngModelChange)="onCostDiscountAmountChange(cost)"
+                      />
+                    </td>
+                    <td class="col-num readonly-cell text-right">
+                      {{ formatCurrency(cost.finalAmount) }}
+                    </td>
+                    <td class="col-num text-center">
+                      @if (cost.costType === 'material_cost') {
+                        @if (formUiLocked) {
+                          {{ cost.depreciationPercent != null ? cost.depreciationPercent + '%' : '-' }}
+                        } @else {
+                          <p-inputNumber
+                            [(ngModel)]="cost.depreciationPercent"
+                            [useGrouping]="false"
+                            styleClass="w-full"
+                            [min]="0"
+                            [max]="100"
+                            suffix="%"
+                            (ngModelChange)="onDepreciationPercentChange(cost)"
+                          />
+                        }
+                      } @else {
+                        -
+                      }
+                    </td>
+                    <td class="col-num readonly-cell text-right">
+                      @if (cost.costType === 'material_cost' && cost.depreciationAmount > 0) {
+                        {{ formatCurrency(cost.depreciationAmount) }}
+                      } @else {
+                        -
+                      }
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+            @if (form.items.length > 0) {
+              <tfoot>
+                <tr class="total-row">
+                  <td colspan="5" class="text-right font-bold">Tổng cộng</td>
+                  <td class="col-num text-right font-bold">{{ formatCurrency(totalGarageAmount) }}</td>
+                  <td class="col-num text-right font-bold">{{ formatCurrency(totalProposedAmount) }}</td>
+                  <td class="col-num"></td>
+                  <td class="col-num"></td>
+                  <td class="col-num text-right font-bold">{{ formatCurrency(totalDiscountAmount) }}</td>
+                  <td class="col-num text-right font-bold">{{ formatCurrency(totalFinalAmount) }}</td>
+                  <td class="col-num"></td>
+                  <td class="col-num text-right font-bold">{{ formatCurrency(totalDepreciationAmount) }}</td>
+                </tr>
+              </tfoot>
+            }
+          </table>
+        </div>
+      </div>
+
+      <!-- SECTION 3: THÔNG TIN TÍNH TOÁN -->
+      <div class="rp-section calc-section">
+        <div class="rp-section-header">
+          <span class="rp-section-title">Thông tin tính toán</span>
+        </div>
+
+        <div class="calc-grid">
+          <!-- Part I -->
+          <div class="calc-group">
+            <div class="calc-group-title">I. Chi phí sửa chữa/thay thế</div>
+            <div class="calc-row">
+              <span class="calc-label">I.1. Tổng tiền đề xuất duyệt</span>
+              <span class="calc-value">{{ formatCurrency(sectionI1) }}</span>
+            </div>
+            <div class="calc-row">
+              <span class="calc-label">I.2. Tổng tiền giảm giá</span>
+              <span class="calc-value">{{ formatCurrency(sectionI2) }}</span>
+            </div>
+            <div class="calc-row">
+              <span class="calc-label">I.3. Tổng khấu hao phụ tùng</span>
+              <span class="calc-value">{{ formatCurrency(sectionI3) }}</span>
+            </div>
+            <div class="calc-row highlight">
+              <span class="calc-label">I.4. Tổng chi phí sửa chữa (Chưa VAT)</span>
+              <span class="calc-value">{{ formatCurrency(sectionI4) }}</span>
+            </div>
+          </div>
+
+          <!-- Part II -->
+          <div class="calc-group">
+            <div class="calc-group-title">II. Chi phí khác</div>
+            <div class="calc-row editable-row">
+              <span class="calc-label">II.1. Chi phí giám định</span>
+              <p-inputNumber
+                [(ngModel)]="form.otherCosts.assessmentCost"
+                [useGrouping]="true"
+                locale="vi-VN"
+                styleClass="calc-input"
+                [min]="0"
+              />
+            </div>
+            <div class="calc-row editable-row">
+              <span class="calc-label">II.2. Chi phí đề phòng hạn chế tổn thất</span>
+              <p-inputNumber
+                [(ngModel)]="form.otherCosts.lossPrevCost"
+                [useGrouping]="true"
+                locale="vi-VN"
+                styleClass="calc-input"
+                [min]="0"
+              />
+            </div>
+            <div class="calc-row editable-row">
+              <span class="calc-label">II.3. Chi phí cứu hộ</span>
+              <p-inputNumber
+                [(ngModel)]="form.otherCosts.rescueCost"
+                [useGrouping]="true"
+                locale="vi-VN"
+                styleClass="calc-input"
+                [min]="0"
+              />
+            </div>
+            <div class="calc-row editable-row">
+              <span class="calc-label">II.4. Chi phí khác</span>
+              <p-inputNumber
+                [(ngModel)]="form.otherCosts.otherCost"
+                [useGrouping]="true"
+                locale="vi-VN"
+                styleClass="calc-input"
+                [min]="0"
+              />
+            </div>
+          </div>
+
+          <!-- Part III -->
+          <div class="calc-group total-group">
+            <div class="calc-row grand-total">
+              <span class="calc-label">III. Tổng chi phí</span>
+              <span class="calc-value grand-value">{{ formatCurrency(sectionIII) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER BUTTONS -->
+    <div class="detail-action-bar">
+      <p-button label="Đóng" severity="secondary" (onClick)="close()" />
+      @if (canShowSaveSubmitButtons) {
+        <p-button
+          label="Lưu"
+          [loading]="saving"
+          [disabled]="saving || !canSaveOrSubmit"
+          (onClick)="save()"
+        />
+        <p-button
+          label="Trình duyệt"
+          [loading]="loadingSubmitInfo || confirmingSubmit"
+          [disabled]="loadingSubmitInfo || confirmingSubmit || !canSaveOrSubmit"
+          (onClick)="submit()"
+        />
+      }
+    </div>
+  }
+</div>
+
+<p-confirmDialog />
+<p-toast />
+
+<!-- Dialog: Trình duyệt PASC -->
+<p-dialog
+  [(visible)]="submitDialogVisible"
+  header="Trình duyệt PASC"
+  [modal]="true"
+  [style]="{ width: '960px', maxWidth: '95vw' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  @if (submitInfo) {
+    <div class="pasc-submit-dialog p-2">
+      <div class="grid grid-cols-12 gap-3 mb-3">
+        <div class="col-span-12 md:col-span-6">
+          <label class="block mb-1 font-medium text-gray-600">Người trình duyệt</label>
+          <div class="py-2">{{ submitInfo.submitterName }}</div>
+        </div>
+        <div class="col-span-12 md:col-span-6">
+          <label class="block mb-1 font-medium text-gray-600">Ngày trình duyệt</label>
+          <div class="py-2">{{ formatSubmitDisplayDate(submitPreviewDate) }}</div>
+        </div>
+      </div>
+      <div class="rp-table-wrap">
+        <table class="rp-table pasc-submit-table w-full">
+          <thead>
+            <tr>
+              <th>Số HSBT</th>
+              <th>Sản phẩm BH</th>
+              <th>Số tiền BT</th>
+              <th>Người duyệt <span class="req">*</span></th>
+              <th>Phân cấp</th>
+              <th>Ghi chú</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{{ submitInfo.folderNo }}</td>
+              <td>{{ submitInfo.productName || '-' }}</td>
+              <td class="font-semibold">{{ formatCurrency(sectionIII) }}</td>
+              <td>
+                <p-select
+                  [(ngModel)]="submitForm.approverId"
+                  [options]="submitInfo.approvers"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="Chọn người duyệt"
+                  [showClear]="true"
+                  [filter]="true"
+                  filterPlaceholder="Tìm..."
+                  styleClass="w-full min-w-[10rem]"
+                  appendTo="body"
+                />
+              </td>
+              <td>{{ submitInfo.businessAuthorityName || '-' }}</td>
+              <td>
+                <input
+                  pInputText
+                  type="text"
+                  [(ngModel)]="submitForm.description"
+                  maxlength="250"
+                  class="w-full min-w-[8rem]"
+                  placeholder="Ghi chú"
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Hủy bỏ"
+      severity="secondary"
+      (onClick)="cancelSubmitDialog()"
+      [disabled]="confirmingSubmit"
+    />
+    <p-button
+      label="Thực hiện"
+      class="btn-orange"
+      (onClick)="confirmSubmit()"
+      [loading]="confirmingSubmit"
+      [disabled]="confirmingSubmit || !submitForm.approverId || !submitInfo?.approvers?.length || !canSaveOrSubmit || !canShowSaveSubmitButtons"
+    />
+  </ng-template>
+</p-dialog>
+
+<app-res-partner-form-dialog
+  [(visible)]="addGarageVisible"
+  [mode]="'create'"
+  [defaultPartnerTypeCode]="'GARAGE'"
+  (saved)="onGarageCreated($event)"
+/>

@@ -1,0 +1,279 @@
+<p-dialog [(visible)]="visible"
+    [header]="isEdit ? ('Report::UpdateReport' | translate) : ('Report::CreateReport' | translate)" [modal]="true"
+    [style]="{width: '80vw'}" [draggable]="false" [resizable]="false" (onHide)="close()">
+
+    <form [formGroup]="form" (ngSubmit)="save()" class="p-fluid">
+        <p-tabs value="0">
+            <p-tablist>
+                <p-tab value="0">{{ 'Report::GeneralInfo' | translate }}</p-tab>
+                <p-tab value="1">{{ 'Report::Parameters' | translate }}</p-tab>
+                <p-tab value="2">{{ 'Report::SqlStatements' | translate }}</p-tab>
+            </p-tablist>
+            <p-tabpanels>
+                <!-- Tab 1: General Info -->
+                <p-tabpanel value="0">
+                    <div class="grid grid-cols-2 gap-4 pt-4">
+                        <div class="field col-span-1">
+                            <label for="name">{{ 'Report::ReportName' | translate }} <span
+                                    class="text-red-500">*</span></label>
+                            <input id="name" type="text" pInputText formControlName="name" />
+                            <small *ngIf="form.get('name')?.invalid && form.get('name')?.touched" class="text-red-500">
+                                {{ 'Report::Validation:ReportNameRequired' | translate }}
+                            </small>
+                        </div>
+                        <div class="field col-span-1">
+                            <label for="code">{{ 'Report::Code' | translate }} <span
+                                    class="text-red-500">*</span></label>
+                            <input id="code" type="text" pInputText formControlName="code" [disabled]="isEdit" [class.bg-gray-200]="isEdit" />
+                            <small *ngIf="form.get('code')?.invalid && form.get('code')?.touched" class="text-red-500">
+                                {{ 'Report::Validation:CodeRequired' | translate }}
+                            </small>
+                        </div>
+                        <div class="field col-span-1">
+                            <label>{{ 'Report::TemplateFile' | translate }} <span class="text-red-500">*</span></label>
+                            <p-fileupload mode="basic" name="file" [chooseLabel]="'Report::SelectFile' | translate"
+                                accept=".doc,.docx,.xls,.xlsx" maxFileSize="1000000" (onSelect)="onUpload($event)"
+                                [auto]="true">
+                            </p-fileupload>
+                            <small *ngIf="uploadedFile" class="block mt-2 text-green-600">
+                                {{ 'Report::Message:SelectedFile' | translate }}: {{ uploadedFile.name }}
+                            </small>
+                            <small *ngIf="!uploadedFile && currentDocument" class="block mt-2 text-blue-600">
+                                {{ 'Report::Message:CurrentFile' | translate }}: <a [href]="currentDocument.url"
+                                    target="_blank" class="underline hover:text-blue-800">{{ currentDocument.fileName
+                                    }}</a>
+                            </small>
+                            <input type="hidden" formControlName="documentId">
+                        </div>
+                        <div class="field col-span-1">
+                            <label for="status">{{ 'Report::Status' | translate }} <span
+                                    class="text-red-500">*</span></label>
+                            <p-select [options]="statusOptions" formControlName="status" optionLabel="label"
+                                optionValue="value" appendTo="body">
+                            </p-select>
+                        </div>
+                        <div class="field col-span-1">
+                            <label for="effectDate">{{ 'Report::EffectDate' | translate }}</label>
+                            <p-datepicker inputId="effectDate" formControlName="effectDate" dateFormat="dd/mm/yy"
+                                appendTo="body" [showIcon]="true">
+                            </p-datepicker>
+                        </div>
+                        <div class="field col-span-1">
+                            <label for="expireDate">{{ 'Report::ExpireDate' | translate }}</label>
+                            <p-datepicker inputId="expireDate" formControlName="expireDate" dateFormat="dd/mm/yy"
+                                appendTo="body" [showIcon]="true">
+                            </p-datepicker>
+                        </div>
+                        <div class="field col-span-2">
+                            <label for="description">{{ 'Report::Description' | translate }}</label>
+                            <textarea id="description" rows="3" pTextarea formControlName="description">
+                            </textarea>
+                        </div>
+                    </div>
+                </p-tabpanel>
+
+                <!-- Tab 2: Parameters -->
+                <p-tabpanel value="1">
+                    <p-table [value]="parameters.controls" dataKey="value" styleClass="mt-4" [scrollable]="true"
+                        scrollHeight="400px">
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th>{{ 'Report::Table:Code' | translate }}</th>
+                                <th>{{ 'Report::Table:Name' | translate }}</th>
+                                <th>{{ 'Report::Table:DataType' | translate }}</th>
+                                <th>{{ 'Report::Table:Status' | translate }}</th>
+                                <th>{{ 'Report::Table:Description' | translate }}</th>
+                                <th style="width: 4rem"></th>
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-control let-i="rowIndex">
+                            <tr [formGroup]="control">
+                                <td>
+                                    <div *ngIf="editingStatus[i]; else viewCode">
+                                        <input pInputText formControlName="code" class="w-full" />
+                                        <small *ngIf="control.get('code')?.invalid && control.get('code')?.touched"
+                                            class="text-red-500 block">
+                                            {{ 'Report::Label:Required' | translate }}
+                                        </small>
+                                    </div>
+                                    <ng-template #viewCode>{{ control.get('code')?.value }}</ng-template>
+                                </td>
+                                <td>
+                                    <div *ngIf="editingStatus[i]; else viewName">
+                                        <input pInputText formControlName="name" class="w-full" />
+                                        <small *ngIf="control.get('name')?.invalid && control.get('name')?.touched"
+                                            class="text-red-500 block">
+                                            {{ 'Report::Label:Required' | translate }}
+                                        </small>
+                                    </div>
+                                    <ng-template #viewName>{{ control.get('name')?.value }}</ng-template>
+                                </td>
+                                <td>
+                                    <div *ngIf="editingStatus[i]; else viewDataType">
+                                        <p-select [options]="dataTypeOptions" formControlName="dataType"
+                                            optionLabel="label" optionValue="value" appendTo="body" styleClass="w-full">
+                                        </p-select>
+                                    </div>
+                                    <ng-template #viewDataType>{{ control.get('dataType')?.value }}</ng-template>
+                                </td>
+                                <td>
+                                    <div *ngIf="editingStatus[i]; else viewStatus">
+                                        <p-select [options]="statusOptions" formControlName="status" optionLabel="label"
+                                            optionValue="value" appendTo="body" styleClass="w-full">
+                                        </p-select>
+                                    </div>
+                                    <ng-template #viewStatus>
+                                        <span
+                                            [class]="(control.get('status')?.value === 'active' || control.get('status')?.value === 'Active' || control.get('status')?.value === '0' || control.get('status')?.value === 0) ? 'px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-800' : 'px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-800'">
+                                            {{ formatStatus(control.get('status')?.value) }}
+                                        </span>
+                                    </ng-template>
+                                </td>
+                                <td>
+                                    <div *ngIf="editingStatus[i]; else viewDesc">
+                                        <input pInputText formControlName="description"
+                                            class="w-full" />
+                                    </div>
+                                    <ng-template #viewDesc>{{ control.get('description')?.value }}</ng-template>
+                                </td>
+                                <td>
+                                    <div class="flex gap-1" style="justify-content: flex-end;">
+                                        <button *ngIf="editingStatus[i]" pButton icon="pi pi-check"
+                                            class="p-button-success p-button-text" (click)="onAcceptParameter(i)"
+                                            pTooltip="Accept" type="button">
+                                        </button>
+                                        <button *ngIf="!editingStatus[i]" pButton icon="pi pi-pencil"
+                                            class="p-button-primary p-button-text" (click)="onEditParameter(i)"
+                                            pTooltip="Edit" type="button">
+                                        </button>
+                                        <button pButton icon="pi pi-trash" class="p-button-danger p-button-text"
+                                            (click)="removeParameter(i)" pTooltip="Delete" type="button">
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="footer">
+                            <tr>
+                                <td colspan="6" class="text-right">
+                                    <button pButton [label]="'Report::Button:AddParameter' | translate"
+                                        icon="pi pi-plus" (click)="addParameter()" type="button"></button>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </p-tabpanel>
+
+                <!-- Tab 3: SQL -->
+                <p-tabpanel value="2">
+                    <p-table [value]="sqls.controls" styleClass="mt-4" [scrollable]="true" scrollHeight="400px">
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th>{{ 'Report::Table:SqlText' | translate }}</th>
+                                <th>{{ 'Report::Table:VariableName' | translate }}</th>
+                                <th>{{ 'Report::Table:Parameter' | translate }}</th>
+                                <th>{{ 'Report::Table:Status' | translate }}</th>
+                                <th>{{ 'Report::Table:IsSingle' | translate }}</th>
+                                <th style="width: 4rem"></th>
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-control let-i="rowIndex">
+                            <tr [formGroup]="control">
+                                <td>
+                                    <div *ngIf="sqlEditingStatus[i]; else viewSqlText">
+                                        <textarea pTextarea formControlName="sqlText" class="w-full"
+                                            rows="3" [autoResize]="true"></textarea>
+                                        <small
+                                            *ngIf="control.get('sqlText')?.invalid && control.get('sqlText')?.touched"
+                                            class="text-red-500 block">
+                                            {{ 'Report::Label:Required' | translate }}
+                                        </small>
+                                    </div>
+                                    <ng-template #viewSqlText>
+                                        <pre
+                                            class="whitespace-pre-wrap font-sans">{{ control.get('sqlText')?.value }}</pre>
+                                    </ng-template>
+                                </td>
+                                <td>
+                                    <div *ngIf="sqlEditingStatus[i]; else viewVarName">
+                                        <input pInputText formControlName="varName"
+                                            class="w-full" />
+                                        <small
+                                            *ngIf="control.get('varName')?.invalid && control.get('varName')?.touched"
+                                            class="text-red-500 block">
+                                            {{ 'Report::Label:Required' | translate }}
+                                        </small>
+                                    </div>
+                                    <ng-template #viewVarName>{{ control.get('varName')?.value }}</ng-template>
+                                </td>
+                                <td>
+                                    <div *ngIf="sqlEditingStatus[i]; else viewParams">
+                                        <p-multiselect [options]="parameterCodeOptions" formControlName="parameterCodes"
+                                            [defaultLabel]="'Report::Label:SelectParameter' | translate" appendTo="body"
+                                            styleClass="w-full">
+                                        </p-multiselect>
+                                    </div>
+                                    <ng-template #viewParams>
+                                        {{ control.get('parameterCodes')?.value?.join(', ') }}
+                                    </ng-template>
+                                </td>
+                                <td>
+                                    <div *ngIf="sqlEditingStatus[i]; else viewSqlStatus">
+                                        <p-select [options]="statusOptions" formControlName="status" optionLabel="label"
+                                            optionValue="value" appendTo="body" styleClass="w-full">
+                                        </p-select>
+                                    </div>
+                                    <ng-template #viewSqlStatus>
+                                        <span
+                                            [class]="(control.get('status')?.value === 'active' || control.get('status')?.value === 'Active' || control.get('status')?.value === '0' || control.get('status')?.value === 0) ? 'px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-800' : 'px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-800'">
+                                            {{ formatStatus(control.get('status')?.value) }}
+                                        </span>
+                                    </ng-template>
+                                </td>
+                                <td>
+                                    <div class="flex justify-center">
+                                        <p-checkbox *ngIf="sqlEditingStatus[i]" formControlName="isSingle"
+                                            [binary]="true"></p-checkbox>
+                                        <p-checkbox *ngIf="!sqlEditingStatus[i]"
+                                            [ngModel]="control.get('isSingle')?.value" [binary]="true" [disabled]="true"
+                                            [ngModelOptions]="{standalone: true}"></p-checkbox>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex gap-1" style="justify-content: flex-end;">
+                                        <button *ngIf="sqlEditingStatus[i]" pButton icon="pi pi-check"
+                                            class="p-button-success p-button-text" (click)="onAcceptSql(i)"
+                                            pTooltip="Accept" type="button">
+                                        </button>
+                                        <button *ngIf="!sqlEditingStatus[i]" pButton icon="pi pi-pencil"
+                                            class="p-button-primary p-button-text" (click)="onEditSql(i)"
+                                            pTooltip="Edit" type="button">
+                                        </button>
+                                        <button pButton icon="pi pi-trash" class="p-button-danger p-button-text"
+                                            (click)="removeSql(i)" pTooltip="Delete" type="button">
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="footer">
+                            <tr>
+                                <td colspan="6" class="text-right">
+                                    <button pButton [label]="'Report::Button:AddSql' | translate" icon="pi pi-plus"
+                                        (click)="addSql()" type="button"></button>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </p-tabpanel>
+            </p-tabpanels>
+        </p-tabs>
+
+    </form>
+    <ng-template pTemplate="footer">
+        <button pButton [label]="'AbpUi::Cancel' | translate" icon="pi pi-times" class="p-button-text" (click)="close()"
+            type="button"></button>
+        <button pButton [label]="'AbpUi::Save' | translate" icon="pi pi-check" class="p-button-primary" (click)="save()"
+            type="button"></button>
+    </ng-template>
+</p-dialog>

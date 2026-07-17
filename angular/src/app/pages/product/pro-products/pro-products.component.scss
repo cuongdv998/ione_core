@@ -1,0 +1,12 @@
+/* ProProducts component styles */
+
+:host {
+    display: block;
+}
+
+/* Make readonly Code field match disabled appearance */
+#detailCode[readonly] {
+    background-color: #e5e7eb !important;
+    cursor: not-allowed !important;
+    opacity: 1 !important;
+}

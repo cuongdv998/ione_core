@@ -1,0 +1,10 @@
+{
+  "Culture": "vi-VN",
+  "Texts": {
+    "Menu:AppMobile": "Ứng dụng di động",
+    "Permission:Create": "Tạo mới",
+    "Permission:Edit": "Sửa",
+    "Permission:Delete": "Xóa",
+    "Permission:View": "Xem"
+  }
+}

@@ -1,0 +1,204 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="filter" class="block mb-2 font-medium">{{ 'AbpIdentity::RoleName' | translate }}</label>
+          <input pInputText id="filter" [(ngModel)]="searchForm.filter" class="w-full" />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button [label]="'AbpAuditLogging::Reset' | translate" icon="pi pi-refresh" severity="secondary"
+            (onClick)="resetSearch()" />
+          <p-button [label]="'AbpAuditLogging::Search' | translate" icon="pi pi-search" (onClick)="search()" />
+          <p-button *ngIf="PERMISSIONS.CREATE | appPermission" [label]="'AbpIdentity::NewRole' | translate"
+            icon="pi pi-plus" (onClick)="openCreateDialog()" />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+
+      <app-v-table [columns]="columns" [data]="roles" [actions]="actions" [totalCount]="totalCount" [loading]="loading"
+        [rows]="pageSize" [rowsPerPageOptions]="[10, 20, 50, 100]" [showGridlines]="true" [stripedRows]="true"
+        [rowHover]="true" size="small" [scrollHeight]="'calc(100vh - 400px)'" (lazyLoad)="loadRoles($event)">
+        <ng-template #cellTemplate let-row let-col="col">
+          <ng-container [ngSwitch]="col.field">
+            <ng-container *ngSwitchCase="'isDefault'">
+              <i class="pi" [ngClass]="row.isDefault ? 'pi-check text-green-500' : 'pi-times text-red-500'"></i>
+            </ng-container>
+            <ng-container *ngSwitchCase="'isPublic'">
+              <i class="pi" [ngClass]="row.isPublic ? 'pi-check text-green-500' : 'pi-times text-red-500'"></i>
+            </ng-container>
+            <ng-container *ngSwitchDefault>
+              {{ row[col.field] }}
+            </ng-container>
+          </ng-container>
+        </ng-template>
+      </app-v-table>
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create/Edit -->
+<p-dialog [(visible)]="roleDialogVisible"
+  [header]="(roleDialogMode === 'create' ? 'AbpIdentity::NewRole' : 'AbpIdentity::Edit') | translate" [modal]="true"
+  [style]="{ width: '800px', maxHeight: '90vh' }" [draggable]="false" [resizable]="false" (onHide)="onDialogHide()">
+  <p-tabs [(value)]="tab">
+    <!-- Tab: Thông tin vai trò -->
+    <p-tablist>
+      <p-tab value="0">{{ 'AbpIdentity::RoleInformation' | translate }}</p-tab>
+      <p-tab value="1" *ngIf="roleDialogMode === 'edit' && (PERMISSIONS.MANAGE_PERMISSIONS | appPermission)">
+        {{ 'AbpIdentity::Permissions' | translate }}
+      </p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+      <p-tabpanel value="0">
+        <div class="flex flex-col gap-4 p-4">
+          <div>
+            <label for="roleName" class="block mb-2 font-medium">
+              {{ 'AbpIdentity::RoleName' | translate }} <span class="text-red-500">*</span>
+            </label>
+            <input pInputText id="roleName" [(ngModel)]="roleFormData.name" class="w-full"
+              [disabled]="roleDialogMode === 'edit' && !!selectedRole?.isStatic" />
+          </div>
+
+          <div class="flex items-center gap-2">
+            <p-checkbox inputId="isDefault" [(ngModel)]="roleFormData.isDefault" [binary]="true" [value]="true" />
+            <label for="isDefault">{{ 'AbpIdentity::DisplayName:IsDefault' | translate }}</label>
+          </div>
+        </div>
+      </p-tabpanel>
+
+      <!-- Tab: Quyền truy cập -->
+      <p-tabpanel value="1" *ngIf="roleDialogMode === 'edit' && (PERMISSIONS.MANAGE_PERMISSIONS | appPermission)">
+        <div class="p-4 flex flex-col gap-4">
+          <div *ngIf="permissionsLoading" class="flex justify-center items-center py-8">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+          </div>
+
+          <div *ngIf="!permissionsLoading && permissionTreeGroups.length > 0" class="flex flex-col gap-4">
+            <!-- Search and Bulk Actions Bar -->
+            <div class="flex flex-col gap-3 border-b pb-3">
+              <!-- Search Inputs Row -->
+              <div class="flex flex-col md:flex-row gap-3">
+                <!-- Tìm theo nhóm quyền (accordion) -->
+                <div class="flex-1 relative">
+                  <i class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10"></i>
+                  <input pInputText [(ngModel)]="groupSearchText" (ngModelChange)="filterPermissions()" class="w-full"
+                    placeholder="Nhóm quyền" [style.padding-left.px]="40" />
+                </div>
+
+                <!-- Tìm theo quyền chi tiết -->
+                <div class="flex-1 relative">
+                  <i class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10"></i>
+                  <input pInputText [(ngModel)]="permissionDetailSearchText" (ngModelChange)="filterPermissions()"
+                    class="w-full" placeholder="Quyền chi tiết" [style.padding-left.px]="40" />
+                </div>
+              </div>
+
+              <!-- Bulk Actions Row -->
+              <div class="flex gap-2 justify-end">
+                <p-button label="Chọn tất cả" icon="pi pi-check-square" severity="secondary" size="small"
+                  (onClick)="selectAllPermissions()" [outlined]="true" />
+                <p-button label="Bỏ chọn tất cả" icon="pi pi-square" severity="secondary" size="small"
+                  (onClick)="deselectAllPermissions()" [outlined]="true" />
+              </div>
+            </div>
+
+            <!-- Selected Count Info -->
+            <div class="text-sm text-gray-600 dark:text-gray-400">
+              <span *ngIf="getTotalSelectedCount().total > 0">
+                Đã chọn:
+                <strong>{{ getTotalSelectedCount().selected }} / {{ getTotalSelectedCount().total }}</strong>
+              </span>
+              <span *ngIf="getTotalSelectedCount().total === 0">
+                {{ 'AbpIdentity::NoPermissionsAvailable' | translate }}
+              </span>
+            </div>
+
+            <!-- Permission Groups -->
+            <p-accordion [multiple]="true" class="permission-accordion">
+              <p-accordionpanel *ngFor="let treeGroup of filteredPermissionTreeGroups" [value]="treeGroup.name">
+                <p-accordionheader>
+                  <div class="flex items-center justify-between w-full pr-4">
+                    <span>{{ treeGroup.displayName }}</span>
+                    <div class="flex items-center gap-2" (click)="$event.stopPropagation()">
+                      <span class="text-xs text-gray-500 dark:text-gray-400">
+                        ({{ getSelectedCountInGroup(treeGroup.name).selected }}/{{
+                        getSelectedCountInGroup(treeGroup.name).total }})
+                      </span>
+                      <p-button *ngIf="!isGroupFullySelected(treeGroup.name)" icon="pi pi-check" label="Chọn tất cả"
+                        size="small" severity="secondary" [text]="true" (onClick)="selectAllInGroup(treeGroup.name)"
+                        [style]="{ 'font-size': '0.75rem', padding: '0.25rem 0.5rem' }" />
+                      <p-button *ngIf="isGroupFullySelected(treeGroup.name) || isGroupPartiallySelected(treeGroup.name)"
+                        icon="pi pi-times" label="Bỏ chọn tất cả" size="small" severity="secondary" [text]="true"
+                        (onClick)="deselectAllInGroup(treeGroup.name)"
+                        [style]="{ 'font-size': '0.75rem', padding: '0.25rem 0.5rem' }" />
+                    </div>
+                  </div>
+                </p-accordionheader>
+                <p-accordioncontent>
+                  <div class="flex flex-col gap-2 pt-2">
+                    <!-- Render permission tree recursively -->
+                    <ng-container *ngFor="let rootNode of treeGroup.rootNodes">
+                      <ng-container
+                        *ngTemplateOutlet="permissionTreeNodeTemplate; context: { $implicit: rootNode, level: 0 }"></ng-container>
+                    </ng-container>
+                  </div>
+                </p-accordioncontent>
+              </p-accordionpanel>
+            </p-accordion>
+
+            <!-- No results message -->
+            <div *ngIf="filteredPermissionTreeGroups.length === 0 && (groupSearchText || permissionDetailSearchText)"
+              class="text-center py-8 text-gray-500">
+              Không tìm thấy quyền nào
+            </div>
+          </div>
+
+          <!-- Recursive template for permission tree nodes -->
+          <ng-template #permissionTreeNodeTemplate let-node let-level="level">
+            <div class="flex items-center gap-2 py-1 hover:bg-gray-50 dark:hover:bg-gray-800 rounded px-2"
+              [style.padding-left.px]="level * 24">
+              <p-checkbox *ngIf="node.permission.name" [inputId]="node.permission.name"
+                [(ngModel)]="selectedPermissions[node.permission.name]" [binary]="true" [value]="true"
+                (onChange)="onPermissionChange(node.permission.name, $event.checked)" />
+              <label *ngIf="node.permission.name" [for]="node.permission.name" class="cursor-pointer flex-1">
+                <span class="font-medium">{{ node.permission.displayName }}</span>
+                <span *ngIf="node.permission.name" class="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                  ({{ node.permission.name }})
+                </span>
+              </label>
+            </div>
+            <!-- Render children recursively -->
+            <ng-container *ngFor="let childNode of node.children">
+              <ng-container
+                *ngTemplateOutlet="permissionTreeNodeTemplate; context: { $implicit: childNode, level: level + 1 }"></ng-container>
+            </ng-container>
+          </ng-template>
+
+          <div *ngIf="!permissionsLoading && !permissionData" class="text-center py-8 text-gray-500">
+            {{ 'AbpIdentity::NoPermissionsAvailable' | translate }}
+          </div>
+        </div>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+
+  <ng-template pTemplate="footer">
+    <p-button [label]="'AbpUi::Cancel' | translate" icon="pi pi-times" severity="secondary"
+      (onClick)="roleDialogVisible = false" />
+    <p-button [label]="'AbpUi::Save' | translate" icon="pi pi-check"
+      (onClick)="save()" [disabled]="!roleFormData.name || (tab === '1' && permissionsLoading)" />
+  </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

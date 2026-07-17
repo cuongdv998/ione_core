@@ -1,0 +1,1708 @@
+<div class="pro-products-container">
+    <!-- Search Panel -->
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true" class="mb-4">
+        <div class="grid grid-cols-12 gap-4">
+            <!-- LOB -->
+            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                <label for="lobId" class="block mb-2 font-medium">{{ 'Product::ProProduct:LOB' | translate }}</label>
+                <p-select id="lobId" [(ngModel)]="searchForm.lobId" [options]="lobOptions"
+                    [placeholder]="'Product::All' | translate" [showClear]="true" optionLabel="label"
+                    optionValue="value" styleClass="w-full" appendTo="body" />
+            </div>
+
+            <!-- Product Category -->
+            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                <label for="productCategoryId" class="block mb-2 font-medium">{{ 'Product::ProProduct:ProductCategory' |
+                    translate }}</label>
+                <p-select id="productCategoryId" [(ngModel)]="searchForm.productCategoryId" [options]="categoryOptions"
+                    [placeholder]="'Product::All' | translate" [showClear]="true" optionLabel="label"
+                    optionValue="value" styleClass="w-full" appendTo="body" />
+            </div>
+
+            <!-- Partner -->
+            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                <label for="partnerId" class="block mb-2 font-medium">{{ 'Product::ProProduct:Partner' | translate
+                    }}</label>
+                <p-select id="partnerId" [(ngModel)]="searchForm.partnerId" [options]="partnerOptions"
+                    [placeholder]="'Product::All' | translate" [showClear]="true" optionLabel="label"
+                    optionValue="value" styleClass="w-full" appendTo="body" />
+            </div>
+
+            <!-- Code -->
+            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                <label for="code" class="block mb-2 font-medium">{{ 'Product::ProProduct:Code' | translate }}</label>
+                <input pInputText id="code" [(ngModel)]="searchForm.code" class="w-full" />
+            </div>
+
+            <!-- Name -->
+            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                <label for="name" class="block mb-2 font-medium">{{ 'Product::ProProduct:Name' | translate }}</label>
+                <input pInputText id="name" [(ngModel)]="searchForm.name" class="w-full" />
+            </div>
+
+            <!-- Status -->
+            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                <label for="status" class="block mb-2 font-medium">{{ 'Product::ProProduct:Status' | translate
+                    }}</label>
+                <p-select id="status" [(ngModel)]="searchForm.status" [options]="statusOptions"
+                    [placeholder]="'Product::All' | translate" [showClear]="true" optionLabel="label"
+                    optionValue="value" styleClass="w-full" appendTo="body" />
+            </div>
+
+            <!-- Buttons -->
+            <div class="col-span-12 flex gap-2 justify-end">
+                <p-button [label]="'AbpAuditLogging::Reset' | translate" icon="pi pi-refresh" severity="secondary"
+                    (onClick)="resetSearch()" />
+                <p-button [label]="'AbpAuditLogging::Search' | translate" icon="pi pi-search" (onClick)="search()" />
+                <p-button *ngIf="PERMISSIONS.CREATE | appPermission" [label]="'Product::ProProduct:New' | translate"
+                    icon="pi pi-plus" (onClick)="openCreateDialog()" />
+                <p-button
+                    [label]="'Product::ProProduct:ExportFile' | translate"
+                    icon="pi pi-download"
+                    severity="secondary"
+                    [loading]="exporting"
+                    [disabled]="exporting"
+                    (onClick)="exportToExcel()"
+                />
+            </div>
+        </div>
+    </p-panel>
+
+    <!-- Data Panel -->
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+        <p-splitter [panelSizes]="[25, 75]" [minSizes]="[15, 50]" style="height: 'auto'; min-height: '500px'">
+            <!-- Tree Panel -->
+            <ng-template pTemplate>
+                <div class="tree-panel p-2" style="min-height: 500px;">
+                    <app-v-product-tree [categories]="categories" [products]="products" [loading]="treeLoading"
+                        [filterText]="treeFilterText" [searchFilterActive]="isProductTreePanelFilterActive"
+                        (nodeSelect)="onTreeNodeSelect($event)"
+                        (addProduct)="onAddProduct($event)" (editProduct)="onEditProduct($event)"
+                        (deleteProduct)="onDeleteProduct($event)" (makeActive)="onMakeActive($event)"
+                        (makeInactive)="onMakeInactive($event)" />
+                </div>
+            </ng-template>
+
+            <!-- Detail Panel -->
+            <ng-template pTemplate>
+                <div class="detail-panel p-2 position-relative">
+                    <div *ngIf="detailLoading" class="flex items-center justify-center py-8">
+                        <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+                        <span class="ml-2">{{ 'AbpUi::LoadingWithThreeDot' | translate }}</span>
+                    </div>
+                    <div *ngIf="!selectedProduct && !isCreateMode() && !detailLoading" class="flex items-center justify-center text-gray-500 py-8">
+                        <div class="text-center">
+                            <i class="pi pi-info-circle text-4xl mb-2"></i>
+                            <p>Chọn một sản phẩm hoặc thêm mới...</p>
+                        </div>
+                    </div>
+
+                    <div *ngIf="(selectedProduct || isCreateMode()) && !detailLoading" class="flex flex-col">
+                        <!-- Product Header -->
+                        <div class="product-header flex justify-between items-center mb-3 pb-3 border-b">
+                            <div>
+                                <h3 class="text-xl font-semibold m-0" *ngIf="selectedProduct">{{ selectedProduct.name }}</h3>
+                                <h3 class="text-xl font-semibold m-0" *ngIf="isCreateMode()">{{ 'Product::ProProduct:New' | translate }}</h3>
+                                <span class="text-sm text-gray-500" *ngIf="selectedProduct">{{ selectedProduct.code }}</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <p-button *ngIf="(PERMISSIONS.UPDATE | appPermission) && selectedProduct && isDetailMode()" icon="pi pi-pencil"
+                                    [label]="'Product::Edit' | translate" severity="secondary" size="small"
+                                    (onClick)="onEditProduct(selectedProduct!)" />
+                            </div>
+                        </div>
+
+                        <!-- Tabs -->
+                        <p-tabs [(value)]="productDetailTabValue">
+                            <p-tablist>
+                                <p-tab value="0">{{ 'Product::ProProduct:GeneralInformation' | translate }}</p-tab>
+                                <p-tab value="1">{{ 'Product::ProProduct:Attribute' | translate
+                                    }}</p-tab>
+                                <p-tab value="2">{{ 'Product::ProProduct:ProductCoverage' | translate
+                                    }}</p-tab>
+                                <p-tab value="3">{{ 'Product::ProProduct:TableRate' | translate
+                                    }}</p-tab>
+                                <p-tab value="4">{{ 'Product::ProProduct:OtherRule' | translate
+                                    }}</p-tab>
+                                <p-tab value="5" [disabled]="!isPackageDefinitionTabEnabled">{{ 'Product::ProProduct:PackageDefinition' |
+                                    translate }}</p-tab>
+                                <p-tab value="6">{{ 'Product::ProProduct:ProductDistribution' |
+                                    translate }}</p-tab>
+                            </p-tablist>
+
+                            <p-tabpanels>
+                                <!-- General Information Tab -->
+                                <p-tabpanel value="0">
+                                    <div class="flex flex-col h-full">
+                                        <div class="grid grid-cols-12 gap-4 p-2 flex-1 overflow-auto">
+                                            <!-- LOB -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailLobId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:LOB' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <p-select id="detailLobId" [(ngModel)]="formData.lobId"
+                                                    [options]="lobOptions" optionLabel="label" optionValue="value"
+                                                    styleClass="w-full" appendTo="body"
+                                                    [disabled]="isDetailMode() || selectedProduct !== null"
+                                                    (ngModelChange)="onLobIdChange()" />
+                                            </div>
+
+                                            <!-- Product Category -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailProductCategoryId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:ProductCategory' | translate }}
+                                                </label>
+                                                <p-select id="detailProductCategoryId"
+                                                    [(ngModel)]="formData.productCategoryId"
+                                                    [options]="productCategorySelectOptions"
+                                                    [showClear]="true" optionLabel="label" optionValue="value"
+                                                    styleClass="w-full" appendTo="body" [disabled]="isDetailMode()"
+                                                    (ngModelChange)="onProductCategoryIdChange()" />
+                                            </div>
+
+                                            <!-- Partner -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailPartnerId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:Partner' | translate }}
+                                                </label>
+                                                <p-select id="detailPartnerId" [(ngModel)]="formData.partnerId"
+                                                    [options]="partnerOptions" [showClear]="true" optionLabel="label"
+                                                    optionValue="value" styleClass="w-full" appendTo="body"
+                                                    [disabled]="isDetailMode() || selectedProduct !== null" />
+                                            </div>
+
+                                            <!-- Parent Product -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailRootProductId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:ParentProduct' | translate }}
+                                                </label>
+                                                <p-select id="detailRootProductId" [(ngModel)]="formData.rootProductId"
+                                                    [options]="parentProductSelectOptions" [showClear]="true" optionLabel="label"
+                                                    optionValue="value" styleClass="w-full" appendTo="body"
+                                                    [disabled]="isDetailMode() || selectedProduct !== null"
+                                                    (ngModelChange)="onRootProductIdChange()" />
+                                            </div>
+
+                                            <!-- Currency -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailCurrencyId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:Currency' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <p-select id="detailCurrencyId" [(ngModel)]="formData.currencyId"
+                                                    [options]="currencyOptions" optionLabel="label" optionValue="value"
+                                                    styleClass="w-full" appendTo="body"
+                                                    [disabled]="isDetailMode() || selectedProduct !== null" />
+                                            </div>
+
+                                            <!-- Plan Definition -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailPlanDefinitionId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:PlanDefinition' | translate }}
+                                                    <span class="text-red-500" *ngIf="isPlanChecked">*</span>
+                                                </label>
+                                                <p-select id="detailPlanDefinitionId" [(ngModel)]="formData.planDefinitionId"
+                                                    [options]="planDefinitionOptions" [showClear]="true" optionLabel="label"
+                                                    optionValue="value" styleClass="w-full" appendTo="body"
+                                                    [disabled]="isDetailMode() || selectedProduct !== null || !formData.rootProductId" />
+                                            </div>
+
+                                            <!-- Code -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailCode" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:Code' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <input pInputText id="detailCode" [(ngModel)]="formData.code"
+                                                    [readonly]="isDetailMode() || selectedProduct !== null" 
+                                                    [ngStyle]="(isDetailMode() || selectedProduct !== null) ? {'background-color': '#e5e7eb', 'cursor': 'not-allowed', 'opacity': '1'} : {}"
+                                                    class="w-full" />
+                                            </div>
+
+                                            <!-- Insurer Product Code -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailInsurerProductCode" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:InsurerProductCode' | translate }}
+                                                </label>
+                                                <input pInputText id="detailInsurerProductCode"
+                                                    [(ngModel)]="formData.insurerProductCode" class="w-full"
+                                                    maxlength="50" [disabled]="isDetailMode()" />
+                                            </div>
+
+                                            <!-- Product Type -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailProductTypeId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:ProductType' | translate }}
+                                                </label>
+                                                <p-select id="detailProductTypeId" [(ngModel)]="formData.productTypeId"
+                                                    [options]="productTypeOptions" [showClear]="true"
+                                                    optionLabel="label" optionValue="value" styleClass="w-full"
+                                                    appendTo="body"
+                                                    [disabled]="isDetailMode() || selectedProduct !== null" />
+                                            </div>
+
+                                            <!-- Short Name -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailShortName" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:ShortName' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <input pInputText id="detailShortName" [(ngModel)]="formData.shortName"
+                                                    class="w-full" maxlength="50" [disabled]="isDetailMode()" />
+                                            </div>
+
+                                            <!-- Name -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailName" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:Name' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <input pInputText id="detailName" [(ngModel)]="formData.name"
+                                                    class="w-full" maxlength="250" [disabled]="isDetailMode()" />
+                                            </div>
+
+                                            <!-- Status -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailStatus" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:Status' | translate }}
+                                                </label>
+                                                <p-select id="detailStatus" [(ngModel)]="formData.status"
+                                                    [options]="statusOptions" optionLabel="label" optionValue="value"
+                                                    styleClass="w-full" appendTo="body" [disabled]="isDetailMode()" />
+                                            </div>
+
+                                            <!-- Rate Type -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailRateType" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:RateType' | translate }}
+                                                </label>
+                                                <p-select id="detailRateType" [(ngModel)]="formData.rateType"
+                                                    [options]="rateTypeOptions" optionLabel="label" optionValue="value"
+                                                    styleClass="w-full" appendTo="body" [disabled]="isDetailMode()" />
+                                            </div>
+
+                                            <!-- Effect Date -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailEffectDate" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:EffectDate' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <p-datepicker id="detailEffectDate" [(ngModel)]="formData.effectDate"
+                                                    [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full"
+                                                    appendTo="body"
+                                                    [disabled]="isDetailMode() || selectedProduct !== null" />
+                                            </div>
+
+                                            <!-- Expire Date -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailExpireDate" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:ExpireDate' | translate }}
+                                                </label>
+                                                <p-datepicker id="detailExpireDate" [(ngModel)]="formData.expireDate"
+                                                    [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full"
+                                                    appendTo="body" [disabled]="isDetailMode()" />
+                                            </div>
+
+                                            <!-- Seq Number -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="detailSeqNumber" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:SeqNumber' | translate }}
+                                                </label>
+                                                <p-inputNumber id="detailSeqNumber" [(ngModel)]="formData.seqNumber"
+                                                    [min]="1" styleClass="w-full" [disabled]="isDetailMode()" />
+                                            </div>
+
+                                            <!-- Is Plan -->
+                                            <div
+                                                class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2 pt-5">
+                                                <p-checkbox id="detailIsPlan" [(ngModel)]="isPlanChecked"
+                                                    [binary]="true"
+                                                    [disabled]="isDetailMode() || selectedProduct !== null" />
+                                                <label for="detailIsPlan" class="cursor-pointer">{{
+                                                    'Product::ProProduct:IsPlan' |
+                                                    translate }}</label>
+                                            </div>
+
+                                            <!-- Description -->
+                                            <div class="col-span-12 lg:col-span-6">
+                                                <label for="detailDescription" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:Description' | translate }}
+                                                </label>
+                                                <textarea pTextarea id="detailDescription"
+                                                    [(ngModel)]="formData.description" class="w-full" [rows]="3"
+                                                    maxlength="500" [disabled]="isDetailMode()"></textarea>
+                                            </div>
+
+                                            <!-- Internal Note -->
+                                            <div class="col-span-12 lg:col-span-6">
+                                                <label for="detailInternalNote" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:InternalNote' | translate }}
+                                                </label>
+                                                <textarea pTextarea id="detailInternalNote"
+                                                    [(ngModel)]="formData.internalNote" class="w-full" [rows]="3"
+                                                    maxlength="250" [disabled]="isDetailMode()"></textarea>
+                                            </div>
+
+                                            <!-- Product Image -->
+                                            <div class="col-span-12 md:col-span-6">
+                                                <label for="detailImage" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:Image' | translate }}
+                                                </label>
+                                                <div class="flex flex-col gap-2">
+                                                    <p-fileUpload id="detailImage" mode="basic"
+                                                        [customUpload]="true" (onSelect)="onImageUpload($event)"
+                                                        [auto]="true" accept="image/jpeg,image/jpg,image/png"
+                                                        [maxFileSize]="5000000"
+                                                        [disabled]="isDetailMode() || imageUploadLoading"
+                                                        [chooseLabel]="'Product::ProProduct:SelectImage' | translate"
+                                                        styleClass="w-full" />
+                                                    
+                                                    <!-- Image Preview -->
+                                                    <div *ngIf="productImageUrl" class="mt-2">
+                                                        <img [src]="productImageUrl" alt="Product Image"
+                                                            class="max-w-xs max-h-48 object-contain border border-gray-300 rounded"
+                                                            style="max-width: 300px; max-height: 200px;" />
+                                                    </div>
+                                                    
+                                                    <!-- Loading indicator -->
+                                                    <div *ngIf="imageUploadLoading" class="text-sm text-gray-500">
+                                                        {{ 'Product::ProProduct:UploadingImage' | translate }}...
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Product certificate template (.docx) -->
+                                            <div class="col-span-12 md:col-span-6">
+                                                <label for="detailCertificateTemplate" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:CertificateTemplate' | translate }}
+                                                </label>
+                                                <div class="flex flex-col gap-2">
+                                                    <p-fileUpload id="detailCertificateTemplate" mode="basic"
+                                                        [customUpload]="true"
+                                                        (onSelect)="onCertificateTemplateUpload($event)"
+                                                        [auto]="true"
+                                                        accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                                        [maxFileSize]="5000000"
+                                                        [disabled]="isDetailMode() || certificateTemplateUploadLoading"
+                                                        [chooseLabel]="'Product::ProProduct:SelectCertificateTemplate' | translate"
+                                                        styleClass="w-full" />
+                                                    <div *ngIf="certificateTemplateDocumentUrl" class="mt-2">
+                                                        <a [href]="certificateTemplateDocumentUrl" target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            class="text-primary underline break-all">
+                                                            {{ certificateTemplateFileName || ('Product::ProProduct:CertificateTemplate' | translate) }}
+                                                        </a>
+                                                    </div>
+                                                    <div *ngIf="certificateTemplateUploadLoading"
+                                                        class="text-sm text-gray-500">
+                                                        {{ 'Product::ProProduct:UploadingCertificateTemplate' | translate }}...
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </p-tabpanel>
+
+                                <!-- Attribute Tab -->
+                                <p-tabpanel value="1">
+                                    <div class="flex flex-col h-full">
+                                        <!-- Add Attribute Form -->
+                                        <div class="grid grid-cols-12 gap-4 p-3 border-b">
+                                            <!-- Attribute Dropdown -->
+                                            <div class="col-span-12 md:col-span-4">
+                                                <label for="attrAttributeId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:Attribute' | translate }}
+                                                </label>
+                                                <p-select id="attrAttributeId" [(ngModel)]="selectedAttributeId"
+                                                    [options]="attributeOptions" [disabled]="!attributeFormVisible"
+                                                    optionLabel="label" optionValue="value" styleClass="w-full"
+                                                    [placeholder]="'Product::ProProduct:SelectAttribute' | translate"
+                                                    appendTo="body" />
+                                            </div>
+
+                                            <!-- Required Checkbox -->
+                                            <div class="col-span-12 md:col-span-3 flex items-center gap-2 pt-5">
+                                                <p-checkbox id="attrIsRequired" [(ngModel)]="attributeIsRequiredChecked"
+                                                    [binary]="true" [disabled]="!attributeFormVisible" />
+                                                <label for="attrIsRequired" class="cursor-pointer">
+                                                    {{ 'Product::ProProduct:Required' | translate }}
+                                                </label>
+                                            </div>
+
+                                            <!-- Action Buttons -->
+                                            <div
+                                                class="col-span-12 md:col-span-5 flex items-center justify-end gap-2 pt-5">
+                                                <p-button *ngIf="!attributeFormVisible" [label]="'Product::ProProduct:AddNew' | translate"
+                                                    icon="pi pi-plus" (onClick)="onShowAttributeForm()" 
+                                                    [disabled]="isDetailMode()" />
+
+                                                <ng-container *ngIf="attributeFormVisible">
+                                                    <p-button [label]="'Product::Cancel' | translate"
+                                                        severity="secondary" (onClick)="onCancelAttributeForm()" />
+                                                    <p-button [label]="'Product::Save' | translate"
+                                                        (onClick)="onSaveAttribute()"
+                                                        [disabled]="!selectedAttributeId" />
+                                                </ng-container>
+                                            </div>
+                                        </div>
+
+                                        <!-- Attribute Table -->
+                                        <div class="flex-1 overflow-auto p-3">
+                                            <p-table [value]="productAttributes" styleClass="p-datatable-sm">
+                                                <ng-template pTemplate="header">
+                                                    <tr>
+                                                        <th>{{ 'Product::ProProduct:AttributeCode' | translate }}</th>
+                                                        <th>{{ 'Product::ProProduct:AttributeName' | translate }}</th>
+                                                        <th>{{ 'Product::ProProduct:Required' | translate }}</th>
+                                                        <th>{{ 'Product::ProProduct:Status' | translate }}</th>
+                                                        <th style="width: 100px">{{ 'Actions' | translate }}</th>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="body" let-attr let-rowIndex="rowIndex">
+                                                    <tr>
+                                                        <td>{{ getAttributeCode(attr.attributeId) }}</td>
+                                                        <td>{{ getAttributeName(attr.attributeId) }}</td>
+                                                        <td>{{ attr.isRequired === 'Y' ? ('Product::Yes' | translate) :
+                                                            ('Product::No' | translate) }}</td>
+                                                        <td>{{ attr.status }}</td>
+                                                        <td>
+                                                            <p-button icon="pi pi-trash" severity="danger" [text]="true"
+                                                                (onClick)="onDeleteAttribute(attr, rowIndex)" 
+                                                                [disabled]="isDetailMode()" />
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="emptymessage">
+                                                    <tr>
+                                                        <td colspan="5" class="text-center text-gray-500">
+                                                            {{ 'Product::ProProduct:NoAttributesAdded' | translate }}
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                            </p-table>
+                                        </div>
+                                    </div>
+                                </p-tabpanel>
+
+                                <p-tabpanel value="2">
+                                    <div class="flex flex-col h-full">
+                                        <!-- Add Coverage Form -->
+                                        <div class="grid grid-cols-12 gap-4 p-3 border-b">
+                                            <!-- Row 1 -->
+                                            <!-- Coverage Group (read-only) -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="covCoverageGroupId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:CoverageGroup' | translate }}
+                                                </label>
+                                                <p-select id="covCoverageGroupId" [(ngModel)]="selectedCoverageGroupId"
+                                                    [options]="coverageGroupOptions" [disabled]="!coverageFormVisible || isCoverageScopeFieldsLocked"
+                                                    optionLabel="label" optionValue="value" styleClass="w-full"
+                                                    [placeholder]="'Product::ProProduct:SelectCoverageGroup' | translate"
+                                                    appendTo="body" (ngModelChange)="onCoverageGroupChange()" />
+                                            </div>
+
+                                            <!-- Coverage (required) -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="covCoverageId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:Coverage' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <p-select id="covCoverageId" [(ngModel)]="selectedCoverageId"
+                                                    [options]="filteredCoverageOptions" [disabled]="!coverageFormVisible || isCoverageScopeFieldsLocked"
+                                                    optionLabel="label" optionValue="value" styleClass="w-full"
+                                                    [placeholder]="'Product::ProProduct:SelectCoverage' | translate"
+                                                    appendTo="body" (ngModelChange)="onCoverageChange()" />
+                                            </div>
+
+                                            <!-- Parent Coverage -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="covParentId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:ParentCoverage' | translate }}
+                                                </label>
+                                                <p-select id="covParentId" [(ngModel)]="selectedParentCoverageId"
+                                                    [options]="parentCoverageOptions" [disabled]="!coverageFormVisible || isCoverageScopeFieldsLocked"
+                                                    optionLabel="label" optionValue="value" styleClass="w-full"
+                                                    [placeholder]="'Product::ProProduct:SelectParentCoverage' | translate"
+                                                    appendTo="body" />
+                                            </div>
+
+                                            <!-- Insurer Coverage Code -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="covInsurerCoverageCode" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:InsurerCoverageCode' | translate }}
+                                                </label>
+                                                <input pInputText id="covInsurerCoverageCode"
+                                                    [(ngModel)]="selectedInsurerCoverageCode"
+                                                    [disabled]="!coverageFormVisible || isCoverageScopeFieldsLocked" class="w-full"
+                                                    maxlength="50" />
+                                            </div>
+
+                                            <!-- Row 2 -->
+                                            <!-- Unit/UOM (required) -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="covUomId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:Uom' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <p-select id="covUomId" [(ngModel)]="selectedUomId"
+                                                    [options]="uomOptions" [disabled]="!coverageFormVisible || isCoverageScopeFieldsLocked"
+                                                    optionLabel="label" optionValue="value" styleClass="w-full"
+                                                    [placeholder]="'Product::ProProduct:SelectUom' | translate"
+                                                    appendTo="body" />
+                                            </div>
+
+                                            <!-- Tax (required) -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="covTaxId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:Tax' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <p-select id="covTaxId" [(ngModel)]="selectedTaxId"
+                                                    [options]="taxOptions" [disabled]="!coverageFormVisible || isCoverageScopeFieldsLocked"
+                                                    optionLabel="label" optionValue="value" styleClass="w-full"
+                                                    [placeholder]="'Product::ProProduct:SelectTax' | translate"
+                                                    appendTo="body" />
+                                            </div>
+
+                                            <!-- Availability Type (required) -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="covAvailabilityType" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:AvailabilityType' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <p-select id="covAvailabilityType" [(ngModel)]="selectedAvailabilityType"
+                                                    [options]="availabilityTypeOptions" [disabled]="!coverageFormVisible || isCoverageScopeFieldsLocked"
+                                                    optionLabel="label" optionValue="value" styleClass="w-full"
+                                                    [placeholder]="'Product::ProProduct:SelectAvailabilityType' | translate"
+                                                    appendTo="body" />
+                                            </div>
+
+                                            <!-- Sequence Number -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="covSeqNumber" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:SeqNumber' | translate }}
+                                                </label>
+                                                <p-inputNumber id="covSeqNumber" [(ngModel)]="selectedSeqNumber"
+                                                    [disabled]="!coverageFormVisible" [min]="1" styleClass="w-full" />
+                                            </div>
+
+                                            <!-- Row 3 -->
+                                            <!-- Effect Date (required) -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="covEffectDate" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:EffectDate' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <p-datepicker id="covEffectDate" [(ngModel)]="selectedEffectDate"
+                                                    [disabled]="!coverageFormVisible || isCoverageScopeFieldsLocked" [showIcon]="true"
+                                                    dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body" />
+                                            </div>
+
+                                            <!-- Expire Date -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="covExpireDate" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:ExpireDate' | translate }}
+                                                </label>
+                                                <p-datepicker id="covExpireDate" [(ngModel)]="selectedExpireDate"
+                                                    [disabled]="!coverageFormVisible" [showIcon]="true"
+                                                    dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body" />
+                                            </div>
+
+                                            <!-- Enable Quantity -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <div class="flex items-center gap-2 pt-6">
+                                                    <p-checkbox id="covEnableQuantity" [(ngModel)]="selectedEnableQuantity"
+                                                        [binary]="true" [disabled]="!coverageFormVisible" />
+                                                    <label for="covEnableQuantity" class="cursor-pointer font-medium">
+                                                        {{ 'Product::ProProduct:EnableQuantity' | translate }}
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <!-- Action Buttons -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3 flex items-center justify-end gap-2 pt-5">
+                                                <p-button *ngIf="!coverageFormVisible"
+                                                    [label]="'Product::ProProduct:AddNew' | translate"
+                                                    icon="pi pi-plus" (onClick)="onShowCoverageForm()" 
+                                                    [disabled]="isDetailMode()" />
+
+                                                <ng-container *ngIf="coverageFormVisible">
+                                                    <p-button [label]="'Product::ProProduct:CancelAction' | translate"
+                                                        severity="secondary" icon="pi pi-times"
+                                                        (onClick)="onCancelCoverageForm()" />
+                                                    <p-button 
+                                                        [label]="(selectedCoverageForEdit ? ('Product::ProProduct:Update' | translate) : ('Product::ProProduct:Execute' | translate))" 
+                                                        icon="pi pi-check"
+                                                        (onClick)="onSaveCoverage()"
+                                                        [disabled]="!isCoverageFormValid" />
+                                                </ng-container>
+                                            </div>
+                                        </div>
+
+                                        <!-- Coverage Tree Table -->
+                                        <div class="flex-1 overflow-auto p-3">
+                                            <p-treetable [value]="coverageTreeData" styleClass="p-treetable-sm">
+                                                <ng-template pTemplate="header">
+                                                    <tr>
+                                                        <th>{{ 'Product::ProProduct:CoverageCode' | translate }}</th>
+                                                        <th>{{ 'Product::ProProduct:CoverageName' | translate }}</th>
+                                                        <th>{{ 'Product::ProProduct:Type' | translate }}</th>
+                                                        <th>{{ 'Product::ProProduct:Uom' | translate }}</th>
+                                                        <th>{{ 'Product::ProProduct:TaxRate' | translate }}</th>
+                                                        <th>{{ 'Product::ProProduct:AvailabilityType' | translate }}</th>
+                                                        <th>{{ 'Product::ProProduct:EffectDate' | translate }}</th>
+                                                        <th>{{ 'Product::ProProduct:ExpireDate' | translate }}</th>
+                                                        <th style="width: 100px">{{ 'Actions' | translate }}</th>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+                                                    <tr [class.font-semibold]="hasCoverageChildren(rowNode)">
+                                                        <td>
+                                                            <p-treeTableToggler [rowNode]="rowNode" />
+                                                            {{ getCoverageCode(rowData.coverageId) }}
+                                                        </td>
+                                                        <td>{{ getCoverageName(rowData.coverageId) }}</td>
+                                                        <td>{{ getCoverageType(rowData.coverageId) }}</td>
+                                                        <td>{{ getUomName(rowData.uomId) }}</td>
+                                                        <td>{{ getTaxName(rowData.taxId) }}</td>
+                                                        <td>{{ getAvailabilityTypeLabel(rowData.availabilityType) }}</td>
+                                                        <td>{{ rowData.effectDate ? (rowData.effectDate | date:'dd/MM/yyyy') : '-' }}</td>
+                                                        <td>{{ rowData.expireDate ? (rowData.expireDate | date:'dd/MM/yyyy') : '-' }}</td>
+                                                        <td>
+                                                            <p-menu #coverageMenu [model]="getCoverageMenuItems(rowData)" [popup]="true" appendTo="body"></p-menu>
+                                                            <p-button icon="pi pi-ellipsis-v" [text]="true"
+                                                                (click)="$event.stopPropagation(); $event.preventDefault(); coverageMenu.toggle($event)" />
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="emptymessage">
+                                                    <tr>
+                                                        <td colspan="9" class="text-center text-gray-500">
+                                                            {{ 'Product::ProProduct:NoCoveragesAdded' | translate }}
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                            </p-treetable>
+                                        </div>
+                                    </div>
+                                </p-tabpanel>
+
+                                <p-tabpanel value="3">
+                                    <div class="flex flex-col h-full">
+                                        <!-- Add Table Rate Form -->
+                                        <div class="grid grid-cols-12 gap-4 p-3 border-b">
+                                            <!-- Table Rate Dropdown -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="tableRateId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:TableRate' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <p-select id="tableRateId" [(ngModel)]="selectedTableRateId"
+                                                    [options]="tableRateOptions" 
+                                                    [disabled]="!tableRateFormVisible || (selectedTableRateForEdit ? !canEditTableRateAllFields(selectedTableRateForEdit) : false)"
+                                                    optionLabel="label" optionValue="value" styleClass="w-full"
+                                                    [placeholder]="'Product::ProProduct:SelectTableRate' | translate"
+                                                    appendTo="body" />
+                                            </div>
+
+                                            <!-- Effect Date -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="tableRateEffectDate" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:EffectDate' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <p-datepicker id="tableRateEffectDate" [(ngModel)]="selectedTableRateEffectDate"
+                                                    [disabled]="!tableRateFormVisible || (selectedTableRateForEdit ? !canEditTableRateAllFields(selectedTableRateForEdit) : false)" 
+                                                    [showIcon]="true"
+                                                    dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body" />
+                                            </div>
+
+                                            <!-- Expire Date -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                                                <label for="tableRateExpireDate" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProProduct:ExpireDate' | translate }}
+                                                </label>
+                                                <p-datepicker id="tableRateExpireDate" [(ngModel)]="selectedTableRateExpireDate"
+                                                    [disabled]="!tableRateFormVisible" [showIcon]="true"
+                                                    dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body" />
+                                            </div>
+
+                                            <!-- Action Buttons -->
+                                            <div class="col-span-12 flex items-center justify-end gap-2 pt-5">
+                                                <p-button *ngIf="!tableRateFormVisible"
+                                                    [label]="'Product::ProProduct:AddNew' | translate"
+                                                    icon="pi pi-plus" (onClick)="onShowTableRateForm()" 
+                                                    [disabled]="isDetailMode()" />
+
+                                                <ng-container *ngIf="tableRateFormVisible">
+                                                    <p-button [label]="'Product::ProProduct:CancelAction' | translate"
+                                                        severity="secondary" icon="pi pi-times"
+                                                        (onClick)="onCancelTableRateForm()" />
+                                                    <p-button [label]="'Product::ProProduct:Execute' | translate" icon="pi pi-check"
+                                                        (onClick)="onSaveTableRate()"
+                                                        [disabled]="!isTableRateFormValid" />
+                                                </ng-container>
+                                            </div>
+                                        </div>
+
+                                        <!-- Table Rate Table -->
+                                        <div class="flex-1 overflow-auto p-3">
+                                            <p-table [value]="productTableRates" styleClass="p-datatable-sm">
+                                                <ng-template pTemplate="header">
+                                                    <tr>
+                                                        <th>{{ 'Product::ProProduct:TableRateCode' | translate }}</th>
+                                                        <th>{{ 'Product::ProProduct:TableRateName' | translate }}</th>
+                                                        <th>{{ 'Product::ProProduct:EffectDate' | translate }}</th>
+                                                        <th>{{ 'Product::ProProduct:ExpireDate' | translate }}</th>
+                                                        <th>{{ 'AbpAuditLogging::CreationTime' | translate }}</th>
+                                                        <th>{{ 'AbpAuditLogging::CreatorId' | translate }}</th>
+                                                        <th style="width: 100px">{{ 'Actions' | translate }}</th>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="body" let-tableRate>
+                                                    <tr>
+                                                        <td>{{ getTableRateCode(tableRate.tableRateId) }}</td>
+                                                        <td>{{ getTableRateName(tableRate.tableRateId) }}</td>
+                                                        <td>{{ tableRate.effectDate ? (tableRate.effectDate | date:'dd/MM/yyyy') : '-' }}</td>
+                                                        <td>{{ tableRate.expireDate ? (tableRate.expireDate | date:'dd/MM/yyyy') : '-' }}</td>
+                                                        <td>{{ tableRate.creationTime ? (tableRate.creationTime | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
+                                                        <td>{{ tableRate.creatorName || '-' }}</td>
+                                                        <td>
+                                                            <p-menu #tableRateMenu [model]="getTableRateMenuItems(tableRate)" [popup]="true" appendTo="body"></p-menu>
+                                                            <p-button icon="pi pi-ellipsis-v" [text]="true"
+                                                                (click)="$event.stopPropagation(); $event.preventDefault(); tableRateMenu.toggle($event)" />
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="emptymessage">
+                                                    <tr>
+                                                        <td colspan="7" class="text-center text-gray-500">
+                                                            {{ 'Product::ProProduct:NoTableRatesAdded' | translate }}
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                            </p-table>
+                                        </div>
+                                    </div>
+                                </p-tabpanel>
+
+                                <p-tabpanel value="4">
+                                    <div class="flex flex-col h-full">
+                                        <!-- Add Rule Form -->
+                                        <div class="grid grid-cols-12 gap-4 p-3 border-b">
+                                            <!-- Rule Type -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="ruleRuleTypeId" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProRule:RuleType' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <p-select id="ruleRuleTypeId" [(ngModel)]="selectedRuleTypeId"
+                                                    [options]="ruleTypeOptions" [disabled]="!ruleFormVisible || isRuleViewMode || (selectedRuleForEdit ? !canEditRuleAllFields(selectedRuleForEdit) : false)"
+                                                    optionLabel="label" optionValue="value" styleClass="w-full"
+                                                    [placeholder]="'Product::ProRule:SelectRuleType' | translate"
+                                                    appendTo="body" />
+                                            </div>
+
+                                            <!-- Code -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="ruleCode" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProRule:Code' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <input pInputText id="ruleCode" [(ngModel)]="selectedRuleCode"
+                                                    [disabled]="!ruleFormVisible || isRuleViewMode || !!selectedRuleForEdit"
+                                                    class="w-full" [class.bg-gray-100]="isRuleViewMode || !!selectedRuleForEdit"
+                                                    maxlength="50" />
+                                            </div>
+
+                                            <!-- Name -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="ruleName" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProRule:Name' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <input pInputText id="ruleName" [(ngModel)]="selectedRuleName"
+                                                    [disabled]="!ruleFormVisible || isRuleViewMode || (selectedRuleForEdit ? !canEditRuleAllFields(selectedRuleForEdit) : false)"
+                                                    class="w-full" [class.bg-gray-100]="isRuleViewMode || (selectedRuleForEdit && !canEditRuleAllFields(selectedRuleForEdit))"
+                                                    maxlength="250" />
+                                            </div>
+
+                                            <!-- Priority -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="rulePriority" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProRule:Priority' | translate }}
+                                                </label>
+                                                <p-inputNumber id="rulePriority" [(ngModel)]="selectedRulePriority"
+                                                    [disabled]="!ruleFormVisible || isRuleViewMode || (selectedRuleForEdit ? !canEditRuleAllFields(selectedRuleForEdit) : false)"
+                                                    [min]="1" styleClass="w-full" />
+                                            </div>
+
+                                            <!-- Status -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="ruleStatus" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProRule:Status' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <p-select id="ruleStatus" [(ngModel)]="selectedRuleStatus"
+                                                    [options]="ruleStatusOptions" [disabled]="!ruleFormVisible || isRuleViewMode || (selectedRuleForEdit ? !canEditRuleAllFields(selectedRuleForEdit) : false)"
+                                                    optionLabel="label" optionValue="value" styleClass="w-full"
+                                                    appendTo="body" />
+                                            </div>
+
+                                            <!-- Effect Date -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="ruleEffectDate" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProRule:EffectDate' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <p-datepicker id="ruleEffectDate" [(ngModel)]="selectedRuleEffectDate"
+                                                    [disabled]="!ruleFormVisible || isRuleViewMode || (selectedRuleForEdit ? !canEditRuleAllFields(selectedRuleForEdit) : false)"
+                                                    [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full"
+                                                    appendTo="body" />
+                                            </div>
+
+                                            <!-- Expire Date -->
+                                            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                                                <label for="ruleExpireDate" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProRule:ExpireDate' | translate }}
+                                                </label>
+                                                <p-datepicker id="ruleExpireDate" [(ngModel)]="selectedRuleExpireDate"
+                                                    [disabled]="!ruleFormVisible || isRuleViewMode" [showIcon]="true"
+                                                    dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body" />
+                                            </div>
+
+                                            <!-- Rule Script -->
+                                            <div class="col-span-12">
+                                                <label for="ruleScript" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProRule:RuleScript' | translate }}
+                                                    <span class="text-red-500">*</span>
+                                                </label>
+                                                <textarea pTextarea id="ruleScript" [(ngModel)]="selectedRuleScript"
+                                                    [disabled]="!ruleFormVisible || isRuleViewMode || (selectedRuleForEdit ? !canEditRuleAllFields(selectedRuleForEdit) : false)"
+                                                    class="w-full" [rows]="4" [class.bg-gray-100]="isRuleViewMode || (selectedRuleForEdit && !canEditRuleAllFields(selectedRuleForEdit))"></textarea>
+                                            </div>
+
+                                            <!-- Description -->
+                                            <div class="col-span-12">
+                                                <label for="ruleDescription" class="block mb-1 font-medium">
+                                                    {{ 'Product::ProRule:Description' | translate }}
+                                                </label>
+                                                <textarea pTextarea id="ruleDescription" [(ngModel)]="selectedRuleDescription"
+                                                    [disabled]="!ruleFormVisible || isRuleViewMode"
+                                                    class="w-full" [rows]="3" maxlength="500" [class.bg-gray-100]="isRuleViewMode"></textarea>
+                                            </div>
+
+                                            <!-- Action Buttons -->
+                                            <div class="col-span-12 flex items-center justify-end gap-2 pt-5">
+                                                <p-button *ngIf="!ruleFormVisible"
+                                                    [label]="'Product::ProProduct:AddNew' | translate"
+                                                    icon="pi pi-plus" (onClick)="onShowRuleForm()" 
+                                                    [disabled]="isDetailMode()" />
+
+                                                <ng-container *ngIf="ruleFormVisible">
+                                                    <p-button *ngIf="!isRuleViewMode" [label]="'Product::ProProduct:CancelAction' | translate"
+                                                        severity="secondary" icon="pi pi-times"
+                                                        (onClick)="onCancelRuleForm()" />
+                                                    <p-button *ngIf="isRuleViewMode" [label]="'Product::Close' | translate"
+                                                        severity="secondary" icon="pi pi-times"
+                                                        (onClick)="onCancelRuleForm()" />
+                                                    <p-button *ngIf="!isRuleViewMode" [label]="'Product::ProProduct:Execute' | translate" icon="pi pi-check"
+                                                        (onClick)="onSaveRule()"
+                                                        [disabled]="!isRuleFormValid" />
+                                                </ng-container>
+                                            </div>
+                                        </div>
+
+                                        <!-- Rules Table -->
+                                        <div class="flex-1 overflow-auto p-3">
+                                            <p-table [value]="productRules" styleClass="p-datatable-sm">
+                                                <ng-template pTemplate="header">
+                                                    <tr>
+                                                        <th>{{ 'Product::ProRule:RuleType' | translate }}</th>
+                                                        <th>{{ 'Product::ProRule:Code' | translate }}</th>
+                                                        <th>{{ 'Product::ProRule:Name' | translate }}</th>
+                                                        <th>{{ 'Product::ProRule:Status' | translate }}</th>
+                                                        <th>{{ 'Product::ProRule:Priority' | translate }}</th>
+                                                        <th>{{ 'Product::ProRule:EffectDate' | translate }}</th>
+                                                        <th>{{ 'Product::ProRule:ExpireDate' | translate }}</th>
+                                                        <th>{{ 'AbpAuditLogging::CreatorId' | translate }}</th>
+                                                        <th style="width: 100px">{{ 'Actions' | translate }}</th>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="body" let-rule>
+                                                    <tr>
+                                                        <td>{{ getRuleTypeName(rule.ruleTypeId) }}</td>
+                                                        <td>{{ rule.code }}</td>
+                                                        <td>{{ rule.name }}</td>
+                                                        <td>{{ getRuleStatusLabel(rule.status) }}</td>
+                                                        <td>{{ rule.priority }}</td>
+                                                        <td>{{ rule.effectDate ? (rule.effectDate | date:'dd/MM/yyyy') : '-' }}</td>
+                                                        <td>{{ rule.expireDate ? (rule.expireDate | date:'dd/MM/yyyy') : '-' }}</td>
+                                                        <td>{{ rule.creatorName || '-' }}</td>
+                                                        <td>
+                                                            <p-menu #ruleMenu [model]="getRuleMenuItems(rule)" [popup]="true" appendTo="body"></p-menu>
+                                                            <p-button icon="pi pi-ellipsis-v" [text]="true"
+                                                                (click)="$event.stopPropagation(); $event.preventDefault(); ruleMenu.toggle($event)" />
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="emptymessage">
+                                                    <tr>
+                                                        <td colspan="9" class="text-center text-gray-500">
+                                                            {{ 'Product::ProRule:NoRulesAdded' | translate }}
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                            </p-table>
+                                        </div>
+                                    </div>
+                                </p-tabpanel>
+
+                                <p-tabpanel value="5">
+                                    <div class="flex flex-col h-full">
+                                        <!-- Add Package Button -->
+                                        <div class="p-3 border-b">
+                                            <p-button [label]="'Product::ProProductPlanDefinition:AddPackage' | translate"
+                                                icon="pi pi-plus" (onClick)="onAddPlanDefinition()"
+                                                [disabled]="isDetailMode() || (!selectedProduct && !isCreateMode()) || (selectedProduct?.partnerId ?? formData.partnerId) || (editingPlanDefinition && !editingPlanDefinition.id) || !canMutatePlanDefinitions" />
+                                        </div>
+
+                                        <!-- Package Definition Table -->
+                                        <div class="flex-1 overflow-auto p-3">
+                                            <p-table [value]="productPlanDefinitions" styleClass="p-datatable-sm">
+                                                <ng-template pTemplate="header">
+                                                    <tr>
+                                                        <th>{{ 'Product::ProProductPlanDefinition:Code' | translate }} <span class="text-red-500">*</span></th>
+                                                        <th>{{ 'Product::ProProductPlanDefinition:Name' | translate }} <span class="text-red-500">*</span></th>
+                                                        <th>{{ 'Product::ProProductPlanDefinition:Status' | translate }} <span class="text-red-500">*</span></th>
+                                                        <th>{{ 'AbpAuditLogging::CreationTime' | translate }}</th>
+                                                        <th>{{ 'AbpAuditLogging::CreatorId' | translate }}</th>
+                                                        <th style="width: 100px">{{ 'Actions' | translate }}</th>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="body" let-plan let-rowIndex="rowIndex">
+                                                    <tr>
+                                                        <td>
+                                                            <ng-container *ngIf="isEditingPlanDefinition(plan) && editingPlanDefinition">
+                                                                <input pInputText [(ngModel)]="editingPlanDefinition!.planCode"
+                                                                    [readonly]="!!plan.id"
+                                                                    [class.bg-gray-100]="!!plan.id"
+                                                                    class="w-full" maxlength="50" />
+                                                            </ng-container>
+                                                            <ng-container *ngIf="!isEditingPlanDefinition(plan)">
+                                                                {{ plan.planCode }}
+                                                            </ng-container>
+                                                        </td>
+                                                        <td>
+                                                            <ng-container *ngIf="isEditingPlanDefinition(plan) && editingPlanDefinition">
+                                                                <input pInputText [(ngModel)]="editingPlanDefinition!.planName"
+                                                                    class="w-full" maxlength="250" />
+                                                            </ng-container>
+                                                            <ng-container *ngIf="!isEditingPlanDefinition(plan)">
+                                                                {{ plan.planName }}
+                                                            </ng-container>
+                                                        </td>
+                                                        <td>
+                                                            <ng-container *ngIf="isEditingPlanDefinition(plan) && editingPlanDefinition">
+                                                                <p-select [(ngModel)]="editingPlanDefinition!.status"
+                                                                    [options]="planDefinitionStatusOptions"
+                                                                    optionLabel="label" optionValue="value"
+                                                                    styleClass="w-full" appendTo="body" />
+                                                            </ng-container>
+                                                            <ng-container *ngIf="!isEditingPlanDefinition(plan)">
+                                                                {{ getPlanDefinitionStatusLabel(plan.status) }}
+                                                            </ng-container>
+                                                        </td>
+                                                        <td>{{ plan.creationTime ? (plan.creationTime | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
+                                                        <td>{{ plan.creatorName || '-' }}</td>
+                                                        <td>
+                                                            <ng-container *ngIf="isEditingPlanDefinition(plan)">
+                                                                <div class="flex gap-2">
+                                                                    <p-button icon="pi pi-check" [text]="true"
+                                                                        (onClick)="onSavePlanDefinition()"
+                                                                        [disabled]="loading || !canMutatePlanDefinitions" />
+                                                                    <p-button icon="pi pi-times" [text]="true"
+                                                                        severity="secondary"
+                                                                        (onClick)="onCancelPlanDefinitionEdit()"
+                                                                        [disabled]="loading" />
+                                                                </div>
+                                                            </ng-container>
+                                                            <ng-container *ngIf="!isEditingPlanDefinition(plan)">
+                                                                <p-menu #planMenu [model]="getPlanDefinitionMenuItems(plan)" [popup]="true" appendTo="body"></p-menu>
+                                                                <p-button icon="pi pi-ellipsis-v" [text]="true"
+                                                                    (click)="$event.stopPropagation(); $event.preventDefault(); planMenu.toggle($event)" />
+                                                            </ng-container>
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="emptymessage">
+                                                    <tr>
+                                                        <td colspan="6" class="text-center text-gray-500">
+                                                            {{ 'Product::ProProductPlanDefinition:NoPackagesAdded' | translate }}
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                            </p-table>
+                                        </div>
+                                    </div>
+                                </p-tabpanel>
+
+                                <!-- Product Distribution (Bán hàng) Tab -->
+                                <p-tabpanel value="6">
+                                    <div class="flex flex-col h-full gap-6 p-4">
+                                        <!-- Channel Distribution -->
+                                        <div class="flex flex-col">
+                                            <label class="block mb-3 font-semibold text-lg">
+                                                {{ 'Product::ProProductDistribution:ChannelDistribution' | translate }}
+                                            </label>
+                                            <app-v-dual-listbox
+                                                [availableOptions]="getAvailableChannelOptions()"
+                                                [selectedOptions]="getSelectedChannelOptions()"
+                                                [(ngModel)]="selectedChannelIds"
+                                                [availableLabel]="'Product::ProProductDistribution:AvailableChannels' | translate"
+                                                [selectedLabel]="'Product::ProProductDistribution:SelectedChannels' | translate"
+                                                [filter]="true"
+                                                [listStyle]="{ height: '300px' }"
+                                                (selectionChange)="onChannelSelectionChange($event)"
+                                                [disabled]="isDetailMode() || (!selectedProduct && !isCreateMode())">
+                                            </app-v-dual-listbox>
+                                        </div>
+
+                                        <!-- App Channel Distribution -->
+                                        <div class="flex flex-col">
+                                            <label class="block mb-3 font-semibold text-lg">
+                                                {{ 'Product::ProProductDistribution:AppChannelDistribution' | translate }}
+                                            </label>
+                                            <app-v-dual-listbox
+                                                [availableOptions]="getAvailableAppChannelOptions()"
+                                                [selectedOptions]="getSelectedAppChannelOptions()"
+                                                [(ngModel)]="selectedAppChannelIds"
+                                                [availableLabel]="'Product::ProProductDistribution:AvailableAppChannels' | translate"
+                                                [selectedLabel]="'Product::ProProductDistribution:SelectedAppChannels' | translate"
+                                                [filter]="true"
+                                                [listStyle]="{ height: '300px' }"
+                                                (selectionChange)="onAppChannelSelectionChange($event)"
+                                                [disabled]="isDetailMode() || (!selectedProduct && !isCreateMode())">
+                                            </app-v-dual-listbox>
+                                        </div>
+
+                                        <!-- Employee Role Distribution -->
+                                        <div class="flex flex-col">
+                                            <label class="block mb-3 font-semibold text-lg">
+                                                {{ 'Product::ProProductDistribution:RoleDistribution' | translate }}
+                                            </label>
+                                            <app-v-dual-listbox
+                                                [availableOptions]="getAvailableEmployeeRoleOptions()"
+                                                [selectedOptions]="getSelectedEmployeeRoleOptions()"
+                                                [(ngModel)]="selectedEmployeeRoleIds"
+                                                [availableLabel]="'Product::ProProductDistribution:AvailableRoles' | translate"
+                                                [selectedLabel]="'Product::ProProductDistribution:SelectedRoles' | translate"
+                                                [filter]="true"
+                                                [listStyle]="{ height: '300px' }"
+                                                (selectionChange)="onEmployeeRoleSelectionChange($event)"
+                                                [disabled]="isDetailMode() || (!selectedProduct && !isCreateMode())">
+                                            </app-v-dual-listbox>
+                                        </div>
+                                    </div>
+                                </p-tabpanel>
+                            </p-tabpanels>
+                        </p-tabs>
+
+                        <!-- Action Buttons at bottom right -->
+                        <div class="flex justify-end gap-2 p-3 border-t mt-2">
+                            <p-button label="Hủy bỏ" severity="secondary"
+                                (onClick)="onCancelProductForm()" [disabled]="loading" />
+                            <p-button [label]="isDetailMode() ? 'Sửa' : 'Thực hiện'" 
+                                (onClick)="isDetailMode() ? onSwitchToEditMode() : onExecuteProductForm()"
+                                [loading]="loading" />
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+        </p-splitter>
+    </p-panel>
+</div>
+
+<!-- Create/Edit Dialog - Hidden, no longer used for create/edit operations (using detail panel instead) -->
+<p-dialog *ngIf="false" [(visible)]="dialogVisible"
+    [header]="(dialogMode === 'create' ? 'Product::ProProduct:New' : 'Product::ProProduct:Edit') | translate"
+    [modal]="true" [style]="{ width: '800px', maxHeight: '90vh' }" [draggable]="false" [resizable]="false"
+    [contentStyle]="{ overflow: 'auto' }">
+    <div class="grid grid-cols-12 gap-4 p-2">
+        <!-- LOB -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="formLobId" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:LOB' | translate }}
+                <span class="text-red-500">*</span>
+            </label>
+            <p-select id="formLobId" [(ngModel)]="formData.lobId" [options]="lobOptions"
+                [placeholder]="'Product::ProProduct:SelectLOB' | translate" optionLabel="label" optionValue="value"
+                styleClass="w-full" appendTo="body" (ngModelChange)="onLobIdChange()" />
+        </div>
+
+        <!-- Product Category -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="formProductCategoryId" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:ProductCategory' | translate }}
+            </label>
+            <p-select id="formProductCategoryId" [(ngModel)]="formData.productCategoryId"
+                [options]="productCategorySelectOptions"
+                [placeholder]="'Product::ProProduct:SelectCategory' | translate" [showClear]="true" optionLabel="label"
+                optionValue="value" styleClass="w-full" appendTo="body"
+                (ngModelChange)="onProductCategoryIdChange()" />
+        </div>
+
+        <!-- Partner -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="formPartnerId" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:Partner' | translate }}
+            </label>
+            <p-select id="formPartnerId" [(ngModel)]="formData.partnerId" [options]="partnerOptions"
+                [placeholder]="'Product::ProProduct:SelectPartner' | translate" [showClear]="true" optionLabel="label"
+                optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Parent Product -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="formRootProductId" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:ParentProduct' | translate }}
+            </label>
+            <p-select id="formRootProductId" [(ngModel)]="formData.rootProductId" [options]="parentProductOptions"
+                [placeholder]="'Product::ProProduct:SelectParentProduct' | translate" [showClear]="true"
+                optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Code -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="formCode" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:Code' | translate }}
+                <span class="text-red-500">*</span>
+            </label>
+            <input pInputText id="formCode" [(ngModel)]="formData.code" [readonly]="dialogMode === 'edit'" class="w-full"
+                [class.bg-gray-100]="dialogMode === 'edit'" maxlength="50" />
+            <small class="text-gray-500">{{ 'Product::ProProduct:CodeHint' | translate }}</small>
+        </div>
+
+        <!-- Insurer Product Code -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="formInsurerProductCode" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:InsurerProductCode' | translate }}
+            </label>
+            <input pInputText id="formInsurerProductCode" [(ngModel)]="formData.insurerProductCode" class="w-full" maxlength="50" />
+        </div>
+
+        <!-- Short Name -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="formShortName" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:ShortName' | translate }}
+                <span class="text-red-500">*</span>
+            </label>
+            <input pInputText id="formShortName" [(ngModel)]="formData.shortName" class="w-full" maxlength="50" />
+        </div>
+
+        <!-- Name -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="formName" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:Name' | translate }}
+                <span class="text-red-500">*</span>
+            </label>
+            <input pInputText id="formName" [(ngModel)]="formData.name" class="w-full" maxlength="250" />
+        </div>
+
+        <!-- Status -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="formStatus" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:Status' | translate }}
+                <span class="text-red-500">*</span>
+            </label>
+            <p-select id="formStatus" [(ngModel)]="formData.status" [options]="statusOptions" optionLabel="label"
+                optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Rate Type -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="formRateType" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:RateType' | translate }}
+                <span class="text-red-500">*</span>
+            </label>
+            <p-select id="formRateType" [(ngModel)]="formData.rateType" [options]="rateTypeOptions" optionLabel="label"
+                optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Product Type -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="formProductTypeId" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:ProductType' | translate }}
+            </label>
+            <p-select id="formProductTypeId" [(ngModel)]="formData.productTypeId" [options]="productTypeOptions"
+                [placeholder]="'Product::ProProduct:SelectProductType' | translate" [showClear]="true"
+                optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Effect Date -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="formEffectDate" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:EffectDate' | translate }}
+                <span class="text-red-500">*</span>
+            </label>
+            <p-datepicker id="formEffectDate" [(ngModel)]="formData.effectDate" [showIcon]="true" dateFormat="dd/mm/yy"
+                styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Expire Date -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="formExpireDate" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:ExpireDate' | translate }}
+            </label>
+            <p-datepicker id="formExpireDate" [(ngModel)]="formData.expireDate" [showIcon]="true" dateFormat="dd/mm/yy"
+                styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Seq Number -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="formSeqNumber" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:SeqNumber' | translate }}
+            </label>
+            <p-inputNumber id="formSeqNumber" [(ngModel)]="formData.seqNumber" [min]="1" styleClass="w-full" />
+        </div>
+
+        <!-- Is Plan -->
+        <div class="col-span-12 md:col-span-6 flex items-center gap-2">
+            <p-checkbox id="formIsPlan" [(ngModel)]="isPlanChecked" [binary]="true" />
+            <label for="formIsPlan" class="cursor-pointer">{{ 'Product::ProProduct:IsPlan' | translate }}</label>
+        </div>
+
+        <!-- Description -->
+        <div class="col-span-12">
+            <label for="formDescription" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:Description' | translate }}
+            </label>
+            <textarea pTextarea id="formDescription" [(ngModel)]="formData.description" class="w-full" [rows]="3"
+                maxlength="500"></textarea>
+        </div>
+
+        <!-- Internal Note -->
+        <div class="col-span-12">
+            <label for="formInternalNote" class="block mb-2 font-medium">
+                {{ 'Product::ProProduct:InternalNote' | translate }}
+            </label>
+            <textarea pTextarea id="formInternalNote" [(ngModel)]="formData.internalNote" class="w-full" [rows]="2"
+                maxlength="250"></textarea>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2">
+            <p-button [label]="'Product::Cancel' | translate" severity="secondary" (onClick)="dialogVisible = false"
+                [disabled]="loading" />
+            <p-button [label]="'Product::Save' | translate" (onClick)="save()" [loading]="loading" />
+        </div>
+    </ng-template>
+</p-dialog>
+
+<!-- Constraint Setup Modal -->
+<p-dialog [(visible)]="interactionModalVisible"
+    [header]="'Product::ProProductCoverageInteraction:SetupConstraints' | translate"
+    [modal]="true" [style]="{ width: '900px', maxHeight: '90vh' }" [draggable]="false" [resizable]="false"
+    [contentStyle]="{ overflow: 'auto' }" (onHide)="onCloseInteractionModal()">
+    <div class="flex flex-col h-full">
+        <!-- Add Interaction Form -->
+        <div class="grid grid-cols-12 gap-4 p-3 border-b">
+            <!-- Interaction Type -->
+            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <label for="interactionType" class="block mb-1 font-medium">
+                    {{ 'Product::ProProductCoverageInteraction:InteractionType' | translate }}
+                    <span class="text-red-500">*</span>
+                </label>
+                <p-select id="interactionType" [(ngModel)]="selectedInteractionType"
+                    [options]="interactionTypeOptions" [disabled]="isDetailMode() || !interactionFormVisible || isInteractionConstraintFieldsLocked"
+                    optionLabel="label" optionValue="value" styleClass="w-full"
+                    [placeholder]="'Product::ProProductCoverageInteraction:SelectInteractionType' | translate"
+                    appendTo="body" />
+            </div>
+
+            <!-- Related Coverage -->
+            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <label for="interactionCoverageId" class="block mb-1 font-medium">
+                    {{ 'Product::ProProductCoverageInteraction:RelatedCoverage' | translate }}
+                    <span class="text-red-500">*</span>
+                </label>
+                <p-select id="interactionCoverageId" [(ngModel)]="selectedInteractionCoverageId"
+                    [options]="interactionCoverageOptions" [disabled]="isDetailMode() || !interactionFormVisible || isInteractionConstraintFieldsLocked"
+                    optionLabel="label" optionValue="value" styleClass="w-full"
+                    [placeholder]="'Product::ProProductCoverageInteraction:SelectRelatedCoverage' | translate"
+                    appendTo="body" />
+            </div>
+
+            <!-- Effect Date -->
+            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <label for="interactionEffectDate" class="block mb-1 font-medium">
+                    {{ 'Product::ProProductCoverageInteraction:EffectDate' | translate }}
+                    <span class="text-red-500">*</span>
+                </label>
+                <p-datepicker id="interactionEffectDate" [(ngModel)]="selectedInteractionEffectDate"
+                    [disabled]="isDetailMode() || !interactionFormVisible || isInteractionConstraintFieldsLocked" [showIcon]="true" dateFormat="dd/mm/yy"
+                    styleClass="w-full" appendTo="body" />
+            </div>
+
+            <!-- Expire Date -->
+            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <label for="interactionExpireDate" class="block mb-1 font-medium">
+                    {{ 'Product::ProProductCoverageInteraction:ExpireDate' | translate }}
+                </label>
+                <p-datepicker id="interactionExpireDate" [(ngModel)]="selectedInteractionExpireDate"
+                    [disabled]="isDetailMode() || !interactionFormVisible" [showIcon]="true" dateFormat="dd/mm/yy"
+                    styleClass="w-full" appendTo="body" />
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="col-span-12 flex items-center justify-end gap-2 pt-5">
+                <p-button *ngIf="!interactionFormVisible"
+                    [label]="'Product::ProProductCoverageInteraction:Add' | translate"
+                    icon="pi pi-plus" (onClick)="onShowInteractionForm()" 
+                    [disabled]="isDetailMode()" />
+
+                <ng-container *ngIf="interactionFormVisible">
+                    <p-button [label]="'Product::ProProduct:CancelAction' | translate"
+                        severity="secondary" icon="pi pi-times"
+                        (onClick)="onCancelInteractionForm()" />
+                    <p-button [label]="'Product::ProProduct:Execute' | translate" icon="pi pi-check"
+                        (onClick)="onSaveInteraction()"
+                        [disabled]="isDetailMode() || !isInteractionFormValid" />
+                </ng-container>
+            </div>
+        </div>
+
+        <!-- Interactions Table -->
+        <div class="flex-1 overflow-auto p-3">
+            <p-table [value]="selectedCoverageForInteraction?.productCoverageInteractions || []"
+                styleClass="p-datatable-sm">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>{{ 'Product::ProProductCoverageInteraction:InteractionType' | translate }}</th>
+                        <th>{{ 'Product::ProProductCoverageInteraction:RelatedCoverageCode' | translate }}</th>
+                        <th>{{ 'Product::ProProductCoverageInteraction:RelatedCoverageName' | translate }}</th>
+                        <th>{{ 'Product::ProProductCoverageInteraction:EffectDate' | translate }}</th>
+                        <th>{{ 'Product::ProProductCoverageInteraction:ExpireDate' | translate }}</th>
+                        <th>{{ 'AbpAuditLogging::CreationTime' | translate }}</th>
+                        <th>{{ 'AbpAuditLogging::CreatorId' | translate }}</th>
+                        <th style="width: 100px">{{ 'Actions' | translate }}</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-interaction>
+                    <tr>
+                        <td>{{ getInteractionTypeLabel(interaction.interactionType) }}</td>
+                        <td>{{ getInteractionCoverageCode(interaction.interactionCoverageId) }}</td>
+                        <td>{{ getInteractionCoverageName(interaction.interactionCoverageId) }}</td>
+                        <td>{{ interaction.effectDate ? (interaction.effectDate | date:'dd/MM/yyyy') : '-' }}</td>
+                        <td>{{ interaction.expireDate ? (interaction.expireDate | date:'dd/MM/yyyy') : '-' }}</td>
+                        <td>{{ interaction.creationTime ? (interaction.creationTime | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
+                        <td>{{ interaction.creatorName || '-' }}</td>
+                        <td>
+                            <p-menu #interactionMenu [model]="getInteractionMenuItems(interaction)" [popup]="true" appendTo="body"></p-menu>
+                            <p-button icon="pi pi-ellipsis-v" [text]="true"
+                                (click)="$event.stopPropagation(); interactionMenu.toggle($event)" />
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="8" class="text-center text-gray-500">
+                            {{ 'Product::ProProductCoverageInteraction:NoInteractionsAdded' | translate }}
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2">
+            <p-button [label]="'Product::Close' | translate" severity="secondary"
+                (onClick)="onCloseInteractionModal()" />
+        </div>
+    </ng-template>
+</p-dialog>
+
+<!-- Level Setup Modal -->
+<p-dialog [(visible)]="levelModalVisible"
+    [header]="'Product::ProProductCoverageLevel:SetupLevel' | translate"
+    [modal]="true" [style]="{ width: '1200px', maxHeight: '90vh' }" [draggable]="false" [resizable]="false"
+    [contentStyle]="{ overflow: 'auto' }" (onHide)="onCloseLevelModal()">
+    <div class="flex flex-col h-full">
+        <!-- Add Level Form -->
+        <div class="grid grid-cols-12 gap-4 p-3 border-b" *ngIf="levelFormVisible">
+            <!-- Code -->
+            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <label for="levelCode" class="block mb-1 font-medium">
+                    {{ 'Product::ProProductCoverageLevel:LevelCode' | translate }}
+                    <span class="text-red-500">*</span>
+                </label>
+                <input pInputText id="levelCode" [(ngModel)]="levelFormData.code"
+                    [disabled]="isDetailMode() || !canEditLevelCode"
+                    class="w-full" [class.bg-gray-100]="isDetailMode() || !canEditLevelCode"
+                    maxlength="50" />
+            </div>
+
+            <!-- Name -->
+            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <label for="levelName" class="block mb-1 font-medium">
+                    {{ 'Product::ProProductCoverageLevel:LevelName' | translate }}
+                    <span class="text-red-500">*</span>
+                </label>
+                <input pInputText id="levelName" [(ngModel)]="levelFormData.name"
+                    class="w-full" maxlength="250" [disabled]="isDetailMode()" />
+            </div>
+
+            <!-- Effect Date -->
+            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <label for="levelEffectDate" class="block mb-1 font-medium">
+                    {{ 'Product::ProProductCoverageLevel:EffectDate' | translate }}
+                    <span class="text-red-500">*</span>
+                </label>
+                <p-datepicker id="levelEffectDate" [(ngModel)]="levelFormData.effectDate"
+                    [disabled]="isDetailMode() || !canEditLevelEffectDate"
+                    [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body" />
+            </div>
+
+            <!-- Expire Date -->
+            <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <label for="levelExpireDate" class="block mb-1 font-medium">
+                    {{ 'Product::ProProductCoverageLevel:ExpireDate' | translate }}
+                </label>
+                <p-datepicker id="levelExpireDate" [(ngModel)]="levelFormData.expireDate"
+                    [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body" 
+                    [disabled]="isDetailMode()" />
+            </div>
+
+            <!-- Conditional Script -->
+            <div class="col-span-12">
+                <label for="levelConditionalScript" class="block mb-1 font-medium">
+                    {{ 'Product::ProProductCoverageLevel:ConditionalScript' | translate }}
+                </label>
+                <textarea pTextarea id="levelConditionalScript" [(ngModel)]="levelFormData.conditionalScript"
+                    class="w-full" [rows]="4" [disabled]="isDetailMode()"></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="col-span-12 flex items-center justify-end gap-2 pt-5">
+                <p-button [label]="'Product::ProProduct:CancelAction' | translate"
+                    severity="secondary" icon="pi pi-times"
+                    (onClick)="onCancelLevelForm()" />
+                <p-button [label]="'Product::ProProduct:Execute' | translate" icon="pi pi-check"
+                    (onClick)="onSaveLevel()" [disabled]="isDetailMode()" />
+            </div>
+        </div>
+
+        <!-- Add Level Button -->
+        <div class="p-3 border-b" *ngIf="!levelFormVisible">
+            <p-button [label]="'Product::ProProductCoverageLevel:AddLevel' | translate"
+                icon="pi pi-plus" (onClick)="onShowLevelForm()" 
+                [disabled]="isDetailMode()" />
+        </div>
+
+        <!-- Levels Table -->
+        <div class="flex-1 overflow-auto p-3">
+            <p-table [value]="coverageLevels" styleClass="p-datatable-sm">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>{{ 'Product::ProProductCoverageLevel:LevelCode' | translate }}</th>
+                        <th>{{ 'Product::ProProductCoverageLevel:LevelName' | translate }}</th>
+                        <th>{{ 'Product::ProProductCoverageLevel:EffectDate' | translate }}</th>
+                        <th>{{ 'Product::ProProductCoverageLevel:ExpireDate' | translate }}</th>
+                        <th>{{ 'AbpAuditLogging::CreationTime' | translate }}</th>
+                        <th>{{ 'AbpAuditLogging::CreatorId' | translate }}</th>
+                        <th style="width: 100px">{{ 'Actions' | translate }}</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-level>
+                    <tr>
+                        <td>{{ level.code }}</td>
+                        <td>{{ level.name }}</td>
+                        <td>{{ level.effectDate ? (level.effectDate | date:'dd/MM/yyyy') : '-' }}</td>
+                        <td>{{ level.expireDate ? (level.expireDate | date:'dd/MM/yyyy') : '-' }}</td>
+                        <td>{{ level.creationTime ? (level.creationTime | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
+                        <td>{{ level.creatorName || '-' }}</td>
+                        <td>
+                            <p-menu #levelMenu [model]="getLevelMenuItems(level)" [popup]="true" appendTo="body"></p-menu>
+                            <p-button icon="pi pi-ellipsis-v" [text]="true"
+                                (click)="$event.stopPropagation(); levelMenu.toggle($event)" />
+                        </td>
+                    </tr>
+                    <!-- Terms Row -->
+                    <tr *ngIf="level.terms && level.terms.length > 0">
+                        <td colspan="7" class="p-0">
+                            <div class="p-3 bg-gray-50">
+                                <p class="font-semibold mb-2">{{ 'Product::ProProductCoverageLevel:Terms' | translate }}</p>
+                                <p-table [value]="level.terms" styleClass="p-datatable-sm">
+                                    <ng-template pTemplate="header">
+                                        <tr>
+                                            <th>{{ 'Product::ProProductCoverageLevelTerm:LevelType' | translate }}</th>
+                                            <th>{{ 'Product::ProProductCoverageLevelTerm:Basis' | translate }}</th>
+                                            <th>{{ 'Product::ProProductCoverageLevelTerm:AmountType' | translate }}</th>
+                                            <th>{{ 'Product::ProProductCoverageLevelTerm:IsDefault' | translate }}</th>
+                                            <th>{{ 'Product::ProProductCoverageLevelTerm:FromAmount' | translate }}</th>
+                                            <th>{{ 'Product::ProProductCoverageLevelTerm:ToAmount' | translate }}</th>
+                                            <th>{{ 'AbpAuditLogging::CreationTime' | translate }}</th>
+                                            <th>{{ 'AbpAuditLogging::CreatorId' | translate }}</th>
+                                            <th style="width: 100px">{{ 'Actions' | translate }}</th>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template pTemplate="body" let-term>
+                                        <tr>
+                                            <td>{{ getLevelTypeName(term.coverageLevelTypeId) }}</td>
+                                            <td>{{ getLevelBasisName(term.coverageLevelBasisId) }}</td>
+                                            <td>{{ getAmountTypeLabel(term.amountType) }}</td>
+                                            <td>{{ term.isDefault === 'Y' ? ('Yes' | translate) : ('No' | translate) }}</td>
+                                            <td>{{ term.fromAmount }}</td>
+                                            <td>{{ term.toAmount }}</td>
+                                            <td>{{ term.creationTime ? (term.creationTime | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
+                                            <td>{{ term.creatorName || '-' }}</td>
+                                            <td>
+                                                <p-menu #termMenu [model]="getTermMenuItems(term, level)" [popup]="true" appendTo="body"></p-menu>
+                                                <p-button icon="pi pi-ellipsis-v" [text]="true"
+                                                    (click)="$event.stopPropagation(); termMenu.toggle($event)" />
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template pTemplate="emptymessage">
+                                        <tr>
+                                            <td colspan="9" class="text-center text-gray-500">
+                                                {{ 'Product::ProProductCoverageLevelTerm:NoTermsAdded' | translate }}
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="7" class="text-center text-gray-500">
+                            {{ 'Product::ProProductCoverageLevel:NoLevelsAdded' | translate }}
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2">
+            <p-button [label]="'Product::Close' | translate" severity="secondary"
+                (onClick)="onCloseLevelModal()" />
+        </div>
+    </ng-template>
+</p-dialog>
+
+<!-- Add/Edit Term Modal -->
+<p-dialog [(visible)]="termModalVisible"
+    [header]="(selectedTerm ? 'Product::ProProductCoverageLevelTerm:EditTerm' : 'Product::ProProductCoverageLevelTerm:AddTerm') | translate"
+    [modal]="true" [style]="{ width: '800px', maxHeight: '90vh' }" [draggable]="false" [resizable]="false"
+    [contentStyle]="{ overflow: 'auto' }" (onHide)="onCloseTermModal()">
+    <div class="grid grid-cols-12 gap-4 p-2">
+        <!-- Coverage Level Type -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="termCoverageLevelTypeId" class="block mb-2 font-medium">
+                {{ 'Product::ProProductCoverageLevelTerm:CoverageLevelType' | translate }}
+                <span class="text-red-500">*</span>
+            </label>
+            <p-select id="termCoverageLevelTypeId" [(ngModel)]="termFormData.coverageLevelTypeId"
+                [options]="coverageLevelTypeOptions" optionLabel="label" optionValue="value"
+                [disabled]="!canEditTermAllFields"
+                styleClass="w-full"
+                [placeholder]="'Product::ProProductCoverageLevelTerm:SelectCoverageLevelType' | translate"
+                appendTo="body" />
+        </div>
+
+        <!-- Coverage Level Basis -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="termCoverageLevelBasisId" class="block mb-2 font-medium">
+                {{ 'Product::ProProductCoverageLevelTerm:CoverageLevelBasis' | translate }}
+                <span class="text-red-500">*</span>
+            </label>
+            <p-select id="termCoverageLevelBasisId" [(ngModel)]="termFormData.coverageLevelBasisId"
+                [options]="coverageLevelBasisOptions" optionLabel="label" optionValue="value"
+                [disabled]="!canEditTermAllFields"
+                styleClass="w-full"
+                [placeholder]="'Product::ProProductCoverageLevelTerm:SelectCoverageLevelBasis' | translate"
+                appendTo="body" />
+        </div>
+
+        <!-- Amount Type -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="termAmountType" class="block mb-2 font-medium">
+                {{ 'Product::ProProductCoverageLevelTerm:AmountType' | translate }}
+                <span class="text-red-500">*</span>
+            </label>
+            <p-select id="termAmountType" [(ngModel)]="termFormData.amountType"
+                [options]="amountTypeOptions" optionLabel="label" optionValue="value"
+                [disabled]="!canEditTermAllFields"
+                styleClass="w-full"
+                [placeholder]="'Product::ProProductCoverageLevelTerm:SelectAmountType' | translate"
+                appendTo="body" />
+        </div>
+
+        <!-- Is Default -->
+        <div class="col-span-12 md:col-span-6 flex items-center gap-2 pt-6">
+            <p-checkbox id="termIsDefault" [(ngModel)]="termIsDefaultChecked" [binary]="true" />
+            <label for="termIsDefault" class="cursor-pointer">
+                {{ 'Product::ProProductCoverageLevelTerm:IsDefault' | translate }}
+            </label>
+        </div>
+
+        <!-- From Amount -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="termFromAmount" class="block mb-2 font-medium">
+                {{ 'Product::ProProductCoverageLevelTerm:FromAmount' | translate }}
+                <span class="text-red-500">*</span>
+            </label>
+            <p-inputNumber id="termFromAmount" [(ngModel)]="termFormData.fromAmount"
+                [min]="0" styleClass="w-full" />
+        </div>
+
+        <!-- To Amount -->
+        <div class="col-span-12 md:col-span-6">
+            <label for="termToAmount" class="block mb-2 font-medium">
+                {{ 'Product::ProProductCoverageLevelTerm:ToAmount' | translate }}
+                <span class="text-red-500">*</span>
+            </label>
+            <p-inputNumber id="termToAmount" [(ngModel)]="termFormData.toAmount"
+                [min]="0" styleClass="w-full" />
+        </div>
+
+        <!-- Condition Script -->
+        <div class="col-span-12">
+            <label for="termConditionScript" class="block mb-2 font-medium">
+                {{ 'Product::ProProductCoverageLevelTerm:ConditionScript' | translate }}
+            </label>
+            <textarea pTextarea id="termConditionScript" [(ngModel)]="termFormData.conditionScript"
+                class="w-full" [rows]="4"></textarea>
+        </div>
+
+        <!-- Compute Script -->
+        <div class="col-span-12">
+            <label for="termComputeScript" class="block mb-2 font-medium">
+                {{ 'Product::ProProductCoverageLevelTerm:ComputeScript' | translate }}
+            </label>
+            <textarea pTextarea id="termComputeScript" [(ngModel)]="termFormData.computeScript"
+                class="w-full" [rows]="4"></textarea>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2">
+            <p-button [label]="'Product::Cancel' | translate" severity="secondary"
+                (onClick)="onCloseTermModal()" />
+            <p-button [label]="'Product::Save' | translate" (onClick)="onSaveTerm()" />
+        </div>
+    </ng-template>
+</p-dialog>
+
+<!-- Toast Messages -->
+<p-toast />
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog />

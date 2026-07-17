@@ -1,0 +1,16 @@
+:host ::ng-deep {
+    .p-dialog-content {
+        overflow-y: auto;
+        max-height: 65vh;
+    }
+
+    .p-select-overlay {
+        z-index: 10000 !important;
+    }
+
+    .required:after {
+        content: " *";
+        color: red;
+        margin-left: 2px;
+    }
+}

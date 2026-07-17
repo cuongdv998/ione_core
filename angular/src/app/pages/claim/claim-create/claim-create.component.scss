@@ -1,0 +1,17 @@
+// Styles for claim-create component
+
+:host ::ng-deep .claim-create-single-line-tooltip {
+  white-space: nowrap !important;
+  max-width: none !important;
+  width: max-content !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
+
+:host ::ng-deep .p-tooltip.claim-create-single-line-tooltip .p-tooltip-text {
+  white-space: nowrap !important;
+  max-width: none !important;
+  width: max-content !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}

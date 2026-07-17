@@ -1,0 +1,850 @@
+<div class="flex flex-col">
+  <div class="flex-1" *ngIf="!loadingContract">
+    <p-panel [header]="'Policy::Policy:ContractInformation' | translate">
+      <div class="grid grid-cols-12 gap-4 p-4">
+        <!-- Row 1: 4 ô -->
+        <div class="col-span-12 md:col-span-3">
+          <label for="createInsurerId" class="block mb-2 font-medium">
+            {{ 'Policy::Policy:PrimaryInsurancePartner' | translate }}
+            <span class="text-red-500">*</span>
+          </label>
+          <p-select
+            id="createInsurerId"
+            [(ngModel)]="formData.insurerId"
+            [options]="insurerOptions"
+            [placeholder]="'Policy::Policy:SelectOption' | translate"
+            [showClear]="!contractId"
+            [loading]="loadingInsurers"
+            [disabled]="!!contractId"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label for="createCode" class="block mb-2 font-medium">{{ 'Policy::Policy:SystemContractNo' | translate }}</label>
+          <input
+            pInputText
+            id="createCode"
+            [(ngModel)]="formData.code"
+            [readonly]="true"
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label for="createInsurerContractCode" class="block mb-2 font-medium">
+            {{ 'Policy::Policy:InsurerContractCode' | translate }}
+          </label>
+          <input
+            pInputText
+            id="createInsurerContractCode"
+            [(ngModel)]="formData.insurerContractCode"
+            class="w-full"
+            maxlength="50"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label for="createLobId" class="block mb-2 font-medium">
+            {{ 'Policy::Policy:LineOfBusiness' | translate }}
+            <span class="text-red-500">*</span>
+          </label>
+          <p-select
+            id="createLobId"
+            [(ngModel)]="formData.lobId"
+            [options]="lobOptions"
+            [placeholder]="'Policy::Policy:SelectLineOfBusiness' | translate"
+            [showClear]="!contractId"
+            [loading]="loadingLobs"
+            [disabled]="!!contractId"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label for="createName" class="block mb-2 font-medium">
+            {{ 'Policy::Policy:ContractName' | translate }}
+            <span class="text-red-500">*</span>
+          </label>
+          <input
+            pInputText
+            id="createName"
+            [(ngModel)]="formData.name"
+            class="w-full"
+            maxlength="250"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label for="createType" class="block mb-2 font-medium">
+            {{ 'Policy::Policy:ContractType' | translate }}
+            <span class="text-red-500">*</span>
+          </label>
+          <p-select
+            id="createType"
+            [(ngModel)]="formData.type"
+            [options]="typeOptions"
+            [placeholder]="'Policy::Policy:SelectOption' | translate"
+            [disabled]="!!contractId"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label for="createCustomerId" class="block mb-2 font-medium">
+            {{ 'Policy::Policy:Customer' | translate }}
+            <span class="text-red-500">*</span>
+          </label>
+          <div class="flex gap-1 align-items-center">
+            <p-select
+              id="createCustomerId"
+              [(ngModel)]="formData.customerId"
+              (ngModelChange)="onCustomerChanged($event)"
+              [options]="customerOptions"
+              [placeholder]="'Policy::Policy:SelectCustomer' | translate"
+              [showClear]="true"
+              [loading]="loadingCustomers"
+              [filter]="true"
+              (onFilter)="onCustomerFilter($event)"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="flex-1 min-w-0"
+              appendTo="body"
+            />
+            <p-button
+              *ngIf="!formData.customerId"
+              icon="pi pi-plus"
+              [text]="true"
+              [rounded]="true"
+              (onClick)="openCustomerDialog()"
+              [pTooltip]="'Policy::Policy:AddCustomer' | translate"
+              [attr.aria-label]="'Policy::Policy:AddCustomer' | translate"
+            />
+            <p-button
+              *ngIf="formData.customerId"
+              icon="pi pi-pencil"
+              [text]="true"
+              [rounded]="true"
+              (onClick)="openCustomerDialog(formData.customerId)"
+              [pTooltip]="'Policy::Policy:EditCustomer' | translate"
+              [attr.aria-label]="'Policy::Policy:EditCustomer' | translate"
+            />
+          </div>
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">
+            {{ 'Policy::Policy:Payer' | translate }}
+          </label>
+          <div class="flex items-center gap-2">
+            <input
+              pInputText
+              id="payerDisplayName"
+              [(ngModel)]="formData.payerName"
+              class="flex-1 min-w-0"
+              maxlength="50"
+            />
+            <p-button
+              icon="pi pi-pencil"
+              [text]="true"
+              [rounded]="true"
+              (onClick)="openPayerDialog()"
+              [pTooltip]="getEditPayerText()"
+              [attr.aria-label]="getEditPayerText()"
+            />
+          </div>
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label for="createEffectDate" class="block mb-2 font-medium">
+            {{ 'Policy::Policy:EffectiveDate' | translate }}
+            <span class="text-red-500">*</span>
+          </label>
+          <p-datepicker
+            inputId="createEffectDate"
+            [(ngModel)]="formData.effectDate"
+            [showIcon]="true"
+            [showTime]="true"
+            hourFormat="24"
+            dateFormat="dd/mm/yy"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label for="createExpireDate" class="block mb-2 font-medium">
+            {{ 'Policy::Policy:ExpireDate' | translate }}
+            <span class="text-red-500">*</span>
+          </label>
+          <p-datepicker
+            inputId="createExpireDate"
+            [(ngModel)]="formData.expireDate"
+            [showIcon]="true"
+            [showTime]="true"
+            hourFormat="24"
+            dateFormat="dd/mm/yy"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label for="createQuantity" class="block mb-2 font-medium">{{ 'Policy::PolicyContract:Quantity' | translate }}</label>
+          <input
+            pInputText
+            id="createQuantity"
+            type="number"
+            [(ngModel)]="formData.quantity"
+            min="1"
+            class="w-full"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label for="createCurrentQuantity" class="block mb-2 font-medium">{{ 'Policy::PolicyContract:CurrentQuantity' | translate }}</label>
+          <input
+            pInputText
+            id="createCurrentQuantity"
+            [(ngModel)]="formData.currentQuantity"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label for="createStatus" class="block mb-2 font-medium">{{ 'Policy::Policy:ContractStatus' | translate }}</label>
+          <p-select
+            id="createStatus"
+            [(ngModel)]="formData.status"
+            [options]="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <!-- Row 3: 4 ô -->
+        <div class="col-span-12 md:col-span-3">
+          <label for="createEmployeeId" class="block mb-2 font-medium">{{ 'Policy::Policy:Seller' | translate }}</label>
+          <p-select
+            id="createEmployeeId"
+            [(ngModel)]="formData.employeeId"
+            [options]="employeeOptions"
+            [placeholder]="'Policy::Policy:SelectSeller' | translate"
+            [showClear]="true"
+            [loading]="loadingEmployees"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3 flex items-end pb-2" style="margin: auto">
+          <div class="flex items-center gap-2">
+            <p-checkbox
+              inputId="createIsReciveInvoice"
+              [(ngModel)]="formData.isReciveInvoice"
+              [binary]="true"
+            />
+            <label for="createIsReciveInvoice">{{ 'Policy::Policy:IsReceiveInvoice' | translate }}</label>
+          </div>
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label for="createDescription" class="block mb-2 font-medium">{{ 'Policy::Policy:Description' | translate }}</label>
+          <textarea
+            pTextarea
+            id="createDescription"
+            [(ngModel)]="formData.description"
+            class="w-full"
+            [rows]="3"
+            maxlength="500"
+          ></textarea>
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:ChooseContractFile' | translate }}</label>
+          <p-button
+            [label]="'Policy::Policy:ChooseContractFile' | translate"
+            icon="pi pi-upload"
+            severity="secondary"
+            (onClick)="contractFileInput.click()"
+            styleClass="w-full"
+          />
+          <input
+            #contractFileInput
+            type="file"
+            class="hidden"
+            accept=".pdf,.doc,.docx,.xlsx,.xls"
+            (change)="onContractFileSelect($event)"
+          />
+          <div *ngIf="contractFileName" class="mt-1 flex flex-col gap-1">
+            <div class="flex items-center gap-2">
+              <small class="text-gray-600 flex-1">
+                {{ contractDocumentUrl ? ('Policy::Policy:UploadedFile' | translate) : ('Policy::Policy:SelectedFile' | translate) }}: {{ contractFileName }}
+              </small>
+              <p-button
+                icon="pi pi-times"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                [pTooltip]="'Policy::PolicyContract:RemoveFile' | translate"
+                (onClick)="removeContractFile()"
+              />
+            </div>
+            <a
+              *ngIf="contractDocumentUrl"
+              [href]="contractDocumentUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-sm text-primary-600 hover:underline"
+            >
+              <i class="pi pi-external-link mr-1"></i>{{ 'Policy::Policy:ViewFile' | translate }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </p-panel>
+  </div>
+  <div *ngIf="loadingContract" class="flex-1 flex items-center justify-center p-8">
+    <i class="pi pi-spin pi-spinner text-4xl text-gray-400"></i>
+  </div>
+
+  <div class="bg-white border-t p-3 flex-shrink-0" *ngIf="!loadingContract">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Policy::Cancel' | translate"
+        severity="secondary"
+        (onClick)="close()"
+        [disabled]="saving"
+      />
+      <p-button
+        [label]="(contractId ? ('Policy::Save' | translate) : ('Policy::Policy:Execute' | translate))"
+        (onClick)="saveContract()"
+        [loading]="saving"
+      />
+    </div>
+  </div>
+</div>
+
+<!-- Customer Creation Dialog (đồng bộ input với form policy) -->
+<p-dialog
+  [(visible)]="customerDialogVisible"
+  [modal]="true"
+  [style]="{ width: '900px' }"
+  [draggable]="false"
+  [resizable]="false"
+  [header]="(customerDialogMode === 'edit' ? ('Policy::Policy:EditCustomer' | translate) : ('Policy::Policy:AddCustomer' | translate))"
+  (onHide)="closeCustomerDialog()"
+>
+  <div class="flex flex-col gap-4">
+    <!-- Row 1: Name, Phone, Email -->
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerName" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Name' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input
+          pInputText
+          id="customerName"
+          [(ngModel)]="customerFormData.name"
+          class="w-full"
+          maxlength="250"
+          required
+        />
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerPhone" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Phone' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input
+          pInputText
+          id="customerPhone"
+          [(ngModel)]="customerFormData.phone"
+          (keydown)="preventSpaceKey($event)"
+          (ngModelChange)="onCustomerPhoneChange($event)"
+          class="w-full"
+          maxlength="15"
+          required
+        />
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerEmail" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Email' | translate }}
+        </label>
+        <input
+          pInputText
+          id="customerEmail"
+          type="email"
+          [(ngModel)]="customerFormData.email"
+          (keydown)="preventSpaceKey($event)"
+          (ngModelChange)="onCustomerEmailChange($event)"
+          class="w-full"
+          maxlength="50"
+        />
+      </div>
+    </div>
+
+    <!-- Row 2: Số CCCD, Tỉnh/Thành phố, Phường/Xã -->
+    <div class="grid grid-cols-12 gap-4">
+      <div *ngIf="isCustomerOrgTypeIndividual()" class="col-span-12 md:col-span-4">
+        <label for="customerIdNo" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:IdNo' | translate }}
+        </label>
+        <input
+          pInputText
+          id="customerIdNo"
+          [(ngModel)]="customerFormData.idNo"
+          class="w-full"
+          maxlength="25"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerProvinceId" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Province' | translate }}
+        </label>
+        <p-select
+          id="customerProvinceId"
+          [(ngModel)]="customerFormData.provinceId"
+          (ngModelChange)="onCustomerProvinceChanged($event)"
+          [options]="provinceOptions"
+          [placeholder]="'Customer::ResCustomer:Province' | translate"
+          [showClear]="true"
+          [filter]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerWardId" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Ward' | translate }}
+        </label>
+        <p-select
+          id="customerWardId"
+          [(ngModel)]="customerFormData.wardId"
+          (ngModelChange)="updateCustomerFullAddress()"
+          [options]="customerWardOptions"
+          [placeholder]="'Customer::ResCustomer:Ward' | translate"
+          [showClear]="true"
+          [filter]="true"
+          [disabled]="!customerFormData.provinceId"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+    </div>
+
+    <!-- Row 3: Loại tổ chức, Giới tính, Ngày sinh -->
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerOrganizationTypeId" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:OrganizationType' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="customerOrganizationTypeId"
+          [(ngModel)]="customerFormData.organizationTypeId"
+          [options]="organizationTypeOptions"
+          [placeholder]="'Customer::ResCustomer:OrganizationType' | translate"
+          [showClear]="true"
+          [filter]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+      <div *ngIf="isCustomerOrgTypeIndividual()" class="col-span-12 md:col-span-4">
+        <label for="customerSex" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Sex' | translate }}
+        </label>
+        <p-select
+          id="customerSex"
+          [(ngModel)]="customerFormData.sex"
+          [options]="sexOptions"
+          [placeholder]="'Customer::ResCustomer:Sex' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+      <div *ngIf="isCustomerOrgTypeIndividual()" class="col-span-12 md:col-span-4">
+        <label for="customerDob" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:DOB' | translate }}
+        </label>
+        <p-datepicker
+          inputId="customerDob"
+          [(ngModel)]="customerFormData.dob"
+          [showIcon]="true"
+          dateFormat="dd/mm/yy"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+    </div>
+
+    <!-- Row 4: Địa chỉ, Địa chỉ đầy đủ -->
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 md:col-span-6">
+        <label for="customerAddress" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Address' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input
+          pInputText
+          id="customerAddress"
+          [(ngModel)]="customerFormData.address"
+          (ngModelChange)="updateCustomerFullAddress()"
+          class="w-full"
+          maxlength="250"
+          required
+        />
+      </div>
+      <div class="col-span-12 md:col-span-6">
+        <label for="customerFullAddress" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:FullAddress' | translate }}
+        </label>
+        <input
+          pInputText
+          id="customerFullAddress"
+          [(ngModel)]="customerFormData.fullAddress"
+          class="w-full bg-gray-100"
+          [readonly]="true"
+        />
+      </div>
+    </div>
+
+    <!-- Row 5a: Ngành nghề -->
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerIndustryId" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:Industry' | translate }}
+        </label>
+        <p-select
+          id="customerIndustryId"
+          [(ngModel)]="customerFormData.industryId"
+          [options]="industryOptions"
+          [placeholder]="'Customer::ResCustomer:Industry' | translate"
+          [showClear]="true"
+          [filter]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+    </div>
+
+    <!-- Row 5b: Số GPKD, MST (chỉ Tổ chức) -->
+    <div *ngIf="isCustomerOrgTypeOrganization()" class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerBusinessNo" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:BusinessNo' | translate }}
+        </label>
+        <input
+          pInputText
+          id="customerBusinessNo"
+          [(ngModel)]="customerFormData.businessNo"
+          class="w-full"
+          maxlength="25"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerTin" class="block mb-2 font-medium">
+          {{ 'Customer::ResCustomer:TIN' | translate }}
+        </label>
+        <input
+          pInputText
+          id="customerTin"
+          [(ngModel)]="customerFormData.tin"
+          class="w-full"
+          maxlength="50"
+        />
+      </div>
+    </div>
+
+    <!-- Thông tin người đại diện pháp luật (chỉ Tổ chức) -->
+    <div *ngIf="isCustomerOrgTypeOrganization()" class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 font-medium mb-1">{{ 'Customer::ResCustomer:LegalRepresentativeInfo' | translate }}</div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerRepName" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:RepName' | translate }}</label>
+        <input
+          pInputText
+          id="customerRepName"
+          [(ngModel)]="customerFormData.repName"
+          class="w-full"
+          maxlength="250"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerRepPhone" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:RepPhone' | translate }}</label>
+        <input
+          pInputText
+          id="customerRepPhone"
+          [(ngModel)]="customerFormData.repPhone"
+          class="w-full"
+          maxlength="15"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerRepEmail" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:RepEmail' | translate }}</label>
+        <input
+          pInputText
+          id="customerRepEmail"
+          type="email"
+          [(ngModel)]="customerFormData.repEmail"
+          class="w-full"
+          maxlength="50"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerRepIdNo" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:RepIdNo' | translate }}</label>
+        <input
+          pInputText
+          id="customerRepIdNo"
+          [(ngModel)]="customerFormData.repIdNo"
+          class="w-full"
+          maxlength="25"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerRepTitle" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:RepTitle' | translate }}</label>
+        <input
+          pInputText
+          id="customerRepTitle"
+          [(ngModel)]="customerFormData.repTitle"
+          class="w-full"
+          maxlength="250"
+        />
+      </div>
+    </div>
+
+    <!-- Thông tin người được ủy quyền (chỉ Tổ chức) -->
+    <div *ngIf="isCustomerOrgTypeOrganization()" class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 font-medium mb-1">{{ 'Customer::ResCustomer:AuthorizedPersonInfo' | translate }}</div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerAuthorizerName" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:Authorizer' | translate }}</label>
+        <input
+          pInputText
+          id="customerAuthorizerName"
+          [(ngModel)]="customerFormData.authorizerName"
+          class="w-full"
+          maxlength="50"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerAuthorizerPhone" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:AuthorizerPhone' | translate }}</label>
+        <input
+          pInputText
+          id="customerAuthorizerPhone"
+          [(ngModel)]="customerFormData.authorizerPhone"
+          class="w-full"
+          maxlength="15"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerAuthorizerEmail" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:AuthorizerEmail' | translate }}</label>
+        <input
+          pInputText
+          id="customerAuthorizerEmail"
+          type="email"
+          [(ngModel)]="customerFormData.authorizerEmail"
+          class="w-full"
+          maxlength="50"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerAuthorizerIdNo" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:AuthorizerNo' | translate }}</label>
+        <input
+          pInputText
+          id="customerAuthorizerIdNo"
+          [(ngModel)]="customerFormData.authorizerIdNo"
+          class="w-full"
+          maxlength="25"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerAuthorizerTitle" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:AuthorizerTitle' | translate }}</label>
+        <input
+          pInputText
+          id="customerAuthorizerTitle"
+          [(ngModel)]="customerFormData.authorizerTitle"
+          class="w-full"
+          maxlength="50"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-4">
+        <label for="customerAuthorizerDate" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:AuthorizerDate' | translate }}</label>
+        <p-datepicker
+          id="customerAuthorizerDate"
+          [(ngModel)]="customerFormData.authorizerDate"
+          [showIcon]="true"
+          [showButtonBar]="true"
+          dateFormat="dd/mm/yy"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Customer::Cancel' | translate"
+        severity="secondary"
+        (onClick)="closeCustomerDialog()"
+        [disabled]="customerDialogLoading"
+      />
+      <p-button
+        [label]="'Policy::Save' | translate"
+        (onClick)="saveCustomer()"
+        [loading]="customerDialogLoading"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Payer dialog -->
+<p-dialog
+  [(visible)]="payerDialogVisible"
+  [modal]="true"
+  [style]="{ width: '900px' }"
+  [draggable]="false"
+  [resizable]="false"
+  [header]="getEditPayerText()"
+  (onHide)="closePayerDialog()"
+>
+  <div class="grid grid-cols-12 gap-4">
+    <div class="col-span-12 md:col-span-4">
+      <label for="payerName" class="block mb-2 font-medium">
+        {{ 'Customer::ResCustomer:Name' | translate }}
+      </label>
+      <input
+        pInputText
+        id="payerName"
+        [(ngModel)]="formData.payerName"
+        class="w-full"
+        maxlength="50"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-4">
+      <label for="payerPhone" class="block mb-2 font-medium">
+        {{ 'Customer::ResCustomer:Phone' | translate }}
+      </label>
+      <input
+        pInputText
+        id="payerPhone"
+        [(ngModel)]="formData.payerPhone"
+        class="w-full"
+        maxlength="15"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-4">
+      <label for="payerEmail" class="block mb-2 font-medium">
+        {{ 'Customer::ResCustomer:Email' | translate }}
+      </label>
+      <input
+        pInputText
+        id="payerEmail"
+        type="email"
+        [(ngModel)]="formData.payerEmail"
+        class="w-full"
+        maxlength="50"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-4">
+      <label for="payerProvinceId" class="block mb-2 font-medium">
+        {{ 'Customer::ResCustomer:Province' | translate }}
+      </label>
+      <p-select
+        id="payerProvinceId"
+        [(ngModel)]="formData.payerProvinceId"
+        (ngModelChange)="onPayerProvinceChanged($event)"
+        [options]="provinceOptions"
+        [placeholder]="'Customer::ResCustomer:Province' | translate"
+        [showClear]="true"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-4">
+      <label for="payerWardId" class="block mb-2 font-medium">
+        {{ 'Customer::ResCustomer:Ward' | translate }}
+      </label>
+      <p-select
+        id="payerWardId"
+        [(ngModel)]="formData.payerWardId"
+        (ngModelChange)="updatePayerFullAddress()"
+        [options]="payerWardOptions"
+        [placeholder]="'Customer::ResCustomer:Ward' | translate"
+        [showClear]="true"
+        [disabled]="!formData.payerProvinceId"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-4">
+      <label for="payerAddress" class="block mb-2 font-medium">
+        {{ 'Customer::ResCustomer:Address' | translate }}
+      </label>
+      <input
+        pInputText
+        id="payerAddress"
+        [(ngModel)]="formData.payerAddress"
+        (ngModelChange)="updatePayerFullAddress()"
+        class="w-full"
+        maxlength="50"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-6">
+      <label for="payerFullAddress" class="block mb-2 font-medium">
+        {{ 'Customer::ResCustomer:FullAddress' | translate }}
+      </label>
+      <input
+        pInputText
+        id="payerFullAddress"
+        [(ngModel)]="formData.payerFullAddress"
+        class="w-full bg-gray-100"
+        readonly
+      />
+    </div>
+    <div class="col-span-12 md:col-span-6">
+      <label for="payerTin" class="block mb-2 font-medium">
+        {{ 'Policy::PolicyContract:PayerTaxCode' | translate }} (Mã số thuế)
+      </label>
+      <input
+        pInputText
+        id="payerTin"
+        [(ngModel)]="formData.payerTin"
+        class="w-full"
+        maxlength="50"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Customer::Cancel' | translate"
+        severity="secondary"
+        (onClick)="closePayerDialog()"
+      />
+      <p-button
+        [label]="'Customer::Save' | translate"
+        (onClick)="closePayerDialog()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Messages -->
+<p-toast />

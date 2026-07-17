@@ -1,0 +1,123 @@
+{
+  "template": "app",
+  "imports": {
+    "Volo.Abp.LeptonXLiteTheme": {
+      "version": "4.3.6",
+      "isInstalled": true
+    },
+    "Volo.Abp.Account": {
+      "isInstalled": true,
+      "creationTime": "11/15/2025 04:55:59 +00:00",
+      "path": "modules/Volo.Abp.Account/Volo.Abp.Account.abpmdl"
+    },
+    "Volo.Abp.OpenIddict": {
+      "version": "9.3.6",
+      "isInstalled": true,
+      "creationTime": "11/15/2025 04:55:59 +00:00"
+    },
+    "Volo.Abp.Identity": {
+      "isInstalled": true,
+      "creationTime": "11/15/2025 04:55:59 +00:00",
+      "path": "modules/Volo.Abp.Identity/Volo.Abp.Identity.abpmdl"
+    },
+    "Volo.Abp.SettingManagement": {
+      "version": "9.3.6",
+      "isInstalled": true,
+      "creationTime": "11/15/2025 04:55:59 +00:00"
+    },
+    "Volo.Abp.PermissionManagement": {
+      "version": "9.3.6",
+      "isInstalled": true,
+      "creationTime": "11/15/2025 04:55:59 +00:00"
+    },
+    "Volo.Abp.FeatureManagement": {
+      "version": "9.3.6",
+      "isInstalled": true,
+      "creationTime": "11/15/2025 04:55:59 +00:00"
+    }
+  },
+  "folders": {
+    "items": {
+      "src": {},
+      "test": {}
+    }
+  },
+  "packages": {
+    "iOne.Application": {
+      "path": "src/web/iOne.Application/iOne.Application.abppkg",
+      "folder": "src/web"
+    },
+    "iOne.Application.Tests": {
+      "path": "test/iOne.Application.Tests/iOne.Application.Tests.abppkg",
+      "folder": "test"
+    },
+    "iOne.Domain.Shared": {
+      "path": "src/common/domain/iOne.Domain.Shared/iOne.Domain.Shared.abppkg",
+      "folder": "src/common/domain"
+    },
+    "iOne.Application.Contracts": {
+      "path": "src/web/iOne.Application.Contracts/iOne.Application.Contracts.abppkg",
+      "folder": "src/web"
+    },
+    "iOne.HttpApi": {
+      "path": "src/web/iOne.HttpApi/iOne.HttpApi.abppkg",
+      "folder": "src/web"
+    },
+    "iOne.HttpApi.Client": {
+      "path": "src/web/iOne.HttpApi.Client/iOne.HttpApi.Client.abppkg",
+      "folder": "src/web"
+    },
+    "iOne.EntityFrameworkCore.Tests": {
+      "path": "test/iOne.EntityFrameworkCore.Tests/iOne.EntityFrameworkCore.Tests.abppkg",
+      "folder": "test"
+    },
+    "iOne.EntityFrameworkCore": {
+      "path": "src/common/infra/iOne.EntityFrameworkCore/iOne.EntityFrameworkCore.abppkg",
+      "folder": "src/common/infra"
+    },
+    "iOne.TestBase": {
+      "path": "test/iOne.TestBase/iOne.TestBase.abppkg",
+      "folder": "test"
+    },
+    "iOne.Domain.Tests": {
+      "path": "test/iOne.Domain.Tests/iOne.Domain.Tests.abppkg",
+      "folder": "test"
+    },
+    "iOne.HttpApi.Client.ConsoleTestApp": {
+      "path": "test/iOne.HttpApi.Client.ConsoleTestApp/iOne.HttpApi.Client.ConsoleTestApp.abppkg",
+      "folder": "test"
+    },
+    "iOne.DbMigrator": {
+      "path": "src/common/infra/iOne.DbMigrator/iOne.DbMigrator.abppkg",
+      "folder": "src/common/infra"
+    },
+    "iOne.HttpApi.Host": {
+      "path": "src/web/iOne.HttpApi.Host/iOne.HttpApi.Host.abppkg",
+      "folder": "src/web"
+    },
+    "iOne.Domain": {
+      "path": "src/common/domain/iOne.Domain/iOne.Domain.abppkg",
+      "folder": "src/common/domain"
+    },
+    "iOne.Hr.Application": {
+      "path": "modules/hr/src/iOne.Hr.Application/iOne.Hr.Application.abppkg",
+      "folder": "modules/hr/src"
+    },
+    "iOne.Hr.Application.Contracts": {
+      "path": "modules/hr/src/iOne.Hr.Application.Contracts/iOne.Hr.Application.Contracts.abppkg",
+      "folder": "modules/hr/src"
+    },
+    "iOne.Hr.HttpApi": {
+      "path": "modules/hr/src/iOne.Hr.HttpApi/iOne.Hr.HttpApi.abppkg",
+      "folder": "modules/hr/src"
+    },
+    "iOne.Hr.HttpApi.Client": {
+      "path": "modules/hr/src/iOne.Hr.HttpApi.Client/iOne.Hr.HttpApi.Client.abppkg",
+      "folder": "modules/hr/src"
+    },
+    "iOne.Hr.HttpApi.Host": {
+      "path": "modules/hr/src/iOne.Hr.HttpApi.Host/iOne.Hr.HttpApi.Host.abppkg",
+      "folder": "modules/hr/src"
+    }
+  }
+}

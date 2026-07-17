@@ -1,0 +1,215 @@
+<div class="claim-task-detail-page p-4 bg-white rounded-lg">
+  <div class="flex flex-col gap-2">
+    <!-- Header top with Title and Actions (Giữ nguyên logic cũ) -->
+    <div class="flex justify-between items-center flex-wrap gap-2 mb-1">
+      <h3 class="text-xl font-semibold m-0">
+        {{ 'Claim::ClaimDetail' | translate }}
+      </h3>
+      <!-- Header Actions (Cũ) đưa sang cục Footer ở giao diện mới -->
+    </div>
+
+    <!-- Header info panels -->
+    <div class="grid grid-cols-1 md:grid-cols-6 gap-2 mb-2 border-b pb-2">
+      <!-- Cột 1 -->
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2">
+          <span class="text-gray-600 font-semibold text-sm"># {{ 'Claim::ClaimCode' | translate }}</span>
+          <span class="text-blue-600 font-bold text-base">{{ claim?.code || '-' }}</span>
+        </div>
+        <div>
+          <span class="text-xs text-gray-500 block mb-0.5">{{ 'Claim::IncidentDate' | translate }}</span>
+          <span class="text-sm font-semibold">{{ formatDateTime(claim?.incidentDate) }}</span>
+        </div>
+      </div>
+
+      <!-- Cột 2 -->
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2 text-sm font-semibold">
+          <i class="pi pi-exclamation-triangle text-gray-500"></i>
+          <span>{{ formatDateTime(claim?.notifyDate) }}</span>
+        </div>
+        <div>
+          <span class="text-xs text-gray-500 block mb-0.5">{{ 'Claim::InsurerName' | translate }}</span>
+          <span class="text-sm font-semibold">{{ claim?.insurerName || '-' }}</span>
+        </div>
+      </div>
+
+      <!-- Cột 3 -->
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2 text-sm font-semibold">
+          <i class="pi pi-user text-gray-500"></i>
+          <span>{{ claim?.contactName || '-' }}</span>
+        </div>
+        <div>
+          <span class="text-xs text-gray-500 block mb-0.5">{{ 'Claim::VehicleInfo' | translate }}</span>
+          <span class="text-sm font-semibold text-gray-700">{{ getVehicleDisplay() }}</span>
+        </div>
+      </div>
+
+      <!-- Cột 4 -->
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2 text-sm font-semibold">
+          <i class="pi pi-phone text-gray-500"></i>
+          <span>{{ claim?.contactPhone || '-' }}</span>
+        </div>
+        <div>
+          <span class="text-xs text-gray-500 block mb-0.5">{{ 'Claim::Priority' | translate }}</span>
+          <span class="text-sm font-semibold" [class]="getPriorityClass(claim?.priority)">{{
+            getPriorityLabel(claim?.priority) }}</span>
+        </div>
+      </div>
+
+      <!-- Cột 5 -->
+      <div class="flex flex-col gap-1">
+        <div class="flex items-start gap-2 text-sm font-semibold">
+          <i class="pi pi-headphones text-gray-500 mt-1"></i>
+          <div class="flex flex-col">
+            <span>{{ getOpenEmployeeDisplay() }}</span>
+            <span class="text-xs font-normal text-gray-500">{{ $any(task)?.openEmployeePhone
+              || '-' }}</span>
+          </div>
+        </div>
+        <div>
+          <span class="text-xs text-gray-500 block mb-0.5">{{ 'Claim::ProcessEmpId' | translate }}</span>
+          <span class="text-sm font-semibold text-gray-800 block">{{ claim?.processEmpName || '-' }}</span>
+          <span class="text-xs text-gray-500">{{ claim?.processDeptName || '-' }} {{ $any(claim)?.processEmpPhone ? ' -
+            ' + $any(claim)?.processEmpPhone : '' }}</span>
+        </div>
+      </div>
+
+      <!-- Cột 6 -->
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2 text-sm font-bold text-green-600">
+          <i class="pi pi-sync"></i>
+          <span>{{ getClaimStatusDisplay(claim?.status) }}</span>
+        </div>
+        <div>
+          <span class="text-xs text-gray-500 block mb-0.5">{{ 'Claim::ProcessClaimType' | translate }}</span>
+          <span class="text-sm font-semibold">{{ getProcessClaimTypeDisplay() }}</span>
+        </div>
+      </div>
+    </div>
+
+    @if (loadingClaim && !claim) {
+    <div class="flex justify-center p-8">
+      <i class="pi pi-spin pi-spinner text-3xl text-primary"></i>
+    </div>
+    } @else if (!claimId || !claim) {
+    <div class="p-4 text-center text-gray-600 font-medium">
+      {{ 'Claim::ClaimNotFound' | translate }}
+    </div>
+    } @else {
+    <!-- Tabs content -->
+    <div class="flex-grow">
+      <p-tabs [(value)]="activeTab" (valueChange)="onTabChange($event)" styleClass="custom-tabs">
+        <p-tablist>
+          <p-tab [value]="0">{{ 'Claim::ClaimInfo' | translate }}</p-tab>
+          <p-tab [value]="1">{{ 'Claim::IncidentImages' | translate }}</p-tab>
+          <p-tab [value]="2">{{ 'Claim::ProcessingProgress' | translate }}</p-tab>
+        </p-tablist>
+        <p-tabpanels class="border border-gray-200 mt-0 pt-2 px-4 pb-2">
+          <!-- Tab 0: Thông tin chung -->
+          <p-tabpanel [value]="0">
+            <app-claim-task-info-tab
+              [claim]="claim"
+              [policies]="policies"
+              [policiesLoading]="policiesLoading"
+              [showTotalEstimatedLoss]="true"
+              [totalEstimatedLossAmount]="claim.totalEstimatedLossAmount"
+              (refreshPolicies)="refreshPolicies()" />
+          </p-tabpanel>
+
+          <!-- Tab 1: Ảnh hiện trường -->
+          <p-tabpanel [value]="1">
+            <app-claim-task-incident-images-tab
+              [documents]="documents"
+              [loading]="loadingDocuments" />
+          </p-tabpanel>
+
+          <!-- Tab 2: Tiến độ xử lý -->
+          <p-tabpanel [value]="2">
+            <app-claim-task-processing-progress-tab
+              [folders]="folders"
+              [loadingFolders]="loadingFolders"
+              [stageProgress]="stageProgress"
+              [loadingStageProgress]="loadingStageProgress"
+              [sentMessages]="sentMessages"
+              [loadingSentMessages]="loadingSentMessages" />
+          </p-tabpanel>
+        </p-tabpanels>
+
+        <!-- KHU VỰC NÚT ACTION (Được gài theo logic cũ) -->
+        <div
+          class="flex justify-end flex-wrap gap-2 p-4 border-t border-gray-200 mt-4 relative bg-white pb-6 z-10 w-full">
+          <p-button
+            [label]="'Claim::Close' | translate"
+            severity="secondary"
+            (onClick)="closeScreen()" />
+
+          @if (canCancelClaim) {
+          <p-button
+            [label]="'Claim::CancelClaim' | translate"
+            severity="danger"
+            [outlined]="true"
+            (onClick)="openCancelModal()" />
+          }
+
+          @if (workTaskId && workTaskStatus === WorkTaskStatus.New) {
+          <p-button [label]="'Claim::Reject' | translate" styleClass="custom-btn-orange outlined"
+            (onClick)="openRejectModal()" />
+          <p-button [label]="'Claim::Transfer' | translate" styleClass="custom-btn-orange outlined"
+            (onClick)="openTransferModal()" />
+          <!-- Nút Accept theo logic cũ đang là Info/Success, nay chuyển theo màu cam để đồng bộ theme -->
+          <p-button [label]="'Claim::Accept' | translate" styleClass="custom-btn-orange" (onClick)="acceptTask()" />
+          }
+
+          @if (workTaskId && workTaskStatus === WorkTaskStatus.InProgress && claim.onLocation === 'Y') {
+          <!-- Nút AssignAssessment thay cho Phân giám định HT -->
+          <p-button [label]="'Claim::AssignAssessment' | translate"
+            styleClass="custom-btn-orange"
+            (onClick)="openAssignModal()"
+            [disabled]="assignOnsiteAssessmentDisabled"
+            tooltipPosition="top" />
+          }
+          @if (workTaskId && workTaskStatus === WorkTaskStatus.InProgress) {
+          <!-- Nút OpenFolder -->
+          <p-button [label]="'Claim::OpenFolder' | translate" styleClass="custom-btn-orange"
+            (onClick)="openCreateFolderModal()" />
+          }
+        </div>
+
+      </p-tabs>
+    </div>
+    }
+  </div>
+</div>
+
+<app-assign-onsite-assessment-modal [visible]="assignModalVisible" (visibleChange)="onAssignModalVisibleChange($event)"
+  [claimId]="claimId!" (assigned)="onOnsiteAssessmentAssigned()" />
+
+<app-open-claim-folder-modal
+  [visible]="createFolderModalVisible"
+  (visibleChange)="onCreateFolderModalVisibleChange($event)"
+  [claimId]="claimId!"
+  [insurerId]="claim?.insurerId || null"
+  [policies]="policies"
+  [incidentDate]="claim?.incidentDate || null"
+  (created)="loadFolders()"
+/>
+
+@if (workTaskId) {
+<app-reject-task-modal [visible]="rejectModalVisible" (visibleChange)="onRejectModalVisibleChange($event)"
+  [workTaskId]="workTaskId" (rejected)="onTaskRejected()" />
+<app-transfer-task-modal [visible]="transferModalVisible" (visibleChange)="onTransferModalVisibleChange($event)"
+  [workTaskId]="workTaskId" (transferred)="onTaskTransferred()" />
+}
+
+<app-cancel-claim-modal
+  [visible]="cancelModalVisible"
+  [claimId]="claimId!"
+  (visibleChange)="onCancelModalClose($event)"
+  (cancelled)="onCancelSuccess()"
+/>
+
+<p-confirmDialog />
+<p-toast />

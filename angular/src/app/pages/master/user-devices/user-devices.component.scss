@@ -1,0 +1,24 @@
+// User Devices Component Styles
+// Dialog: content scroll trong modal, overlay p-select/p-datepicker dùng appendTo="body" nên vẫn hiển thị đúng
+:host ::ng-deep {
+  .p-dialog .p-dialog-content {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(90vh - 8rem);
+  }
+  .p-dialog {
+    .p-select-overlay,
+    .p-datepicker {
+      z-index: 10000 !important;
+    }
+  }
+  // Control trong dialog không tràn: input/select/datepicker full width trong container
+  .user-device-dialog-body {
+    min-width: 0;
+    .p-inputtext,
+    .p-select,
+    .p-datepicker {
+      max-width: 100%;
+    }
+  }
+}

@@ -1,0 +1,225 @@
+<div class="grid grid-cols-12 gap-4 detail-assessment-page pasc-detail-wrap">
+  <div class="col-span-12">
+    <p-panel header="Thông tin tìm kiếm">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12">
+          <div class="flex flex-nowrap items-center gap-2">
+            <div class="quick-search-shell flex-1 min-w-0 border border-surface-300 rounded-md flex items-stretch overflow-hidden">
+              <span *ngIf="quickSearchSelectedType" class="font-semibold text-surface-700 whitespace-nowrap self-center shrink-0 pl-2 py-2">
+                {{ quickSearchPrefixLabel }}:
+              </span>
+              <div class="flex-1 min-w-0 flex">
+                <p-autoComplete
+                  [(ngModel)]="quickSearchKeyword"
+                  [suggestions]="quickSearchSuggestions"
+                  (completeMethod)="onQuickSearchComplete($event)"
+                  (focus)="onQuickSearchFocus()"
+                  (onSelect)="onQuickSearchSuggestionSelect($event)"
+                  (ngModelChange)="onQuickSearchKeywordChange($event)"
+                  [placeholder]="'Nhập biển số / số khung / số máy / mã hồ sơ bồi thường'"
+                  [optionLabel]="'keyword'"
+                  [minLength]="1"
+                  [completeOnFocus]="true"
+                  [forceSelection]="false"
+                  styleClass="w-full flex-1 min-w-0 quick-search-complete"
+                  [inputStyleClass]="'w-full border-0 shadow-none rounded-none'"
+                  appendTo="body"
+                >
+                  <ng-template let-item pTemplate="item">
+                    <span class="font-semibold">{{ item.prefix }}</span>: {{ item.keyword }}
+                  </ng-template>
+                </p-autoComplete>
+              </div>
+            </div>
+            <p-button
+              icon="pi pi-search"
+              [text]="true"
+              [rounded]="true"
+              styleClass="shrink-0"
+              (onClick)="search()"
+              [pTooltip]="'AbpAuditLogging::Search' | translate"
+              tooltipPosition="top"
+            />
+            <p-button
+              icon="pi pi-sliders-h"
+              [text]="true"
+              [rounded]="true"
+              styleClass="shrink-0"
+              (onClick)="toggleAdvancedSearch()"
+              [pTooltip]="showAdvancedSearch ? 'Thu gọn bộ lọc' : 'Tìm kiếm nâng cao'"
+              tooltipPosition="top"
+            />
+          </div>
+        </div>
+
+        <ng-container *ngIf="showAdvancedSearch">
+          <div class="col-span-12 md:col-span-6 xl:col-span-4 flex items-center gap-2">
+            <label for="lobId" class="font-medium whitespace-nowrap min-w-[140px]">Nghiệp vụ BH</label>
+            <p-select
+              id="lobId"
+              [(ngModel)]="searchForm.lobId"
+              [options]="lobOptions"
+              [loading]="loadingLobs"
+              [filter]="true"
+              [showClear]="true"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+              placeholder="Chọn"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="col-span-12 md:col-span-6 xl:col-span-4 flex items-center gap-2">
+            <label for="insurerId" class="font-medium whitespace-nowrap min-w-[140px]">Đối tác BH gốc</label>
+            <p-select
+              id="insurerId"
+              [(ngModel)]="searchForm.insurerId"
+              [options]="insurerOptions"
+              [loading]="loadingInsurers"
+              [filter]="true"
+              [showClear]="true"
+              [editable]="true"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+              placeholder="--Tất cả--"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="col-span-12 md:col-span-6 xl:col-span-4 flex items-center gap-2">
+            <label for="processDeptId" class="font-medium whitespace-nowrap min-w-[140px]">Đơn vị xử lý</label>
+            <p-select
+              id="processDeptId"
+              [(ngModel)]="searchForm.processDeptId"
+              [options]="departmentOptions"
+              [loading]="loadingDepartments"
+              [filter]="true"
+              [showClear]="true"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+              placeholder="--Tất cả--"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="col-span-12 md:col-span-6 xl:col-span-4 flex items-center gap-2">
+            <label for="claimId" class="font-medium whitespace-nowrap min-w-[140px]">Yêu cầu bồi thường</label>
+            <p-select
+              id="claimId"
+              [(ngModel)]="searchForm.claimId"
+              [options]="claimOptions"
+              [loading]="loadingClaims"
+              [filter]="true"
+              [showClear]="true"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+              placeholder="--Tất cả--"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="col-span-12 md:col-span-6 xl:col-span-4 flex items-center gap-2">
+            <label for="workTaskStatus" class="font-medium whitespace-nowrap min-w-[140px]">Trạng thái</label>
+            <p-select
+              id="workTaskStatus"
+              [(ngModel)]="searchForm.workTaskStatus"
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="col-span-12 md:col-span-6 xl:col-span-4 flex items-center gap-2">
+            <label for="reporterId" class="font-medium whitespace-nowrap min-w-[140px]">Người trình duyệt</label>
+            <p-select
+              id="reporterId"
+              [(ngModel)]="searchForm.reporterId"
+              [options]="employeeOptions"
+              [loading]="loadingEmployees"
+              [filter]="true"
+              [showClear]="true"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+              placeholder="--Tất cả--"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="col-span-12 md:col-span-6 xl:col-span-4 flex items-center gap-2">
+            <label for="carPlate" class="font-medium whitespace-nowrap min-w-[140px]">Biển số xe</label>
+            <input
+              pInputText
+              id="carPlate"
+              [(ngModel)]="searchForm.carPlate"
+              (blur)="onVehicleFieldBlur('carPlate')"
+              class="w-full"
+            />
+          </div>
+
+          <div class="col-span-12 md:col-span-6 xl:col-span-4 flex items-center gap-2">
+            <label for="vin" class="font-medium whitespace-nowrap min-w-[140px]">Số khung</label>
+            <input pInputText id="vin" [(ngModel)]="searchForm.vin" (blur)="onVehicleFieldBlur('vin')" class="w-full" />
+          </div>
+
+          <div class="col-span-12 md:col-span-6 xl:col-span-4 flex items-center gap-2">
+            <label for="engineNumber" class="font-medium whitespace-nowrap min-w-[140px]">Số máy</label>
+            <input
+              pInputText
+              id="engineNumber"
+              [(ngModel)]="searchForm.engineNumber"
+              (blur)="onVehicleFieldBlur('engineNumber')"
+              class="w-full"
+            />
+          </div>
+
+          <div class="col-span-12 md:col-span-6 xl:col-span-4 flex items-center gap-2">
+            <label for="folderNo" class="font-medium whitespace-nowrap min-w-[140px]">Mã hồ sơ bồi thường</label>
+            <input pInputText id="folderNo" [(ngModel)]="searchForm.folderNo" class="w-full uppercase" />
+          </div>
+        </ng-container>
+
+        <div class="col-span-12 flex gap-2 justify-end action-bar">
+          <p-button
+            [label]="'AbpAuditLogging::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button label="Tìm kiếm" icon="pi pi-search" class="btn-orange" (onClick)="search()" />
+          <p-button label="Xuất file" icon="pi pi-download" class="btn-orange" (onClick)="exportCsv()" />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <div class="col-span-12">
+    <p-panel header="Danh sách dữ liệu">
+      <app-v-table
+        [columns]="columns"
+        [data]="rows"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [showIndex]="false"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        [tableMinWidth]="'2100px'"
+        [scrollHeight]="'calc(100vh - 420px)'"
+        [actionLabelKey]="'Claim::Action'"
+        (lazyLoad)="loadData($event)"
+      />
+    </p-panel>
+  </div>
+</div>
+
+<p-toast />

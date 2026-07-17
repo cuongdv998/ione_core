@@ -1,0 +1,94 @@
+// Employees Component Styles
+
+// Fix scroll issue when p-select dropdown opens in dialog
+::ng-deep {
+  .p-dialog-content {
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .p-dialog {
+    .p-select-overlay {
+      z-index: 10000 !important;
+    }
+  }
+
+  // Ensure dialog body can scroll
+  .p-dialog-body {
+    overflow: hidden;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  // Splitter styles
+  .p-splitter {
+    .p-splitter-panel {
+      overflow: auto;
+    }
+
+    .p-splitter-gutter {
+      background: var(--p-surface-border);
+      cursor: col-resize;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background: var(--p-primary-color);
+      }
+    }
+  }
+
+  // Tree styles
+  .p-tree {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    
+    .p-tree-wrapper, 
+    .p-tree-container, 
+    .p-tree-root-list {
+      flex: 1;
+      height: 100%;
+      min-height: 0;
+      overflow: auto !important;
+      padding-bottom: 2rem;
+
+      .p-treenode {
+        .p-treenode-content {
+          padding: 0.5rem;
+          border-radius: 0.25rem;
+          transition: background-color 0.2s;
+
+          &:hover {
+            background-color: var(--p-surface-hover);
+          }
+
+          &.p-highlight {
+            background-color: var(--p-highlight-bg);
+            color: var(--p-highlight-text-color);
+          }
+        }
+      }
+    }
+  }
+
+  // Panel inside splitter
+  .p-panel {
+    &.h-full {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+
+      .p-panel-content {
+        flex: 1;
+        min-height: 0;
+        overflow: auto !important;
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+      }
+    }
+  }
+}
+

@@ -1,0 +1,58 @@
+# Docker Compose cho môi trường UAT
+# Chạy khi deploy từ nhánh master (CI/CD)
+# Sử dụng: IMAGE_TAG=<commit-sha> docker-compose -f docker-compose-uat.yml up -d
+
+version: '3.8'
+
+services:
+  ione-api-uat:
+    image: ione-api:${IMAGE_TAG}
+    container_name: ione-api-uat
+    ports:
+      - "8091:80"
+      - "8092:443"
+    restart: unless-stopped
+    networks:
+      - ione-network
+    volumes:
+      - /home/ione/openiddict.pfx:/app/openiddict.pfx:ro
+      - /data/firebaseAuth.json:/app/firebaseAuth.json:ro
+    environment:
+      App__SelfUrl: "${APP_SELF_URL:-https://ione-api-uat.vnexco.com}"
+      App__AngularUrl: "${APP_ANGULAR_URL:-https://ione-uat.vnexco.com}"
+      App__CorsOrigins: "${APP_CORS_ORIGINS:-https://ione-uat.vnexco.com}"
+      App__RedirectAllowedUrls: "${APP_REDIRECT_URLS:-https://ione-uat.vnexco.com}"
+      App__HealthCheckUrl: "${APP_HEALTH_URL:-https://ione-api-uat.vnexco.com/health-status}"
+
+      ASPNETCORE_URLS: "http://+:80"
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT:-Staging}"
+      IONE_PYTHON: "/usr/bin/python3"
+      TZ: "Asia/Ho_Chi_Minh"
+
+      AuthServer__Authority: "${AUTH_AUTHORITY:-https://ione-api-uat.vnexco.com}"
+      AuthServer__RequireHttpsMetadata: "${AUTH_REQUIRE_HTTPS:-false}"
+      AuthServer__SwaggerClientId: "${AUTH_SWAGGER_CLIENTID:-iOne_Swagger}"
+      AuthServer__CertificatePassPhrase: "${AUTH_CERT_PASSPHRASE:-f4e2aebe-2402-411d-855e-c3314c44dea2}"
+
+      ConnectionStrings__Default: "${DB_CONNECTION_STRING:-Host=ione_db;Port=5432;Database=ione_uat;Username=ione;Password=ione}"
+
+      MinIO__Endpoint: "${MINIO_ENDPOINT:-minio:9000}"
+      MinIO__AccessKey: "${MINIO_ACCESS_KEY:-ione}"
+      MinIO__SecretKey: "${MINIO_SECRET_KEY:-ione123456}"
+      MinIO__BucketName: "${MINIO_BUCKET_NAME:-ione-file-uat}"
+      MinIO__UseSSL: "${MINIO_USE_SSL:-false}"
+
+  ione-angular-uat:
+    image: ione-angular:${IMAGE_TAG}
+    container_name: ione-angular-uat
+    ports:
+      - "8093:80"
+    restart: unless-stopped
+    networks:
+      - ione-network
+    depends_on:
+      - ione-api-uat
+
+networks:
+  ione-network:
+    external: true

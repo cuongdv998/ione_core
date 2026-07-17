@@ -1,0 +1,77 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+	<Import Project="..\..\..\common.props" />
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+		<RootNamespace>iOne</RootNamespace>
+		<PreserveCompilationReferences>true</PreserveCompilationReferences>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(RunConfiguration)' == 'iOne.HttpApi.Host' " />
+	<ItemGroup>
+		<PackageReference Include="Volo.Abp.AspNetCore.SignalR" Version="9.3.6" />
+		<PackageReference Include="AspNetCore.HealthChecks.UI" Version="9.0.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="9.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.5" />
+		<PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+		<PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Volo.Abp.AspNetCore.MultiTenancy" Version="9.3.6" />
+		<PackageReference Include="Volo.Abp.Autofac" Version="9.3.6" />
+		<PackageReference Include="Volo.Abp.AspNetCore.Serilog" Version="9.3.6" />
+		<PackageReference Include="Volo.Abp.Swashbuckle" Version="9.3.6" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="../../../modules/Volo.Abp.Account/src/Volo.Abp.Account.Web.OpenIddict/Volo.Abp.Account.Web.OpenIddict.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonXLite" Version="4.3.6" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\modules\app\src\iOne.AppMobile.Application\iOne.AppMobile.Application.csproj" />
+		<ProjectReference Include="..\..\..\modules\app\src\iOne.AppMobile.HttpApi\iOne.AppMobile.HttpApi.csproj" />
+		<ProjectReference Include="..\iOne.Application\iOne.Application.csproj" />
+		<ProjectReference Include="..\iOne.HttpApi\iOne.HttpApi.csproj" />
+		<ProjectReference Include="..\..\common\domain\iOne.Domain.Shared\iOne.Domain.Shared.csproj" />
+		<ProjectReference Include="..\..\common\domain\iOne.Domain\iOne.Domain.csproj" />
+		<ProjectReference Include="..\..\common\infra\iOne.EntityFrameworkCore\iOne.EntityFrameworkCore.csproj" />
+		<ProjectReference Include="../../../modules/Volo.Abp.AuditLogging/src/Volo.Abp.AuditLogging.HttpApi/Volo.Abp.AuditLogging.HttpApi.csproj" />
+		<ProjectReference Include="../../../modules/hr/src/iOne.Hr.HttpApi/iOne.Hr.HttpApi.csproj" />
+		<ProjectReference Include="../../../modules/hr/src/iOne.Hr.Application/iOne.Hr.Application.csproj" />
+		<ProjectReference Include="../../../modules/partner/src/iOne.Partner.HttpApi/iOne.Partner.HttpApi.csproj" />
+		<ProjectReference Include="../../../modules/partner/src/iOne.Partner.Application/iOne.Partner.Application.csproj" />
+		<ProjectReference Include="../../../modules/customer/src/iOne.Customer.HttpApi/iOne.Customer.HttpApi.csproj" />
+		<ProjectReference Include="../../../modules/customer/src/iOne.Customer.Application/iOne.Customer.Application.csproj" />
+		<ProjectReference Include="../../../modules/product/src/iOne.Product.HttpApi/iOne.Product.HttpApi.csproj" />
+		<ProjectReference Include="../../../modules/product/src/iOne.Product.Application/iOne.Product.Application.csproj" />
+		<ProjectReference Include="../../../modules/policy/src/iOne.Policy.HttpApi/iOne.Policy.HttpApi.csproj" />
+		<ProjectReference Include="../../../modules/policy/src/iOne.Policy.Application/iOne.Policy.Application.csproj" />
+		<ProjectReference Include="../../../modules/claim/src/iOne.Claim.HttpApi/iOne.Claim.HttpApi.csproj" />
+		<ProjectReference Include="../../../modules/claim/src/iOne.Claim.Application/iOne.Claim.Application.csproj" />
+		<ProjectReference Include="../../../modules/master/src/iOne.Master.HttpApi/iOne.Master.HttpApi.csproj" />
+		<ProjectReference Include="../../../modules/master/src/iOne.Master.Application/iOne.Master.Application.csproj" />
+		<ProjectReference Include="../../../modules/finance/src/iOne.Finance.HttpApi/iOne.Finance.HttpApi.csproj" />
+		<ProjectReference Include="../../../modules/finance/src/iOne.Finance.Application/iOne.Finance.Application.csproj" />
+		<ProjectReference Include="../../../modules/survey/src/iOne.Survey.HttpApi/iOne.Survey.HttpApi.csproj" />
+		<ProjectReference Include="../../../modules/survey/src/iOne.Survey.Application/iOne.Survey.Application.csproj" />
+		<ProjectReference Include="../../../modules/file/src/iOne.File.HttpApi/iOne.File.HttpApi.csproj" />
+		<ProjectReference Include="../../../modules/file/src/iOne.File.Application/iOne.File.Application.csproj" />
+		<ProjectReference Include="../../../modules/report/src/iOne.Report.HttpApi/iOne.Report.HttpApi.csproj" />
+		<ProjectReference Include="../../../modules/report/src/iOne.Report.Application/iOne.Report.Application.csproj" />
+		<ProjectReference Include="../../../modules/workflow/src/iOne.Workflow.HttpApi/iOne.Workflow.HttpApi.csproj" />
+		<ProjectReference Include="../../../modules/workflow/src/iOne.Workflow.Application/iOne.Workflow.Application.csproj" />
+		<ProjectReference Include="../../../modules/payment/src/iOne.Payment.HttpApi/iOne.Payment.HttpApi.csproj" />
+		<ProjectReference Include="../../../modules/payment/src/iOne.Payment.Application/iOne.Payment.Application.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Volo.Abp.Studio.Client.AspNetCore" Version="1.4.2" />
+	</ItemGroup>
+	<ItemGroup>
+		<!-- Partner integration key files — included in Docker image via output copy -->
+		<Content Include="Keys\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+</Project>

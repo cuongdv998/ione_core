@@ -1,0 +1,39 @@
+.v-dual-listbox {
+  width: 100%;
+
+  &.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .dual-listbox-container {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .listbox-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    .listbox-label {
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+  }
+
+  .control-buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+    padding-top: 4rem;
+
+    ::ng-deep .p-button {
+      min-width: 2.5rem;
+      height: 2.5rem;
+    }
+  }
+}

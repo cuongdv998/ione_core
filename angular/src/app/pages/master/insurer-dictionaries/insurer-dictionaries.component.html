@@ -1,0 +1,363 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Tìm theo Tên bảng dữ liệu -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="searchBusinessName" class="block mb-2 font-medium">{{ 'Master::InsurerDictionary:BusinessName' | translate }}</label>
+          <p-select
+            id="searchBusinessName"
+            [(ngModel)]="searchForm.businessName"
+            [options]="businessNameOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Tìm theo Công ty bảo hiểm -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="searchInsurerId" class="block mb-2 font-medium">{{ 'Master::InsurerDictionary:InsurerId' | translate }}</label>
+          <p-select
+            id="searchInsurerId"
+            [(ngModel)]="searchForm.insurerId"
+            [options]="insurerOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Tìm theo Own Code -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="ownCode" class="block mb-2 font-medium">{{ 'Master::InsurerDictionary:OwnCode' | translate }}</label>
+          <input
+            pInputText
+            id="ownCode"
+            [(ngModel)]="searchForm.ownCode"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Tìm theo Insurer Code -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="insurerCode" class="block mb-2 font-medium">{{ 'Master::InsurerDictionary:InsurerCode' | translate }}</label>
+          <input
+            pInputText
+            id="insurerCode"
+            [(ngModel)]="searchForm.insurerCode"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Filter theo Status -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="status" class="block mb-2 font-medium">{{ 'Master::InsurerDictionary:Status' | translate }}</label>
+          <p-select
+            id="status"
+            [(ngModel)]="searchForm.status"
+            [options]="statusOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button
+            [label]="'AbpAuditLogging::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button
+            [label]="'AbpAuditLogging::Search' | translate"
+            icon="pi pi-search"
+            (onClick)="search()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Master::InsurerDictionary:Import' | translate"
+            icon="pi pi-upload"
+            severity="secondary"
+            (onClick)="openImportDialog()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Master::InsurerDictionary:New' | translate"
+            icon="pi pi-plus"
+            (onClick)="openCreateDialog()"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table
+        [columns]="columns"
+        [data]="insurerDictionaries"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        size="small"
+        [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadData($event)"
+      />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create/Edit -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Master::InsurerDictionary:New' : 'Master::InsurerDictionary:Edit') | translate"
+  [modal]="true"
+  [style]="{ width: '700px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflow: 'visible' }"
+>
+  <div class="flex flex-col gap-4 p-4">
+    <!-- Tên bảng dữ liệu: Create = select (admin_config TABLE_MAPPING_INSURER), Edit = readonly -->
+    <div>
+      <label for="formBusinessName" class="block mb-2 font-medium">
+        {{ 'Master::InsurerDictionary:BusinessName' | translate }}
+        <span class="text-red-500" *ngIf="dialogMode === 'create'">*</span>
+      </label>
+      <p-select
+        *ngIf="dialogMode === 'create'"
+        id="formBusinessName"
+        [(ngModel)]="formData.businessName"
+        [options]="businessNameOptions"
+        [placeholder]="'Master::InsurerDictionary:BusinessName' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+      <input
+        *ngIf="dialogMode === 'edit'"
+        pInputText
+        id="formBusinessNameDisplay"
+        [value]="getBusinessNameLabel(formData.businessName)"
+        class="w-full p-inputtext"
+        readonly
+      />
+    </div>
+
+    <!-- Insurer (Công ty bảo hiểm): Create = dropdown, Edit = readonly text -->
+    <div>
+      <label for="formInsurerId" class="block mb-2 font-medium">
+        {{ 'Master::InsurerDictionary:InsurerId' | translate }}
+        <span class="text-red-500" *ngIf="dialogMode === 'create'">*</span>
+      </label>
+      <p-select
+        *ngIf="dialogMode === 'create'"
+        id="formInsurerId"
+        [(ngModel)]="formData.insurerId"
+        [options]="insurerOptions"
+        [placeholder]="'Master::InsurerDictionary:InsurerId' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+      <input
+        *ngIf="dialogMode === 'edit'"
+        pInputText
+        id="formInsurerIdDisplay"
+        [value]="getInsurerLabel(formData.insurerId)"
+        class="w-full p-inputtext"
+        readonly
+      />
+    </div>
+
+    <!-- Own Code: Create = editable, Edit = readonly -->
+    <div>
+      <label for="formOwnCode" class="block mb-2 font-medium">
+        {{ 'Master::InsurerDictionary:OwnCode' | translate }}
+        <span class="text-red-500" *ngIf="dialogMode === 'create'">*</span>
+      </label>
+      <input
+        pInputText
+        id="formOwnCode"
+        [(ngModel)]="formData.ownCode"
+        class="w-full"
+        maxlength="50"
+        [readonly]="dialogMode === 'edit'"
+      />
+    </div>
+
+    <!-- Insurer Code field -->
+    <div>
+      <label for="formInsurerCode" class="block mb-2 font-medium">
+        {{ 'Master::InsurerDictionary:InsurerCode' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formInsurerCode"
+        [(ngModel)]="formData.insurerCode"
+        class="w-full"
+        maxlength="50"
+      />
+    </div>
+
+    <!-- Extra Data field -->
+    <div>
+      <label for="formExtraData" class="block mb-2 font-medium">
+        {{ 'Master::InsurerDictionary:ExtraData' | translate }}
+      </label>
+      <textarea
+        pTextarea
+        id="formExtraData"
+        [(ngModel)]="formData.extraData"
+        class="w-full"
+        [rows]="3"
+      ></textarea>
+    </div>
+
+    <!-- Effect Date field -->
+    <div>
+      <label for="formEffectDate" class="block mb-2 font-medium">
+        {{ 'Master::InsurerDictionary:EffectDate' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-datepicker
+        inputId="formEffectDate"
+        [(ngModel)]="effectDatePicker"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [showButtonBar]="true"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Expire Date field (bắt buộc khi sửa, không bắt buộc khi thêm) -->
+    <div>
+      <label for="formExpireDate" class="block mb-2 font-medium">
+        {{ 'Master::InsurerDictionary:ExpireDate' | translate }}
+        <span class="text-red-500" *ngIf="dialogMode === 'edit'">*</span>
+      </label>
+      <p-datepicker
+        inputId="formExpireDate"
+        [(ngModel)]="expireDatePicker"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [showButtonBar]="true"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Status field -->
+    <div>
+      <label for="formStatus" class="block mb-2 font-medium">
+        {{ 'Master::InsurerDictionary:Status' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formStatus"
+        [(ngModel)]="formData.status"
+        [options]="statusOptions"
+        [placeholder]="'Master::InsurerDictionary:Status' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Master::Cancel' | translate"
+        severity="secondary"
+        (onClick)="dialogVisible = false"
+        [disabled]="loading"
+      />
+      <p-button
+        [label]="'Master::Save' | translate"
+        (onClick)="save()"
+        [loading]="loading"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Import Dialog -->
+<p-dialog
+  [(visible)]="importDialogVisible"
+  [header]="'Master::InsurerDictionary:ImportDialogTitle' | translate"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="p-4">
+    <p class="mb-4 text-sm text-gray-600">
+      {{ 'Master::InsurerDictionary:DownloadTemplate' | translate }} để lấy file mẫu. Các cột: STT, Tên bảng dữ liệu, Công ty bảo hiểm (Mã), Mã nội bộ, Mã công ty bảo hiểm, Ngày hiệu lực (dd/MM/yyyy), Ngày hết hạn (dd/MM/yyyy).
+    </p>
+    <input
+      #importFileInput
+      type="file"
+      accept=".xlsx,.xls"
+      class="hidden"
+      (change)="onImportFileChange($event)"
+    />
+    <div *ngIf="importResult" class="mt-4 p-3 bg-gray-100 rounded">
+      <p class="font-semibold mb-2">Kết quả import: {{ importResult.successCount }} thành công, {{ importResult.errorCount }} lỗi.</p>
+      <p class="text-sm">Tổng: {{ importResult.totalRows }} · Thành công: {{ importResult.successCount }} · Lỗi: {{ importResult.errorCount }}</p>
+      <p *ngIf="importResult.fileBase64" class="text-sm mt-2">File kết quả (cột Lỗi) đã được tải về.</p>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="'AbpUi::Close' | translate"
+      icon="pi pi-times"
+      severity="secondary"
+      (onClick)="importDialogVisible = false"
+    />
+    <p-button
+      [label]="'Master::InsurerDictionary:DownloadTemplate' | translate"
+      icon="pi pi-download"
+      severity="secondary"
+      (onClick)="downloadTemplate()"
+      [loading]="loading"
+    />
+    <p-button
+      [label]="'Master::InsurerDictionary:Import' | translate"
+      icon="pi pi-upload"
+      (onClick)="importFileInput.click()"
+      [loading]="importing"
+      [disabled]="importing"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Messages -->
+<p-toast />
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog />

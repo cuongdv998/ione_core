@@ -1,0 +1,9 @@
+:host ::ng-deep {
+    .p-dialog-content {
+        overflow: visible;
+    }
+
+    .p-select-overlay {
+        z-index: 10000 !important;
+    }
+}

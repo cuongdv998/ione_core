@@ -1,0 +1,448 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="eventCode" class="block mb-2 font-medium">{{ 'Master::SystemEventNotify:EventCode' | translate }}</label>
+          <input
+            pInputText
+            id="eventCode"
+            [(ngModel)]="searchForm.eventCode"
+            class="w-full"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="searchAppChannelId" class="block mb-2 font-medium">{{ 'Master::SystemEventNotify:AppChannelId' | translate }}</label>
+          <p-select
+            id="searchAppChannelId"
+            [(ngModel)]="searchForm.appChannelId"
+            [options]="appChannelOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="recipientType" class="block mb-2 font-medium">{{ 'Master::SystemEventNotify:RecipientType' | translate }}</label>
+          <p-select
+            id="recipientType"
+            [(ngModel)]="searchForm.recipientType"
+            [options]="recipientTypeOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="recipient" class="block mb-2 font-medium">{{ 'Master::SystemEventNotify:Recipient' | translate }}</label>
+          <input
+            pInputText
+            id="recipient"
+            [(ngModel)]="searchForm.recipient"
+            class="w-full"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="searchStatus" class="block mb-2 font-medium">{{ 'Master::SystemEventNotify:Status' | translate }}</label>
+          <p-select
+            id="searchStatus"
+            [(ngModel)]="searchForm.status"
+            [options]="statusOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="scheduleAtFrom" class="block mb-2 font-medium">{{ 'Master::SystemEventNotify:ScheduleAt' | translate }} (từ)</label>
+          <p-datepicker
+            id="scheduleAtFrom"
+            [(ngModel)]="scheduleAtFromPicker"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            [showClear]="true"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="scheduleAtTo" class="block mb-2 font-medium">{{ 'Master::SystemEventNotify:ScheduleAt' | translate }} (đến)</label>
+          <p-datepicker
+            id="scheduleAtTo"
+            [(ngModel)]="scheduleAtToPicker"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            [showClear]="true"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button
+            [label]="'AbpAuditLogging::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button
+            [label]="'AbpAuditLogging::Search' | translate"
+            icon="pi pi-search"
+            (onClick)="search()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Master::SystemEventNotify:New' | translate"
+            icon="pi pi-plus"
+            (onClick)="openCreateDialog()"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Bảng dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table
+        [columns]="columns"
+        [data]="items"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        size="small"
+        [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadData($event)"
+      />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create: form đầy đủ -->
+<p-dialog
+  *ngIf="dialogMode === 'create'"
+  [(visible)]="dialogVisible"
+  [header]="'Master::SystemEventNotify:New' | translate"
+  [modal]="true"
+  [style]="{ width: '720px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflow: 'auto', maxHeight: 'calc(90vh - 8rem)' }"
+>
+  <div class="system-event-notify-dialog-body flex flex-col gap-4 p-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label for="formEventCode" class="block mb-2 font-medium">
+          {{ 'Master::SystemEventNotify:EventCode' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input
+          pInputText
+          id="formEventCode"
+          [(ngModel)]="formData.eventCode"
+          class="w-full"
+          maxlength="50"
+        />
+      </div>
+      <div>
+        <label for="formAppChannelId" class="block mb-2 font-medium">
+          {{ 'Master::SystemEventNotify:AppChannelId' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="formAppChannelId"
+          [(ngModel)]="formData.appChannelId"
+          [options]="appChannelOptions"
+          [placeholder]="'Master::SystemEventNotify:AppChannelId' | translate"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+    </div>
+    <div>
+      <label for="formTitle" class="block mb-2 font-medium">
+        {{ 'Master::SystemEventNotify:Title' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formTitle"
+        [(ngModel)]="formData.title"
+        class="w-full"
+        maxlength="250"
+      />
+    </div>
+    <div>
+      <label for="formBody" class="block mb-2 font-medium">
+        {{ 'Master::SystemEventNotify:Body' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <textarea
+        pInputText
+        id="formBody"
+        [(ngModel)]="formData.body"
+        class="w-full"
+        rows="3"
+        maxlength="500"
+      ></textarea>
+    </div>
+    <div>
+      <label for="formPayload" class="block mb-2 font-medium">{{ 'Master::SystemEventNotify:Payload' | translate }}</label>
+      <input
+        pInputText
+        id="formPayload"
+        [(ngModel)]="formData.payload"
+        class="w-full"
+        maxlength="500"
+      />
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label for="formRecipientType" class="block mb-2 font-medium">
+          {{ 'Master::SystemEventNotify:RecipientType' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="formRecipientType"
+          [(ngModel)]="formData.recipientType"
+          [options]="recipientTypeOptions"
+          [placeholder]="'Master::SystemEventNotify:RecipientType' | translate"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+      <div>
+        <label for="formRecipientId" class="block mb-2 font-medium">
+          {{ 'Master::SystemEventNotify:RecipientId' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input
+          pInputText
+          id="formRecipientId"
+          [(ngModel)]="formData.recipientId"
+          class="w-full"
+        />
+      </div>
+    </div>
+    <div>
+      <label for="formRecipient" class="block mb-2 font-medium">{{ 'Master::SystemEventNotify:Recipient' | translate }}</label>
+      <input
+        pInputText
+        id="formRecipient"
+        [(ngModel)]="formData.recipient"
+        class="w-full"
+        maxlength="50"
+      />
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label for="formStatusCreate" class="block mb-2 font-medium">
+          {{ 'Master::SystemEventNotify:Status' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="formStatusCreate"
+          [(ngModel)]="formData.status"
+          [options]="statusOptions"
+          [placeholder]="'Master::SystemEventNotify:Status' | translate"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+      <div>
+        <label for="formScheduleAt" class="block mb-2 font-medium">
+          {{ 'Master::SystemEventNotify:ScheduleAt' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-datepicker
+          id="formScheduleAt"
+          [(ngModel)]="scheduleAtPicker"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+      <div>
+        <label for="formSentAt" class="block mb-2 font-medium">{{ 'Master::SystemEventNotify:SentAt' | translate }}</label>
+        <p-datepicker
+          id="formSentAt"
+          [(ngModel)]="sentAtPicker"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          [showClear]="true"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+    </div>
+    <div>
+      <label for="formErrorMessage" class="block mb-2 font-medium">{{ 'Master::SystemEventNotify:ErrorMessage' | translate }}</label>
+      <input
+        pInputText
+        id="formErrorMessage"
+        [(ngModel)]="formData.errorMessage"
+        class="w-full"
+        maxlength="1000"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Master::Cancel' | translate"
+        severity="secondary"
+        (onClick)="dialogVisible = false"
+        [disabled]="loading"
+      />
+      <p-button
+        [label]="'Master::Save' | translate"
+        (onClick)="save()"
+        [loading]="loading"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog Edit: xem hết thông tin, chỉ sửa trạng thái -->
+<p-dialog
+  *ngIf="dialogMode === 'edit'"
+  [(visible)]="dialogVisible"
+  [header]="'Master::SystemEventNotify:Edit' | translate"
+  [modal]="true"
+  [style]="{ width: '720px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflow: 'auto', maxHeight: 'calc(90vh - 8rem)' }"
+>
+  <div class="system-event-notify-edit-dialog p-4 flex flex-col gap-4">
+    <p class="text-sm text-amber-600 font-medium">{{ 'Master::SystemEventNotify:OnlyStatusEditable' | translate }}</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block mb-1 text-sm font-medium text-gray-500">{{ 'Master::SystemEventNotify:EventCode' | translate }}</label>
+        <p class="text-sm bg-gray-50 p-2 rounded">{{ selectedItem?.eventCode || '—' }}</p>
+      </div>
+      <div>
+        <label class="block mb-1 text-sm font-medium text-gray-500">{{ 'Master::SystemEventNotify:AppChannelId' | translate }}</label>
+        <p class="text-sm bg-gray-50 p-2 rounded">{{ getAppChannelLabel(selectedItem?.appChannelId) || '—' }}</p>
+      </div>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-500">{{ 'Master::SystemEventNotify:Title' | translate }}</label>
+      <p class="text-sm bg-gray-50 p-2 rounded break-words">{{ selectedItem?.title || '—' }}</p>
+    </div>
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-500">{{ 'Master::SystemEventNotify:Body' | translate }}</label>
+      <p class="text-sm bg-gray-50 p-2 rounded break-words whitespace-pre-wrap">{{ selectedItem?.body || '—' }}</p>
+    </div>
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-500">{{ 'Master::SystemEventNotify:Payload' | translate }}</label>
+      <p class="text-sm bg-gray-50 p-2 rounded break-words">{{ selectedItem?.payload || '—' }}</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block mb-1 text-sm font-medium text-gray-500">{{ 'Master::SystemEventNotify:RecipientType' | translate }}</label>
+        <p class="text-sm bg-gray-50 p-2 rounded">{{ formatRecipientType(selectedItem?.recipientType) || '—' }}</p>
+      </div>
+      <div>
+        <label class="block mb-1 text-sm font-medium text-gray-500">{{ 'Master::SystemEventNotify:RecipientId' | translate }}</label>
+        <p class="text-sm bg-gray-50 p-2 rounded">{{ selectedItem?.recipientId || '—' }}</p>
+      </div>
+    </div>
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-500">{{ 'Master::SystemEventNotify:Recipient' | translate }}</label>
+      <p class="text-sm bg-gray-50 p-2 rounded">{{ selectedItem?.recipient || '—' }}</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block mb-1 text-sm font-medium text-gray-500">{{ 'Master::SystemEventNotify:ScheduleAt' | translate }}</label>
+        <p class="text-sm bg-gray-50 p-2 rounded">{{ formatDateTimeDisplay(selectedItem?.scheduleAt) || '—' }}</p>
+      </div>
+      <div>
+        <label class="block mb-1 text-sm font-medium text-gray-500">{{ 'Master::SystemEventNotify:SentAt' | translate }}</label>
+        <p class="text-sm bg-gray-50 p-2 rounded">{{ formatDateTimeDisplay(selectedItem?.sentAt) || '—' }}</p>
+      </div>
+      <div>
+        <label class="block mb-1 text-sm font-medium text-gray-500">{{ 'Master::SystemEventNotify:ReadAt' | translate }}</label>
+        <p class="text-sm bg-gray-50 p-2 rounded">{{ formatDateTimeDisplay(selectedItem?.readAt) || '—' }}</p>
+      </div>
+    </div>
+
+    <div *ngIf="selectedItem?.errorMessage">
+      <label class="block mb-1 text-sm font-medium text-gray-500">{{ 'Master::SystemEventNotify:ErrorMessage' | translate }}</label>
+      <p class="text-sm bg-red-50 p-2 rounded break-words text-red-800">{{ selectedItem?.errorMessage }}</p>
+    </div>
+
+    <!-- Thông tin audit: ngày tạo, ngày sửa -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4 mt-2">
+      <div>
+        <label class="block mb-1 text-sm font-medium text-gray-500">{{ 'AbpIdentity::CreationTime' | translate }}</label>
+        <p class="text-sm bg-gray-50 p-2 rounded">{{ formatDateTimeDisplay(selectedItem?.creationTime) || '—' }}</p>
+      </div>
+      <div>
+        <label class="block mb-1 text-sm font-medium text-gray-500">{{ 'Master::LastModificationTime' | translate }}</label>
+        <p class="text-sm bg-gray-50 p-2 rounded">{{ formatDateTimeDisplay(selectedItem?.lastModificationTime) || '—' }}</p>
+      </div>
+    </div>
+
+    <!-- Chỉ được sửa trạng thái -->
+    <div class="border-t pt-4 mt-2">
+      <label for="formStatusEdit" class="block mb-2 font-medium">
+        {{ 'Master::SystemEventNotify:Status' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="formStatusEdit"
+        [(ngModel)]="formData.status"
+        [options]="statusOptions"
+        [placeholder]="'Master::SystemEventNotify:Status' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Master::Cancel' | translate"
+        severity="secondary"
+        (onClick)="dialogVisible = false"
+        [disabled]="loading"
+      />
+      <p-button
+        [label]="'Master::Save' | translate"
+        (onClick)="save()"
+        [loading]="loading"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

@@ -1,0 +1,836 @@
+<div class="claim-detail-page grid grid-cols-12 gap-2 p-4">
+
+
+  @if (loadingClaim && !claim) {
+    <div class="col-span-12 flex justify-center p-8">
+      <i class="pi pi-spin pi-spinner text-3xl"></i>
+    </div>
+  } @else if (!claimId || !claim) {
+    <div class="col-span-12 p-4 text-center text-gray-600">
+      {{ 'Claim::ClaimNotFound' | translate }}
+    </div>
+  } @else {
+    <div class="col-span-12">
+      <p-tabs [(value)]="activeTab" (valueChange)="onTabChange($event)">
+        <p-tablist>
+          <p-tab [value]="0">{{ 'Claim::ClaimInfo' | translate }}</p-tab>
+          <p-tab [value]="1">{{ 'Claim::IncidentImages' | translate }}</p-tab>
+          <p-tab [value]="2">{{ 'Claim::ProcessingProgress' | translate }}</p-tab>
+        </p-tablist>
+        <p-tabpanels>
+          <!-- Tab 0: Thông tin chung - layout giống claim-create, các input disable -->
+          <p-tabpanel [value]="0">
+            <div class="flex flex-col gap-2 p-4">
+              <!-- General Claim Details -->
+              <div class="border-b pb-4">
+                <h3 class="text-lg font-semibold mb-4 underline">{{ 'Claim::GeneralInfo' | translate }}</h3>
+                <div class="grid grid-cols-12 gap-2">
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::NotifyDate' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="formatDateTime(claim.notifyDate)"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::ProcessClaimType' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="getProcessClaimTypeDisplay()"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::ProcessDeptId' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.processDeptName || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::ProcessEmpId' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.processEmpName || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::EstimatedTotalLoss' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="formatTotalEstimatedLossAmount(claim.totalEstimatedLossAmount)"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+              </div>
+              </div>
+
+              <!-- Notifier Information -->
+              <div class="border-b pb-4">
+                <h3 class="text-lg font-semibold mb-4 underline">{{ 'Claim::NotifierInfo' | translate }}</h3>
+                <div class="grid grid-cols-12 gap-2">
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::NotifierName' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.notifierName || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::NotifierPhone' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.notifierPhone || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::NotifierEmail' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.notifierEmail || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::NotifierInRelationship' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="getRelationshipLabel(claim.notifierInRelationship) || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+              </div>
+              </div>
+
+              <!-- Contact Information -->
+              <div class="border-b pb-4">
+                <h3 class="text-lg font-semibold mb-4 underline">{{ 'Claim::ContactInfo' | translate }}</h3>
+                <div class="grid grid-cols-12 gap-2">
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::ContactName' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.contactName || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::ContactPhone' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.contactPhone || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::ContactEmail' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.contactEmail || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::ContactInRelationship' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="getRelationshipLabel(claim.contactInRelationship) || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+              </div>
+              </div>
+
+              <!-- Incident Details -->
+              <div class="border-b pb-4">
+                <h3 class="text-lg font-semibold mb-4 underline">{{ 'Claim::IncidentDetails' | translate }}</h3>
+                <div class="grid grid-cols-12 gap-2">
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::IncidentDate' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="formatDateTime(claim.incidentDate)"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::CertificateNo' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.certificateNo || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::InsurerName' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.insurerName || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::VehicleInfo' | translate }}
+                  </label>
+                  <div class="grid grid-cols-3 gap-2">
+                    <input
+                      pInputText
+                      [value]="claim.carPlate || '-'"
+                      class="w-full bg-gray-100"
+                      [disabled]="true"
+                    />
+                    <input
+                      pInputText
+                      [value]="claim.vin || '-'"
+                      class="w-full bg-gray-100"
+                      [disabled]="true"
+                    />
+                    <input
+                      pInputText
+                      [value]="claim.engineNumber || '-'"
+                      class="w-full bg-gray-100"
+                      [disabled]="true"
+                    />
+                  </div>
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::IncidentProvince' | translate }} <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    pInputText
+                    [value]="incidentProvinceName || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::IncidentWard' | translate }} <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    pInputText
+                    [value]="incidentWardName || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-6">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::IncidentAddress' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.incidentAddress || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::OnLocation' | translate }} <span class="text-red-500">*</span>
+                  </label>
+                  <div class="flex gap-4">
+                    <div class="flex items-center">
+                      <p-radioButton
+                        inputId="onLocationYDetail"
+                        name="onLocationDetail"
+                        [(ngModel)]="onLocationValue"
+                        value="Y"
+                        [disabled]="true"
+                      />
+                      <label for="onLocationYDetail" class="ml-2">{{ 'Claim::Yes' | translate }}</label>
+                    </div>
+                    <div class="flex items-center">
+                      <p-radioButton
+                        inputId="onLocationNDetail"
+                        name="onLocationDetail"
+                        [(ngModel)]="onLocationValue"
+                        value="N"
+                        [disabled]="true"
+                      />
+                      <label for="onLocationNDetail" class="ml-2">{{ 'Claim::No' | translate }}</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::IncidentCause' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.incidentCauseName || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-6">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::IncidentDescription' | translate }}
+                  </label>
+                  <textarea
+                    pTextarea
+                    [value]="claim.incidentDescription || '-'"
+                    class="w-full bg-gray-100"
+                    [rows]="3"
+                    [disabled]="true"
+                  ></textarea>
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::IncidentResult' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.incidentResult || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3 mt-4" style="margin-top: 30px;">
+                  <p-rating
+                    [ngModel]="claim.priority || 0"
+                    [stars]="3"
+                    [readonly]="true"
+                  ></p-rating>
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::AssessmentDate' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="formatDateTime(claim.assessmentDate)"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::AssessmentPartner' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.assessmentPartnerName || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+              </div>
+              </div>
+
+              <!-- Additional Information -->
+              <div class="border-b pb-4">
+                <h3 class="text-lg font-semibold mb-4 underline">{{ 'Claim::AdditionalInfo' | translate }}</h3>
+                <div class="grid grid-cols-12 gap-2">
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::PersonOnCar' | translate }}
+                  </label>
+                  <p-inputNumber
+                    [ngModel]="claim.personOnCar ?? null"
+                    [disabled]="true"
+                    [showButtons]="false"
+                    styleClass="w-full bg-gray-100"
+                  ></p-inputNumber>
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::DriverName' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.driverName || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::DriverSex' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="getDriverSexLabel(claim.driverSex) || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::DriverPhone' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.driverPhone || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::DriverIdNo' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.driverIdNo || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::DriverLicenseNo' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.driverLicenseNo || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::DriverLicenseEffectDate' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="formatDate(claim.driverLicenseEffectDate)"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::DriverLicenseExpireDate' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="formatDate(claim.driverLicenseExpireDate)"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::DriverLicenseLevel' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.driverLicenseLevel || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::DriverRegistryNo' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="claim.driverRegistryNo || '-'"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::DriverRegistryEffectDate' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="formatDate(claim.driverRegistryEffectDate)"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-3">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::DriverRegistryExpireDate' | translate }}
+                  </label>
+                  <input
+                    pInputText
+                    [value]="formatDate(claim.driverRegistryExpireDate)"
+                    class="w-full bg-gray-100"
+                    [disabled]="true"
+                  />
+                </div>
+
+                <div class="col-span-12 md:col-span-6">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::Note' | translate }}
+                  </label>
+                  <textarea
+                    pTextarea
+                    [value]="claim.note || '-'"
+                    class="w-full bg-gray-100"
+                    [rows]="3"
+                    [disabled]="true"
+                  ></textarea>
+                </div>
+
+                <div class="col-span-12 md:col-span-6">
+                  <label class="block mb-2 font-medium">
+                    {{ 'Claim::SnapshotLink' | translate }}
+                  </label>
+                  <div class="flex gap-2">
+                    <input
+                      pInputText
+                      [value]="claim.snapshotLink || ''"
+                      [disabled]="true"
+                      class="flex-1 bg-gray-100"
+                    />
+                    <p-button
+                      icon="pi pi-copy"
+                      [text]="true"
+                      [rounded]="true"
+                      severity="secondary"
+                      (onClick)="copySnapshotLink()"
+                      [disabled]="!claim.snapshotLink"
+                      [pTooltip]="'Claim::CopyLink' | translate"
+                      tooltipStyleClass="claim-create-single-line-tooltip"
+                    />
+                  </div>
+                  <small class="text-gray-500">{{ 'Claim::SnapshotLinkHint' | translate }}</small>
+                </div>
+              </div>
+              </div>
+
+              <!-- Insurance Information Table -->
+              <div class="pb-4">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-lg font-semibold underline">{{ 'Claim::InsuranceInfo' | translate }}</h3>
+                  <p-button
+                    icon="pi pi-refresh"
+                    [text]="true"
+                    [rounded]="true"
+                    severity="secondary"
+                    (onClick)="refreshPolicies()"
+                    [pTooltip]="'Claim::Refresh' | translate"
+                  />
+                </div>
+                <p-table
+                    [value]="filteredPolicies"
+                    [loading]="policiesLoading"
+                    [paginator]="false"
+                    styleClass="p-datatable-sm"
+                  >
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th>{{ 'Claim::STT' | translate }}</th>
+                        <th>{{ 'Claim::LobName' | translate }}</th>
+                        <th>{{ 'Claim::ContractId' | translate }}</th>
+                        <th>{{ 'Claim::CertificateNo' | translate }}</th>
+                        <th>{{ 'Claim::Products' | translate }}</th>
+                        <th>{{ 'Claim::CarPlate' | translate }}</th>
+                        <th>{{ 'Claim::OwnerName' | translate }}</th>
+                        <th>{{ 'Claim::InsurancePeriod' | translate }}</th>
+                        <th>{{ 'Claim::Status' | translate }}</th>
+                        <th>{{ 'Claim::Action' | translate }}</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-policy let-rowIndex="rowIndex">
+                      <tr>
+                        <td>{{ rowIndex + 1 }}</td>
+                        <td>{{ policy.lobName }}</td>
+                        <td>{{ policy.contractId }}</td>
+                        <td>{{ policy.certificateNo }}</td>
+                        <td>{{ policy.products?.join(', ') }}</td>
+                        <td>{{ policy.carPlate }}</td>
+                        <td>{{ policy.ownerName }}</td>
+                        <td>
+                          {{ policy.effectDate | date:'dd/MM/yyyy' }} - {{ policy.expireDate | date:'dd/MM/yyyy' }}
+                        </td>
+                        <td>{{ formatPolicyStatus(policy.status) }}</td>
+                        <td>
+                          <p-menu
+                            #policyMenu
+                            [popup]="true"
+                            appendTo="body"
+                            [model]="getPolicyMenuItems(policy)"
+                          ></p-menu>
+                          <button
+                            pButton
+                            type="button"
+                            icon="pi pi-ellipsis-h"
+                            severity="secondary"
+                            class="p-button-text p-button-rounded p-button-sm"
+                            [pTooltip]="'Claim::Action' | translate"
+                            tooltipPosition="top"
+                            (mousedown)="$event.preventDefault(); $event.stopPropagation()"
+                            (click)="$event.preventDefault(); $event.stopPropagation(); policyMenu.toggle($event)"
+                          ></button>
+                        </td>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="emptymessage">
+                      <tr>
+                        <td colspan="10" class="text-center py-2">
+                          {{ 'Claim::NoPoliciesFound' | translate }}
+                        </td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+              </div>
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab 1: Ảnh hiện trường -->
+          <p-tabpanel [value]="1">
+            <div class="p-4">
+              @if (loadingDocuments) {
+                <div class="flex justify-center p-8"><i class="pi pi-spin pi-spinner text-3xl"></i></div>
+              } @else {
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  @for (doc of documents; track doc.id) {
+                    <div class="border rounded overflow-hidden bg-gray-50">
+                      @if (isImage(doc.mimeType) && doc.thumbnailUrl) {
+                        <img [src]="doc.thumbnailUrl" [alt]="doc.fileName || ''" class="w-full aspect-square object-cover cursor-pointer" (click)="openDocUrl(doc.url)" />
+                      } @else if (isImage(doc.mimeType)) {
+                        <div class="aspect-square flex items-center justify-center cursor-pointer bg-gray-200" (click)="openDocUrl(doc.url)">
+                          <i class="pi pi-image text-4xl text-gray-500"></i>
+                        </div>
+                      } @else {
+                        <div class="aspect-square flex flex-col items-center justify-center cursor-pointer bg-gray-200" (click)="openDocUrl(doc.url)">
+                          <i class="pi pi-video text-4xl text-gray-500 mb-1"></i>
+                          <span class="text-xs truncate w-full px-2 text-center">{{ doc.fileName }}</span>
+                        </div>
+                      }
+                      <div class="p-2 text-xs truncate" [title]="doc.fileName">{{ doc.fileName || doc.id }}</div>
+                    </div>
+                  }
+                </div>
+                @if (documents.length === 0) {
+                  <p class="text-gray-500 text-center py-8">{{ 'Claim::NoDocuments' | translate }}</p>
+                }
+              }
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab 2: Tiến độ xử lý - 3 bảng -->
+          <p-tabpanel [value]="2">
+            <div class="p-4 flex flex-col gap-4">
+              <p-panel [header]="'Claim::ClaimFoldersList' | translate" [toggleable]="true">
+                <p-table [value]="folders" [loading]="loadingFolders" styleClass="p-datatable-sm" [rowHover]="true">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>{{ 'Claim::FolderNo' | translate }}</th>
+                      <th>{{ 'Claim::FolderName' | translate }}</th>
+                      <th>{{ 'Claim::InsurerName' | translate }}</th>
+                      <th>{{ 'Claim::PolicyNo' | translate }}</th>
+                      <th>{{ 'Claim::Status' | translate }}</th>
+                      <th>{{ 'Claim::OpenDate' | translate }}</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-row>
+                    <tr>
+                      <td>{{ row.folderNo || '-' }}</td>
+                      <td>{{ row.folderName || '-' }}</td>
+                      <td>{{ row.insurerName || '-' }}</td>
+                      <td>{{ row.policyNo || '-' }}</td>
+                      <td>{{ row.status ?? '-' }}</td>
+                      <td>{{ formatDate(row.openDate) }}</td>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="emptymessage">
+                    <tr><td [attr.colspan]="6" class="text-center text-gray-500">{{ 'Claim::NoData' | translate }}</td></tr>
+                  </ng-template>
+                </p-table>
+              </p-panel>
+
+              <p-panel [header]="'Claim::StageProgress' | translate" [toggleable]="true">
+                <p-table [value]="stageProgress" [loading]="loadingStageProgress" styleClass="p-datatable-sm" [rowHover]="true">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>{{ 'Claim::FolderNo' | translate }}</th>
+                      <th>{{ 'Claim::StageName' | translate }}</th>
+                      <th>{{ 'Claim::TaskName' | translate }}</th>
+                      <th>{{ 'Claim::PerformerName' | translate }}</th>
+                      <th>{{ 'Claim::StartDate' | translate }}</th>
+                      <th>{{ 'Claim::DueDate' | translate }}</th>
+                      <th>{{ 'Claim::SlaText' | translate }}</th>
+                      <th>{{ 'Claim::Status' | translate }}</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-row>
+                    <tr>
+                      <td>{{ row.folderNo || '-' }}</td>
+                      <td>{{ row.stageName || '-' }}</td>
+                      <td>{{ row.taskName || '-' }}</td>
+                      <td>{{ row.performerName || '-' }}</td>
+                      <td>{{ formatDate(row.startDate) }}</td>
+                      <td>{{ formatDate(row.dueDate) }}</td>
+                      <td>{{ row.slaText || '-' }}</td>
+                      <td>{{ row.status ?? row.workTaskStatus ?? '-' }}</td>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="emptymessage">
+                    <tr><td [attr.colspan]="8" class="text-center text-gray-500">{{ 'Claim::NoData' | translate }}</td></tr>
+                  </ng-template>
+                </p-table>
+              </p-panel>
+
+              <p-panel [header]="'Claim::SentMessages' | translate" [toggleable]="true">
+                <p-table [value]="sentMessages" [loading]="loadingSentMessages" styleClass="p-datatable-sm" [rowHover]="true">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>{{ 'Claim::SentAt' | translate }}</th>
+                      <th>{{ 'Claim::Recipient' | translate }}</th>
+                      <th>{{ 'Claim::ChannelName' | translate }}</th>
+                      <th>{{ 'Claim::Title' | translate }}</th>
+                      <th>{{ 'Claim::Status' | translate }}</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-row>
+                    <tr>
+                      <td>{{ formatDate(row.sentAt) }}</td>
+                      <td>{{ row.recipient || '-' }}</td>
+                      <td>{{ row.channelName || '-' }}</td>
+                      <td>{{ row.title || '-' }}</td>
+                      <td>{{ row.status ?? '-' }}</td>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="emptymessage">
+                    <tr><td [attr.colspan]="5" class="text-center text-gray-500">{{ 'Claim::NoData' | translate }}</td></tr>
+                  </ng-template>
+                </p-table>
+              </p-panel>
+            </div>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </div>
+    <div class="col-span-12 bg-white border-t p-3 flex justify-end gap-2 sticky bottom-0 z-10">
+      <p-button
+        *ngIf="canCancelClaim"
+        [label]="'Claim::CancelClaim' | translate"
+        severity="danger"
+        [outlined]="true"
+        (onClick)="openCancelModal()"
+      />
+      <p-button
+        *ngIf="canEditClaim"
+        [label]="'Claim::Edit' | translate"
+        (onClick)="openEditInNewTab()"
+      />
+      <p-button
+        [label]="'Claim::Back' | translate"
+        severity="secondary"
+        (onClick)="goBack()"
+      />
+    </div>
+  }
+</div>
+
+<app-cancel-claim-modal
+  [visible]="cancelModalVisible"
+  [claimId]="claimId!"
+  (visibleChange)="onCancelModalClose($event)"
+  (cancelled)="onCancelSuccess()"
+/>
+
+<app-assign-assessment-modal
+  [visible]="assignModalVisible"
+  (visibleChange)="onAssignModalVisibleChange($event)"
+  [claimId]="claimId!"
+  [currentProcessDeptId]="claim?.processDeptId"
+  [currentProcessEmpId]="claim?.processEmpId"
+/>
+
+<app-create-claim-folder-modal
+  [visible]="createFolderModalVisible"
+  (visibleChange)="onCreateFolderModalVisibleChange($event)"
+  [claimId]="claimId!"
+  (created)="loadFolders()"
+/>
+
+<p-confirmDialog />
+<p-toast />

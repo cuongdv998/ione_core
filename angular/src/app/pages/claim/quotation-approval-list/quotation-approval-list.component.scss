@@ -1,0 +1,43 @@
+:host {
+  display: block;
+}
+
+:host ::ng-deep .p-panel .p-panel-header {
+  color: #1f4b7f;
+  font-weight: 700;
+}
+
+.detail-assessment-page .action-bar :host ::ng-deep .p-button.p-button-orange,
+.detail-assessment-page .action-bar :host ::ng-deep .btn-orange {
+  /* inherits global orange styling if defined */
+}
+
+:host ::ng-deep .action-bar .p-button {
+  min-width: 0;
+}
+
+:host ::ng-deep .quick-search-shell .quick-search-complete {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: stretch;
+  width: 100%;
+}
+
+:host ::ng-deep .quick-search-shell .quick-search-complete .p-autocomplete-input,
+:host ::ng-deep .quick-search-shell .quick-search-complete .p-inputtext {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent;
+}
+
+.pasc-detail-wrap {
+}

@@ -1,0 +1,97 @@
+<div class="p-4 flex flex-col gap-3">
+  <p-panel [header]="'Claim::ClaimFoldersList' | translate" [toggleable]="true">
+    <p-table [value]="folders" [loading]="loadingFolders" styleClass="p-datatable-sm" [rowHover]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>{{ 'Claim::FolderNo' | translate }}</th>
+          <th>{{ 'Claim::FolderName' | translate }}</th>
+          <th>{{ 'Claim::InsurerName' | translate }}</th>
+          <th>{{ 'Claim::PolicyNo' | translate }}</th>
+          <th>{{ 'Claim::Status' | translate }}</th>
+          <th>{{ 'Claim::OpenDate' | translate }}</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td>{{ row.folderNo || '-' }}</td>
+          <td>{{ row.folderName || '-' }}</td>
+          <td>{{ row.insurerName || '-' }}</td>
+          <td>{{ row.policyNo || '-' }}</td>
+          <td>{{ row.status ?? '-' }}</td>
+          <td>{{ formatDate(row.openDate) }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="6" class="text-center text-gray-500">{{ 'Claim::NoData' | translate }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-panel>
+
+  <p-panel [header]="'Claim::StageProgress' | translate" [toggleable]="true">
+    <p-table [value]="stageProgress" [loading]="loadingStageProgress" styleClass="p-datatable-sm"
+      [rowHover]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>{{ 'Claim::STT' | translate }}</th>
+          <th>{{ 'Claim::FolderNo' | translate }}</th>
+          <th>{{ 'Claim::StageName' | translate }}</th>
+          <th>{{ 'Claim::TaskName' | translate }}</th>
+          <th>{{ 'Claim::PerformerName' | translate }}</th>
+          <th>{{ 'Claim::StartDate' | translate }}</th>
+          <th>{{ 'Claim::DueDate' | translate }}</th>
+          <th>{{ 'Claim::SlaText' | translate }}</th>
+          <th>{{ 'Claim::Status' | translate }}</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+        <tr>
+          <td>{{ rowIndex + 1 }}</td>
+          <td>{{ row.folderNo || '-' }}</td>
+          <td>{{ row.stageName || '-' }}</td>
+          <td>{{ row.taskName || '-' }}</td>
+          <td>{{ row.performerName || '-' }}</td>
+          <td>{{ formatDate(row.startDate) }}</td>
+          <td>{{ formatDate(row.dueDate) }}</td>
+          <td>{{ row.slaText || '-' }}</td>
+          <td>{{ row.status ?? row.workTaskStatus ?? '-' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="9" class="text-center text-gray-500">{{ 'Claim::NoData' | translate }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-panel>
+
+  <p-panel [header]="'Claim::SentMessages' | translate" [toggleable]="true">
+    <p-table [value]="sentMessages" [loading]="loadingSentMessages" styleClass="p-datatable-sm"
+      [rowHover]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>{{ 'Claim::SentAt' | translate }}</th>
+          <th>{{ 'Claim::Recipient' | translate }}</th>
+          <th>{{ 'Claim::ChannelName' | translate }}</th>
+          <th>{{ 'Claim::Title' | translate }}</th>
+          <th>{{ 'Claim::Status' | translate }}</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td>{{ formatDate(row.sentAt) }}</td>
+          <td>{{ row.recipient || '-' }}</td>
+          <td>{{ row.channelName || '-' }}</td>
+          <td>{{ row.title || '-' }}</td>
+          <td>{{ row.status ?? '-' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="5" class="text-center text-gray-500">{{ 'Claim::NoData' | translate }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-panel>
+</div>

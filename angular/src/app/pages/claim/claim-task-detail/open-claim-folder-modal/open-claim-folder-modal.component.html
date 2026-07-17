@@ -1,0 +1,140 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="onVisibleChange($event)"
+  [header]="'Claim::OpenFolder' | translate"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="grid grid-cols-12 gap-4 p-2">
+    <!-- Sản phẩm bảo hiểm -->
+    <div class="col-span-12 md:col-span-6">
+      <label for="productId" class="block mb-2 font-medium">
+        {{ 'Claim::Product' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="productId"
+        [(ngModel)]="productId"
+        [options]="productOptions"
+        [placeholder]="'Claim::SelectProduct' | translate"
+        [showClear]="true"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+        (ngModelChange)="onProductSelectionChange()"
+      />
+    </div>
+
+    <!-- Đối tượng bảo hiểm -->
+    <div class="col-span-12 md:col-span-6">
+      <label for="objectIds" class="block mb-2 font-medium">
+        {{ 'Claim::ObjectType' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-multiSelect
+        id="objectIds"
+        [(ngModel)]="selectedObjectIds"
+        [options]="objectTypeOptions"
+        [placeholder]="'Claim::SelectObjectType' | translate"
+        [showClear]="true"
+        [filter]="true"
+        [loading]="loadingObjectTypes"
+        [disabled]="!productId"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      ></p-multiSelect>
+    </div>
+
+    <!-- Ước bồi thường -->
+    <div class="col-span-12 md:col-span-6">
+      <label for="estimateAmount" class="block mb-2 font-medium">
+        {{ 'Claim::EstimateAmount' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-inputNumber
+        id="estimateAmount"
+        [(ngModel)]="estimateAmount"
+        [min]="0"
+        [mode]="'decimal'"
+        [useGrouping]="true"
+        styleClass="w-full"
+      ></p-inputNumber>
+    </div>
+
+    <!-- Thông tin người giám định -->
+    <div class="col-span-12 md:col-span-6">
+      <label for="assessmentDeptId" class="block mb-2 font-medium">
+        {{ 'Claim::AssessmentDepartment' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="assessmentDeptId"
+        [(ngModel)]="assigneeOrganizationId"
+        [options]="departmentOptions"
+        [placeholder]="'Claim::SelectDepartment' | translate"
+        [showClear]="true"
+        [filter]="true"
+        [loading]="loadingDepartments"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+        (onChange)="onDepartmentChange()"
+      />
+    </div>
+
+    <div class="col-span-12 md:col-span-6">
+      <label for="assessmentEmpId" class="block mb-2 font-medium">
+        {{ 'Claim::Assessor' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-select
+        id="assessmentEmpId"
+        [(ngModel)]="assigneeId"
+        [options]="employeeOptions"
+        [placeholder]="'Claim::SelectEmployee' | translate"
+        [showClear]="true"
+        [filter]="true"
+        [loading]="loadingEmployees"
+        [disabled]="!assigneeOrganizationId"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <div class="col-span-12 md:col-span-6">
+      <label for="assessmentStartDate" class="block mb-2 font-medium">
+        {{ 'Claim::AssessmentStartDate' | translate }} <span class="text-red-500">*</span>
+      </label>
+      <p-datepicker
+        id="assessmentStartDate"
+        [(ngModel)]="assessmentStartDate"
+        [showIcon]="true"
+        [showTime]="true"
+        dateFormat="dd/mm/yy"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="'Claim::Cancel' | translate"
+      severity="secondary"
+      (onClick)="confirmClose()"
+      [disabled]="saving"
+    />
+    <p-button
+      [label]="'Claim::Execute' | translate"
+      (onClick)="submit()"
+      [loading]="saving"
+    />
+  </ng-template>
+</p-dialog>
+<p-confirmDialog />
+<p-toast />
+

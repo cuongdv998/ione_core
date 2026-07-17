@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>Volo.Abp.AuditLogging.Installer</AssemblyName>
+    <PackageId>Volo.Abp.AuditLogging.Installer</PackageId>
+    <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+    <RootNamespace />
+    <Version>9.3.6</Version>
+  </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Volo.Abp.VirtualFileSystem" Version="9.3.6" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="..\..\Volo.Abp.AuditLogging.abpmdl" />
+      <Content Include="..\..\Volo.Abp.AuditLogging.abpmdl">
+        <Pack>true</Pack>
+        <PackagePath>content\</PackagePath>
+      </Content>
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,153 @@
+# GitLab CI — Backend (.NET)
+# develop + đúng paths (hoặc web): build → image → push → deploy dev (docker-compose).
+# master: build → image → push (production image; không job deploy).
+
+stages:
+  - build
+  - docker
+  - deploy
+
+variables:
+  DOTNET_VERSION: "9.0.x"
+  SOLUTION_PATH: "iOne.sln"
+  API_PROJECT_PATH: "src/web/iOne.HttpApi.Host/iOne.HttpApi.Host.csproj"
+  DOCKER_IMAGE_API: "ione-api"
+  DOCKER_REGISTRY: "${CI_REGISTRY}"
+  DOCKER_IMAGE_TAG: "${CI_COMMIT_SHORT_SHA}"
+  # Make NuGet cacheable across container builds
+  NUGET_PACKAGES: "${CI_PROJECT_DIR}/.nuget/packages"
+
+# .NET Build Job
+build:dotnet:
+  stage: build
+  image: mcr.microsoft.com/dotnet/sdk:9.0
+  rules:
+    # develop: dev — có thay đổi backend
+    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "push"'
+      changes:
+        - "src/**/*"
+        - "modules/**/*"
+        - "*.sln"
+        - "*.csproj"
+        - "common.props"
+    # master: production — chỉ build/push image (không deploy)
+    - if: '$CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "push"'
+    # web develop/master: chọn BE hoặc ALL
+    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "master") && ($BUILD_TYPE == "BE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
+  script:
+    - echo "Restoring NuGet packages..."
+    - dotnet restore $SOLUTION_PATH --packages "$NUGET_PACKAGES"
+    - echo "Building solution..."
+    - dotnet build $SOLUTION_PATH --configuration Release --no-restore
+    - echo "Publishing API Host..."
+    - dotnet publish $API_PROJECT_PATH --configuration Release --output src/web/iOne.HttpApi.Host/bin/Release/net9.0/publish --no-build
+  artifacts:
+    paths:
+      - src/web/iOne.HttpApi.Host/bin/Release/net9.0/publish/
+    expire_in: 1 hour
+  cache:
+    key:
+      files:
+        - NuGet.Config
+        - common.props
+      prefix: ${CI_COMMIT_REF_SLUG}-nuget
+    policy: pull-push
+    paths:
+      - .nuget/packages/
+
+# Build Docker Image for API
+docker:build:api:
+  stage: docker
+  image: docker:latest
+  services:
+    - name: docker:24-dind
+      command:
+        - "--insecure-registry=217.216.73.213:5000"
+  variables:
+    # Enable Docker layer caching with registry-backed cache image
+    DOCKER_BUILDKIT: "1"
+  rules:
+    # develop: dev
+    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "push"'
+      changes:
+        - "src/**/*"
+        - "modules/**/*"
+        - "*.sln"
+        - "*.csproj"
+        - "common.props"
+    # master: production image
+    - if: '$CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "push"'
+    # web develop/master: build/push image theo branch
+    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "master") && ($BUILD_TYPE == "BE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
+  needs:
+    - job: build:dotnet
+      optional: false
+  before_script:
+    # Biến CI_REGISTRY_USER / CI_REGISTRY_PASSWORD cấu hình trong GitLab CI/CD Variables
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$DOCKER_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+  script:
+    - echo "Building Docker image for API..."
+    - cd src/web/iOne.HttpApi.Host
+    - docker pull $DOCKER_REGISTRY/$DOCKER_IMAGE_API:buildcache || true
+    - docker build --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $DOCKER_REGISTRY/$DOCKER_IMAGE_API:buildcache -t $DOCKER_REGISTRY/$DOCKER_IMAGE_API:$DOCKER_IMAGE_TAG -t $DOCKER_REGISTRY/$DOCKER_IMAGE_API:buildcache .
+    - echo "Pushing Docker image for API..."
+    - docker push $DOCKER_REGISTRY/$DOCKER_IMAGE_API:$DOCKER_IMAGE_TAG
+    - docker push $DOCKER_REGISTRY/$DOCKER_IMAGE_API:buildcache
+
+# Deploy Backend — chỉ dev (develop hoặc web); không chạy trên master
+deploy:be:
+  stage: deploy
+  image: docker:latest
+  services:
+    - name: docker:24-dind
+      command:
+        - "--insecure-registry=217.216.73.213:5000"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "push"'
+      changes:
+        - "src/**/*"
+        - "modules/**/*"
+        - "*.sln"
+        - "*.csproj"
+        - "common.props"
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "develop" && ($BUILD_TYPE == "BE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
+  needs:
+    - job: docker:build:api
+      optional: true
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$DOCKER_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+    - apk add --no-cache docker-compose || true
+  script:
+    - |
+      echo "Deploying backend containers using docker-compose..."
+      
+      echo "Pulling image from registry with git hash tag..."
+      REGISTRY_IMAGE="$DOCKER_REGISTRY/$DOCKER_IMAGE_API:$DOCKER_IMAGE_TAG"
+      LOCAL_IMAGE="$DOCKER_IMAGE_API:$DOCKER_IMAGE_TAG"
+      
+      # Pull image from registry with git hash tag
+      docker pull $REGISTRY_IMAGE || {
+        echo "Error: Failed to pull image from registry!"
+        exit 1
+      }
+      
+      echo "Retagging image from registry to local with git hash tag..."
+      # Retag image from registry to local (using git hash tag, not latest)
+      docker tag $REGISTRY_IMAGE $LOCAL_IMAGE || {
+        echo "Error: Failed to retag image!"
+        exit 1
+      }
+      
+      echo "Setting IMAGE_TAG environment variable to: $DOCKER_IMAGE_TAG"
+      export IMAGE_TAG=$DOCKER_IMAGE_TAG
+      
+      echo "Stopping existing containers..."
+      docker-compose down || true
+      
+      echo "Starting containers with docker-compose (using IMAGE_TAG=$IMAGE_TAG)..."
+      IMAGE_TAG=$DOCKER_IMAGE_TAG docker-compose up -d
+      
+      echo "Backend containers started successfully!"
+      docker-compose ps
+      docker ps
+

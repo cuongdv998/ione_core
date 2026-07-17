@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\..\common.props" />
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>iOne.Report</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\src\common\domain\iOne.Domain\iOne.Domain.csproj" />
+    <ProjectReference Include="..\iOne.Report.Application.Contracts\iOne.Report.Application.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\file\src\iOne.File.Application.Contracts\iOne.File.Application.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.PermissionManagement.Application" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.FeatureManagement.Application" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.SettingManagement.Application" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.UI.Navigation" Version="9.3.6" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="ClosedXML.Report" Version="0.2.12" />
+    <PackageReference Include="Aspose.Words" Version="23.12.0" />
+    <ProjectReference Include="..\..\..\Volo.Abp.Account\src\Volo.Abp.Account.Application\Volo.Abp.Account.Application.csproj" />
+    <ProjectReference Include="..\..\..\Volo.Abp.Identity\src\Volo.Abp.Identity.Application\Volo.Abp.Identity.Application.csproj" />
+    <ProjectReference Include="..\..\..\Volo.Abp.AuditLogging\src\Volo.Abp.AuditLogging.Application\Volo.Abp.AuditLogging.Application.csproj" />
+  </ItemGroup>
+</Project>
+

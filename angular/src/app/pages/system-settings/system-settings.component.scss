@@ -1,0 +1,28 @@
+:host ::ng-deep .system-settings-panel .p-tabpanels {
+  padding-top: 0;
+}
+
+.password-settings-heading {
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--surface-border, var(--p-content-border-color, #e5e7eb));
+}
+
+.password-settings-tab .password-rule-grid label {
+  cursor: pointer;
+  line-height: 1.35;
+}
+
+.password-settings-actions {
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--surface-border, var(--p-content-border-color, #e5e7eb));
+}
+
+.email-test-section {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border, var(--p-content-border-color, #e5e7eb));
+}

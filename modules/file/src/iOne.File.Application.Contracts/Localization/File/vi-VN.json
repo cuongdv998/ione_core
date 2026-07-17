@@ -1,0 +1,16 @@
+{
+  "Culture": "vi-VN",
+  "Texts": {
+    "Menu:File": "Tệp tin",
+    "Permission:Create": "Tạo mới",
+    "Permission:Edit": "Sửa",
+    "Permission:Delete": "Xóa",
+    "Permission:View": "Xem",
+    "Permission:FileModule": "Tệp tin",
+    "Permission:WordToPdf": "Chuyển Word sang PDF",
+    "File:WordToPdf:EmptyFile": "Tệp tải lên rỗng.",
+    "File:WordToPdf:UnsupportedExtension": "Chỉ hỗ trợ tệp .doc và .docx.",
+    "File:WordToPdf:ConversionFailed": "Không thể chuyển tài liệu sang PDF."
+  }
+}
+

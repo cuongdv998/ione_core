@@ -1,0 +1,91 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="onVisibleChange($event)"
+  [header]="'Claim::OpenFolder' | translate"
+  [modal]="true"
+  [style]="{ width: '520px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="close()"
+>
+  <div class="grid grid-cols-12 gap-4 p-2">
+    <div class="col-span-12">
+      <label for="claimTypeId" class="block mb-2 font-medium">{{ 'Claim::ClaimType' | translate }} <span class="text-red-500">*</span></label>
+      <input
+        pInputText
+        id="claimTypeId"
+        [(ngModel)]="claimTypeId"
+        class="w-full"
+      />
+    </div>
+    <div class="col-span-12">
+      <label for="folderName" class="block mb-2 font-medium">{{ 'Claim::FolderName' | translate }}</label>
+      <input
+        pInputText
+        id="folderName"
+        [(ngModel)]="folderName"
+        class="w-full"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-6">
+      <label for="policyNo" class="block mb-2 font-medium">{{ 'Claim::PolicyNo' | translate }}</label>
+      <input pInputText id="policyNo" [(ngModel)]="policyNo" class="w-full" />
+    </div>
+    <div class="col-span-12 md:col-span-6">
+      <label for="insurerPolicyNo" class="block mb-2 font-medium">{{ 'Claim::InsurerPolicyNo' | translate }}</label>
+      <input pInputText id="insurerPolicyNo" [(ngModel)]="insurerPolicyNo" class="w-full" />
+    </div>
+    <div class="col-span-12">
+      <label for="insurerId" class="block mb-2 font-medium">{{ 'Claim::InsurerName' | translate }}</label>
+      <p-select
+        id="insurerId"
+        [(ngModel)]="insurerId"
+        [options]="insurerOptions"
+        [placeholder]="'Claim::SelectInsurer' | translate"
+        [showClear]="true"
+        [loading]="loadingInsurers"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-6">
+      <label for="priority" class="block mb-2 font-medium">{{ 'Claim::Priority' | translate }}</label>
+      <p-select
+        id="priority"
+        [(ngModel)]="priority"
+        [options]="priorityOptions"
+        [placeholder]="'Claim::SelectPriority' | translate"
+        [showClear]="true"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div class="col-span-12 md:col-span-6">
+      <label for="hasAdjustLocation" class="block mb-2 font-medium">{{ 'Claim::HasAdjustLocation' | translate }}</label>
+      <p-select
+        id="hasAdjustLocation"
+        [(ngModel)]="hasAdjustLocation"
+        [options]="[{ label: 'Y', value: 'Y' }, { label: 'N', value: 'N' }]"
+        [placeholder]="'Claim::Select' | translate"
+        [showClear]="true"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div class="col-span-12">
+      <label for="description" class="block mb-2 font-medium">{{ 'Claim::Description' | translate }}</label>
+      <textarea pTextarea id="description" [(ngModel)]="description" class="w-full" [rows]="3"></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button [label]="'Claim::Cancel' | translate" severity="secondary" (onClick)="close()" [disabled]="saving" />
+    <p-button [label]="'Claim::Save' | translate" (onClick)="submit()" [loading]="saving" />
+  </ng-template>
+</p-dialog>
+<p-toast />

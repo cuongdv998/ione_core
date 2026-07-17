@@ -1,0 +1,214 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Tìm theo Car Brand -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="carBrandId" class="block mb-2 font-medium">{{ 'Master::ResCarModel:CarBrand' | translate
+            }}</label>
+          <p-select id="carBrandId" [(ngModel)]="searchForm.carBrandId" [options]="fullCarBrandOptions"
+            [placeholder]="'Master::All' | translate" [showClear]="true" optionLabel="label" optionValue="value"
+            styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Tìm theo Code -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="code" class="block mb-2 font-medium">{{ 'Master::ResCarModel:Code' | translate }}</label>
+          <input pInputText id="code" [(ngModel)]="searchForm.code" class="w-full" />
+        </div>
+
+        <!-- Tìm theo Name -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="name" class="block mb-2 font-medium">{{ 'Master::ResCarModel:Name' | translate }}</label>
+          <input pInputText id="name" [(ngModel)]="searchForm.name" class="w-full" />
+        </div>
+
+        <!-- Filter theo Status -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="status" class="block mb-2 font-medium">{{ 'Master::ResCarModel:Status' | translate }}</label>
+          <p-select id="status" [(ngModel)]="searchForm.status" [options]="statusOptions"
+            [placeholder]="'Master::All' | translate" [showClear]="true" optionLabel="label" optionValue="value"
+            styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button [label]="'AbpAuditLogging::Reset' | translate" icon="pi pi-refresh" severity="secondary"
+            (onClick)="resetSearch()" />
+          <p-button [label]="'AbpAuditLogging::Search' | translate" icon="pi pi-search" (onClick)="search()" />
+          <p-button *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Master::ResCarModel:DownloadTemplate' | translate" icon="pi pi-download" severity="secondary"
+            (onClick)="downloadTemplate()" [loading]="loading" />
+          <p-button *ngIf="PERMISSIONS.CREATE | appPermission" [label]="'Master::ResCarModel:ImportExcel' | translate"
+            icon="pi pi-upload" severity="info" (onClick)="openImportDialog()" />
+          <p-button *ngIf="PERMISSIONS.CREATE | appPermission" [label]="'Master::ResCarModel:New' | translate"
+            icon="pi pi-plus" (onClick)="openCreateDialog()" />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table [columns]="columns" [data]="carModels" [actions]="actions" [totalCount]="totalCount"
+        [loading]="loading" [rows]="pageSize" [rowsPerPageOptions]="[10, 20, 50, 100]" [showGridlines]="true"
+        [stripedRows]="true" [rowHover]="true" size="small" [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadData($event)" />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create/Edit -->
+<p-dialog [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Master::ResCarModel:New' : 'Master::ResCarModel:Edit') | translate"
+  [modal]="true" [style]="{ width: '600px', maxHeight: '90vh' }" [draggable]="false" [resizable]="false"
+  [contentStyle]="{ overflow: 'visible' }">
+  <div class="flex flex-col gap-4 p-4">
+    <!-- Car Brand field -->
+    <div>
+      <label for="formCarBrandId" class="block mb-2 font-medium">
+        {{ 'Master::ResCarModel:CarBrand' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select id="formCarBrandId" [(ngModel)]="formData.carBrandId" [options]="carBrandOptions"
+        [placeholder]="'Master::ResCarModel:CarBrand' | translate" [disabled]="dialogMode === 'edit'"
+        optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+      <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+        {{ 'Master::ResCarModel:CarBrandCannotBeChanged' | translate }}
+      </small>
+    </div>
+
+    <!-- Code field -->
+    <div>
+      <label for="formCode" class="block mb-2 font-medium">
+        {{ 'Master::ResCarModel:Code' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input pInputText id="formCode" [(ngModel)]="formData.code" [readonly]="dialogMode === 'edit'" class="w-full"
+        [class.bg-gray-100]="dialogMode === 'edit'" (input)="onCodeInput($event)" maxlength="50" />
+      <small class="text-gray-500">{{ 'Master::ResCarModel:CodeInvalid' | translate }}</small>
+      <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+        {{ 'Master::ResCarModel:CodeCannotBeChanged' | translate }}
+      </small>
+    </div>
+
+    <!-- Name field -->
+    <div>
+      <label for="formName" class="block mb-2 font-medium">
+        {{ 'Master::ResCarModel:Name' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input pInputText id="formName" [(ngModel)]="formData.name"
+        class="w-full" maxlength="250" />
+    </div>
+
+    <!-- Description field -->
+    <div>
+      <label for="formDescription" class="block mb-2 font-medium">
+        {{ 'Master::ResCarModel:Description' | translate }}
+      </label>
+      <textarea pTextarea id="formDescription" [(ngModel)]="formData.description" class="w-full" [rows]="3"
+        maxlength="500"></textarea>
+    </div>
+
+    <!-- Status field -->
+    <div>
+      <label for="formStatus" class="block mb-2 font-medium">
+        {{ 'Master::ResCarModel:Status' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select id="formStatus" [(ngModel)]="formData.status" [options]="statusOptions"
+        [placeholder]="'Master::ResCarModel:Status' | translate" optionLabel="label" optionValue="value"
+        styleClass="w-full" appendTo="body" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button [label]="'Master::Cancel' | translate" severity="secondary" (onClick)="dialogVisible = false"
+        [disabled]="loading" />
+      <p-button [label]="'Master::Save' | translate" (onClick)="save()" [loading]="loading" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Messages -->
+<p-toast />
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog />
+
+<!-- Import Excel Dialog -->
+<p-dialog [(visible)]="importDialogVisible" [header]="'Master::ResCarModel:ImportExcel' | translate" [modal]="true"
+  [style]="{ width: '700px', maxHeight: '90vh' }" [draggable]="false" [resizable]="false">
+  <div class="flex flex-col gap-4 p-4">
+    <div>
+      <p class="mb-2">{{ 'Master::ResCarModel:ImportExcelInstructions' | translate }}</p>
+      <ul class="list-disc list-inside text-sm text-gray-600 mb-4">
+        <li>{{ 'Master::ResCarModel:ImportExcelInstruction1' | translate }}</li>
+        <li>{{ 'Master::ResCarModel:ImportExcelInstruction2' | translate }}</li>
+        <li>{{ 'Master::ResCarModel:ImportExcelInstruction3' | translate }}</li>
+      </ul>
+    </div>
+
+    <div>
+      <label class="block mb-2 font-medium">{{ 'Master::ResCarModel:SelectExcelFile' | translate }}</label>
+      <p-fileUpload mode="basic" [accept]="'.xlsx,.xls'" [maxFileSize]="10485760" [auto]="false"
+        chooseLabel="{{ 'Master::ResCarModel:ChooseFile' | translate }}" [disabled]="importing"
+        (onSelect)="onFileSelect($event)" styleClass="w-full" />
+    </div>
+
+    <!-- Import Result -->
+    <div *ngIf="importResult" class="mt-4">
+      <p class="font-semibold mb-2">{{ 'Master::ResCarModel:ImportResult' | translate }}</p>
+      <div class="grid grid-cols-3 gap-4 mb-4">
+        <div class="p-3 bg-gray-100 rounded">
+          <div class="text-sm text-gray-600">{{ 'Master::ResCarModel:TotalRows' | translate }}</div>
+          <div class="text-lg font-semibold">{{ importResult.totalRows }}</div>
+        </div>
+        <div class="p-3 bg-green-100 rounded">
+          <div class="text-sm text-green-600">{{ 'Master::ResCarModel:SuccessCount' | translate }}</div>
+          <div class="text-lg font-semibold text-green-700">{{ importResult.successCount }}</div>
+        </div>
+        <div class="p-3 bg-red-100 rounded">
+          <div class="text-sm text-red-600">{{ 'Master::ResCarModel:ErrorCount' | translate }}</div>
+          <div class="text-lg font-semibold text-red-700">{{ importResult.errorCount }}</div>
+        </div>
+      </div>
+
+      <!-- Error Details -->
+      <div *ngIf="importResult.errors && importResult.errors.length > 0" class="mt-4">
+        <p class="font-semibold mb-2 text-red-600">{{ 'Master::ResCarModel:ImportErrors' | translate }}</p>
+        <div class="max-h-60 overflow-y-auto border rounded">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-100 sticky top-0">
+              <tr>
+                <th class="p-2 text-left border">{{ 'Master::ResCarModel:RowNumber' | translate }}</th>
+                <th class="p-2 text-left border">{{ 'Master::ResCarModel:Field' | translate }}</th>
+                <th class="p-2 text-left border">{{ 'Master::ResCarModel:Error' | translate }}</th>
+                <th class="p-2 text-left border">{{ 'Master::ResCarModel:Value' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let error of importResult.errors" class="border-b">
+                <td class="p-2 border">{{ error.rowNumber }}</td>
+                <td class="p-2 border">{{ error.field }}</td>
+                <td class="p-2 border text-red-600">{{ translateErrorMessage(error.message, error) }}</td>
+                <td class="p-2 border">{{ error.value || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button [label]="'Master::Close' | translate" severity="secondary" (onClick)="importDialogVisible = false"
+        [disabled]="importing" />
+    </div>
+  </ng-template>
+</p-dialog>

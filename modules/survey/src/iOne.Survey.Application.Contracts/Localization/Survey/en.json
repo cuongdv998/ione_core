@@ -1,0 +1,11 @@
+{
+  "Culture": "en",
+  "Texts": {
+    "Menu:Survey": "Survey",
+    "Permission:Create": "Create",
+    "Permission:Edit": "Edit",
+    "Permission:Delete": "Delete",
+    "Permission:View": "View"
+  }
+}
+

@@ -1,0 +1,289 @@
+<p-toast />
+
+<p-panel
+  [header]="'iOne::SystemSettings:Title' | translate"
+  class="system-settings-panel mb-4">
+  @if (!permissionService.isGranted(VIEW)) {
+    <p class="text-color-secondary">{{ 'iOne::SystemSettings:NoViewPermission' | translate }}</p>
+  } @else {
+    <p-tabs [(value)]="activeTabIndex" (valueChange)="onTabChange($event)">
+      <p-tablist>
+        <p-tab value="0">{{ 'iOne::SystemSettings:TabAccount' | translate }}</p-tab>
+        <p-tab value="1">{{ 'iOne::SystemSettings:TabPassword' | translate }}</p-tab>
+        <p-tab value="2">{{ 'iOne::SystemSettings:TabEmail' | translate }}</p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="grid grid-cols-12 gap-4 pt-4">
+            <div class="col-span-12 md:col-span-4 flex items-center gap-2">
+              <p-checkbox
+                [binary]="true"
+                [ngModel]="bool(accountValues, IdentitySettingKeys.LockoutAllowedForNewUsers)"
+                (ngModelChange)="setBool(accountValues, IdentitySettingKeys.LockoutAllowedForNewUsers, $event)"
+                inputId="lockAllowed" />
+              <label for="lockAllowed">{{ 'iOne::SystemSettings:LockoutAllowedForNewUsers' | translate }}</label>
+            </div>
+            <div class="col-span-12 md:col-span-4">
+              <label class="block mb-2 font-medium">{{ 'iOne::SystemSettings:LockoutMaxFailedAttempts' | translate }}</label>
+              <p-inputnumber
+                styleClass="w-full"
+                inputStyleClass="w-full"
+                [ngModel]="num(accountValues, IdentitySettingKeys.LockoutMaxFailedAttempts, 5)"
+                (ngModelChange)="setNum(accountValues, IdentitySettingKeys.LockoutMaxFailedAttempts, $event)"
+                [min]="0"
+                [useGrouping]="false" />
+            </div>
+            <div class="col-span-12 md:col-span-4">
+              <label class="block mb-2 font-medium">{{ 'iOne::SystemSettings:LockoutDurationSeconds' | translate }}</label>
+              <p-inputnumber
+                styleClass="w-full"
+                inputStyleClass="w-full"
+                [ngModel]="num(accountValues, IdentitySettingKeys.LockoutDurationSeconds, 300)"
+                (ngModelChange)="setNum(accountValues, IdentitySettingKeys.LockoutDurationSeconds, $event)"
+                [min]="0"
+                [useGrouping]="false" />
+            </div>
+            <div class="col-span-12 flex justify-end gap-2 mt-4">
+              <p-button
+                [label]="'iOne::SystemSettings:Reload' | translate"
+                severity="secondary"
+                [disabled]="loading"
+                (onClick)="loadTab('account')" />
+              <p-button
+                [label]="'iOne::SystemSettings:Save' | translate"
+                [disabled]="!canManage || saving || loading"
+                (onClick)="saveAccount()" />
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <p-tabpanel value="1">
+          <div class="password-settings-tab flex flex-col gap-8 pt-2">
+            <!-- Độ phức tạp: số liệu + quy tắc trong một khối -->
+            <section>
+              <h3 class="password-settings-heading">
+                {{ 'iOne::SystemSettings:PasswordSectionComplexity' | translate }}
+              </h3>
+              <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                  <label class="block mb-2 font-medium">{{ 'iOne::SystemSettings:PasswordRequiredLength' | translate }}</label>
+                  <p-inputnumber
+                    styleClass="w-full"
+                    inputStyleClass="w-full"
+                    [ngModel]="num(passwordValues, IdentitySettingKeys.PasswordRequiredLength, 6)"
+                    (ngModelChange)="setNum(passwordValues, IdentitySettingKeys.PasswordRequiredLength, $event)"
+                    [min]="1"
+                    [useGrouping]="false" />
+                </div>
+                <div class="col-span-12 sm:col-span-6 lg:col-span-4">
+                  <label class="block mb-2 font-medium">{{
+                    'iOne::SystemSettings:PasswordRequiredUniqueChars' | translate
+                  }}</label>
+                  <p-inputnumber
+                    styleClass="w-full"
+                    inputStyleClass="w-full"
+                    [ngModel]="num(passwordValues, IdentitySettingKeys.PasswordRequiredUniqueChars, 1)"
+                    (ngModelChange)="setNum(passwordValues, IdentitySettingKeys.PasswordRequiredUniqueChars, $event)"
+                    [min]="0"
+                    [useGrouping]="false" />
+                </div>
+                <div class="col-span-12">
+                  <p class="text-sm text-color-secondary mb-2">{{ 'iOne::SystemSettings:PasswordRequirementChecks' | translate }}</p>
+                  <div class="password-rule-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 gap-y-2">
+                    <div class="flex items-center gap-2 min-h-[2.25rem]">
+                      <p-checkbox
+                        inputId="reqDigitPw"
+                        [binary]="true"
+                        [ngModel]="bool(passwordValues, IdentitySettingKeys.PasswordRequireDigit)"
+                        (ngModelChange)="setBool(passwordValues, IdentitySettingKeys.PasswordRequireDigit, $event)" />
+                      <label for="reqDigitPw">{{ 'iOne::SystemSettings:PasswordRequireDigit' | translate }}</label>
+                    </div>
+                    <div class="flex items-center gap-2 min-h-[2.25rem]">
+                      <p-checkbox
+                        inputId="reqLowerPw"
+                        [binary]="true"
+                        [ngModel]="bool(passwordValues, IdentitySettingKeys.PasswordRequireLowercase)"
+                        (ngModelChange)="setBool(passwordValues, IdentitySettingKeys.PasswordRequireLowercase, $event)" />
+                      <label for="reqLowerPw">{{ 'iOne::SystemSettings:PasswordRequireLowercase' | translate }}</label>
+                    </div>
+                    <div class="flex items-center gap-2 min-h-[2.25rem]">
+                      <p-checkbox
+                        inputId="reqUpperPw"
+                        [binary]="true"
+                        [ngModel]="bool(passwordValues, IdentitySettingKeys.PasswordRequireUppercase)"
+                        (ngModelChange)="setBool(passwordValues, IdentitySettingKeys.PasswordRequireUppercase, $event)" />
+                      <label for="reqUpperPw">{{ 'iOne::SystemSettings:PasswordRequireUppercase' | translate }}</label>
+                    </div>
+                    <div class="flex items-center gap-2 min-h-[2.25rem]">
+                      <p-checkbox
+                        inputId="reqNonAlphaPw"
+                        [binary]="true"
+                        [ngModel]="bool(passwordValues, IdentitySettingKeys.PasswordRequireNonAlphanumeric)"
+                        (ngModelChange)="setBool(passwordValues, IdentitySettingKeys.PasswordRequireNonAlphanumeric, $event)" />
+                      <label for="reqNonAlphaPw">{{ 'iOne::SystemSettings:PasswordRequireNonAlphanumeric' | translate }}</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Đổi mật định kỳ: một hàng trên desktop -->
+            <section>
+              <h3 class="password-settings-heading">
+                {{ 'iOne::SystemSettings:PasswordSectionRotation' | translate }}
+              </h3>
+              <div class="grid grid-cols-12 gap-4 items-end">
+                <div class="col-span-12 lg:col-span-7 flex items-center gap-2">
+                  <p-checkbox
+                    inputId="forcePw"
+                    [binary]="true"
+                    [ngModel]="bool(passwordValues, IdentitySettingKeys.PasswordForcePeriodicallyChange)"
+                    (ngModelChange)="setBool(passwordValues, IdentitySettingKeys.PasswordForcePeriodicallyChange, $event)" />
+                  <label for="forcePw">{{ 'iOne::SystemSettings:PasswordForceChange' | translate }}</label>
+                </div>
+                <div class="col-span-12 lg:col-span-5 max-w-xs">
+                  <label class="block mb-2 font-medium">{{ 'iOne::SystemSettings:PasswordChangePeriodDays' | translate }}</label>
+                  <p-inputnumber
+                    styleClass="w-full"
+                    inputStyleClass="w-full"
+                    [ngModel]="num(passwordValues, IdentitySettingKeys.PasswordChangePeriodDays, 0)"
+                    (ngModelChange)="setNum(passwordValues, IdentitySettingKeys.PasswordChangePeriodDays, $event)"
+                    [min]="0"
+                    [useGrouping]="false" />
+                </div>
+              </div>
+            </section>
+
+            <div class="password-settings-actions flex justify-end gap-2 pt-3">
+              <p-button
+                [label]="'iOne::SystemSettings:Reload' | translate"
+                severity="secondary"
+                [disabled]="loading"
+                (onClick)="loadTab('password')" />
+              <p-button
+                [label]="'iOne::SystemSettings:Save' | translate"
+                [disabled]="!canManage || saving || loading"
+                (onClick)="savePassword()" />
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <p-tabpanel value="2">
+          <div class="grid grid-cols-12 gap-4 pt-4">
+            <div class="col-span-12 md:col-span-6">
+              <label class="block mb-2 font-medium">{{ 'iOne::SystemSettings:MailDefaultFromAddress' | translate }}</label>
+              <input
+                pInputText
+                class="w-full"
+                [ngModel]="text(emailValues, EmailSettingKeys.DefaultFromAddress)"
+                (ngModelChange)="setText(emailValues, EmailSettingKeys.DefaultFromAddress, $event)" />
+            </div>
+            <div class="col-span-12 md:col-span-6">
+              <label class="block mb-2 font-medium">{{
+                'iOne::SystemSettings:MailDefaultFromDisplayName' | translate
+              }}</label>
+              <input
+                pInputText
+                class="w-full"
+                [ngModel]="text(emailValues, EmailSettingKeys.DefaultFromDisplayName)"
+                (ngModelChange)="setText(emailValues, EmailSettingKeys.DefaultFromDisplayName, $event)" />
+            </div>
+            <div class="col-span-12 md:col-span-6">
+              <label class="block mb-2 font-medium">{{ 'iOne::SystemSettings:SmtpHost' | translate }}</label>
+              <input
+                pInputText
+                class="w-full"
+                [ngModel]="text(emailValues, EmailSettingKeys.SmtpHost)"
+                (ngModelChange)="setText(emailValues, EmailSettingKeys.SmtpHost, $event)" />
+            </div>
+            <div class="col-span-12 md:col-span-3">
+              <label class="block mb-2 font-medium">{{ 'iOne::SystemSettings:SmtpPort' | translate }}</label>
+              <p-inputnumber
+                styleClass="w-full"
+                inputStyleClass="w-full"
+                [ngModel]="num(emailValues, EmailSettingKeys.SmtpPort, 587)"
+                (ngModelChange)="setNum(emailValues, EmailSettingKeys.SmtpPort, $event)"
+                [min]="0"
+                [max]="65535"
+                [useGrouping]="false" />
+            </div>
+            <div class="col-span-12 md:col-span-3">
+              <label class="block mb-2 font-medium">{{ 'iOne::SystemSettings:SmtpUserName' | translate }}</label>
+              <input
+                pInputText
+                class="w-full"
+                [ngModel]="text(emailValues, EmailSettingKeys.SmtpUserName)"
+                (ngModelChange)="setText(emailValues, EmailSettingKeys.SmtpUserName, $event)" />
+            </div>
+            <div class="col-span-12 md:col-span-6">
+              <label class="block mb-2 font-medium">{{ 'iOne::SystemSettings:SmtpPassword' | translate }}</label>
+              <p-password
+                [(ngModel)]="smtpPasswordInput"
+                [feedback]="false"
+                [toggleMask]="true"
+                styleClass="w-full"
+                inputStyleClass="w-full" />
+              <small class="text-color-secondary block mt-1">{{
+                'iOne::SystemSettings:SmtpPasswordHint' | translate
+              }}</small>
+            </div>
+            <div class="col-span-12 md:col-span-6 flex items-center gap-2">
+              <p-checkbox
+                [binary]="true"
+                [ngModel]="bool(emailValues, EmailSettingKeys.SmtpEnableSsl)"
+                (ngModelChange)="setBool(emailValues, EmailSettingKeys.SmtpEnableSsl, $event)"
+                [inputId]="'smtpSsl'" />
+              <label for="smtpSsl">{{ 'iOne::SystemSettings:SmtpEnableSsl' | translate }}</label>
+            </div>
+            <div class="col-span-12 md:col-span-6 flex items-center gap-2">
+              <p-checkbox
+                [binary]="true"
+                [ngModel]="bool(emailValues, EmailSettingKeys.SmtpUseDefaultCredentials)"
+                (ngModelChange)="setBool(emailValues, EmailSettingKeys.SmtpUseDefaultCredentials, $event)"
+                [inputId]="'smtpDefCred'" />
+              <label for="smtpDefCred">{{ 'iOne::SystemSettings:SmtpUseDefaultCredentials' | translate }}</label>
+            </div>
+
+            <section class="col-span-12 email-test-section">
+              <h3 class="password-settings-heading">{{ 'iOne::SystemSettings:TestEmailSection' | translate }}</h3>
+              <p class="text-sm text-color-secondary mb-3">{{ 'iOne::SystemSettings:TestEmailHint' | translate }}</p>
+              <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
+                <div class="flex-1 min-w-0">
+                  <label class="block mb-2 font-medium" for="testEmailTo">{{
+                    'iOne::SystemSettings:TestEmailToLabel' | translate
+                  }}</label>
+                  <input
+                    id="testEmailTo"
+                    pInputText
+                    type="email"
+                    class="w-full"
+                    autocomplete="off"
+                    [(ngModel)]="testEmailTo"
+                    [disabled]="!canManage" />
+                </div>
+                <p-button
+                  [label]="'iOne::SystemSettings:SendTestEmail' | translate"
+                  icon="pi pi-send"
+                  [loading]="sendingTestEmail"
+                  [disabled]="!canManage || sendingTestEmail || saving || loading"
+                  (onClick)="sendTestEmail()" />
+              </div>
+            </section>
+
+            <div class="col-span-12 flex justify-end gap-2 mt-4">
+              <p-button
+                [label]="'iOne::SystemSettings:Reload' | translate"
+                severity="secondary"
+                [disabled]="loading"
+                (onClick)="loadTab('email')" />
+              <p-button
+                [label]="'iOne::SystemSettings:Save' | translate"
+                [disabled]="!canManage || saving || loading"
+                (onClick)="saveEmail()" />
+            </div>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  }
+</p-panel>

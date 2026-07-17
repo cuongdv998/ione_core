@@ -1,0 +1,211 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Khối: Doanh thu bảo hiểm -->
+  <div class="col-span-12">
+    <p-panel header="Tổng quan doanh thu bảo hiểm">
+      <div class="grid grid-cols-12 gap-4">
+        <div *ngFor="let card of insuranceSummaryCards" class="col-span-12 sm:col-span-6 xl:col-span-3">
+          <div
+            class="rounded-xl border border-surface-200 bg-surface-0 px-4 py-3 shadow-sm dark:border-surface-700 dark:bg-surface-900">
+            <div class="text-sm font-medium text-surface-500 mb-2">
+              {{ card.title }}
+            </div>
+            <div class="flex items-baseline justify-between gap-2">
+              <div class="text-2xl font-semibold text-blue-600 dark:text-blue-400">
+                {{ card.value }}
+              </div>
+              <div *ngIf="card.trend" class="flex items-center gap-1 text-xs" [ngClass]="{
+                  'text-emerald-600': card.trend === 'up',
+                  'text-rose-600': card.trend === 'down',
+                  'text-surface-500': card.trend === 'flat'
+                }">
+                <i class="pi" [ngClass]="{
+                    'pi-arrow-up': card.trend === 'up',
+                    'pi-arrow-down': card.trend === 'down',
+                    'pi-minus': card.trend === 'flat'
+                  }"></i>
+                <span>{{ card.subTitle }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Khối: Bồi thường -->
+  <div class="col-span-12 xl:col-span-6">
+    <p-panel header="Tổng quan bồi thường">
+      <div class="h-72 flex flex-col gap-2">
+        <div *ngFor="let card of claimSummaryCards"
+          class="flex items-center justify-between rounded-lg border border-surface-200 bg-surface-0 px-4 py-2 shadow-sm dark:border-surface-700 dark:bg-surface-900">
+          <div class="flex flex-col">
+            <div class="text-xs font-medium text-surface-500">
+              {{ card.title }}
+            </div>
+            <div class="text-lg font-semibold text-blue-600 dark:text-blue-400">
+              {{ card.value }}
+            </div>
+          </div>
+          <div *ngIf="card.trend" class="flex items-center gap-1 text-[10px]" [ngClass]="{
+              'text-emerald-600': card.trend === 'up',
+              'text-rose-600': card.trend === 'down',
+              'text-surface-500': card.trend === 'flat'
+            }">
+            <i class="pi" [ngClass]="{
+                'pi-arrow-up': card.trend === 'up',
+                'pi-arrow-down': card.trend === 'down',
+                'pi-minus': card.trend === 'flat'
+              }"></i>
+            <span>{{ card.subTitle }}</span>
+          </div>
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Biểu đồ: Xu hướng yêu cầu bồi thường -->
+  <div class="col-span-12 xl:col-span-6">
+    <p-panel header="Xu hướng yêu cầu bồi thường theo tuần">
+      <div class="h-72">
+        <p-chart type="line" [data]="claimLineData" [options]="claimLineOptions" height="100%"></p-chart>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Biểu đồ: Doanh thu phí theo tháng (dòng 3 - bên trái) -->
+  <div class="col-span-12 xl:col-span-6">
+    <p-panel header="Biểu đồ doanh thu phí theo tháng">
+      <div class="h-72">
+        <p-chart type="bar" [data]="premiumBarData" [options]="premiumBarOptions" height="100%"></p-chart>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Khối: Công việc cần thực hiện -->
+  <div class="col-span-12 xl:col-span-6">
+    <p-panel header="Công việc cần thực hiện">
+      <div class="h-72 overflow-y-auto flex flex-col gap-3">
+        <div *ngFor="let task of pendingTasks"
+          (click)="onTaskRowClick(task)"
+          [class.cursor-pointer]="task.routerLink"
+          class="flex items-start justify-between gap-3 rounded-lg border border-surface-200 bg-surface-0 px-4 py-3 hover:border-primary-400 dark:border-surface-700 dark:bg-surface-900">
+          <div class="flex flex-col gap-1">
+            <div class="text-sm font-medium text-surface-900 dark:text-surface-0">
+              {{ task.title }}
+            </div>
+            <div class="text-xs text-surface-500">
+              {{ task.module }} · {{ task.dueDate }}
+            </div>
+          </div>
+          <div class="inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium"
+            [ngClass]="getTaskStatusClass(task.status)">
+            <ng-container [ngSwitch]="task.status">
+              <span *ngSwitchCase="'pending'">
+                Chờ thực hiện
+              </span>
+              <span *ngSwitchCase="'in_progress'">
+                Đang thực hiện
+              </span>
+              <span *ngSwitchCase="'done'">
+                Đã hoàn thành
+              </span>
+              <span *ngSwitchDefault>
+                Không xác định
+              </span>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Khối: Đơn bảo hiểm mới -->
+  <div class="col-span-12 xl:col-span-6">
+    <p-panel header="Đơn bảo hiểm mới">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-surface-200 dark:divide-surface-700 text-sm">
+          <thead class="bg-surface-50 dark:bg-surface-900/40">
+            <tr>
+              <th class="px-3 py-2 text-left font-semibold text-surface-500">
+                Số đơn / HĐ
+              </th>
+              <th class="px-3 py-2 text-left font-semibold text-surface-500">
+                Khách hàng
+              </th>
+              <th class="px-3 py-2 text-left font-semibold text-surface-500">
+                Thời gian tạo
+              </th>
+              <th class="px-3 py-2 text-left font-semibold text-surface-500">
+                Trạng thái
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-surface-200 dark:divide-surface-800">
+            <tr *ngFor="let policy of newPolicies" class="hover:bg-surface-50 dark:hover:bg-surface-900/60">
+              <td class="px-3 py-2 font-medium text-surface-900 dark:text-surface-0">
+                {{ policy.policyNo }}
+              </td>
+              <td class="px-3 py-2 text-surface-700 dark:text-surface-200">
+                {{ policy.customerName }}
+              </td>
+              <td class="px-3 py-2 text-surface-500">
+                {{ policy.createdAt }}
+              </td>
+              <td class="px-3 py-2">
+                <span
+                  class="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-200">
+                  {{ policy.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Khối: Yêu cầu bồi thường mới -->
+  <div class="col-span-12 xl:col-span-6">
+    <p-panel header="Yêu cầu bồi thường mới">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-surface-200 dark:divide-surface-700 text-sm">
+          <thead class="bg-surface-50 dark:bg-surface-900/40">
+            <tr>
+              <th class="px-3 py-2 text-left font-semibold text-surface-500">
+                Số hồ sơ bồi thường
+              </th>
+              <th class="px-3 py-2 text-left font-semibold text-surface-500">
+                Khách hàng
+              </th>
+              <th class="px-3 py-2 text-left font-semibold text-surface-500">
+                Thời gian tạo
+              </th>
+              <th class="px-3 py-2 text-left font-semibold text-surface-500">
+                Trạng thái
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-surface-200 dark:divide-surface-800">
+            <tr *ngFor="let claim of newClaims" class="hover:bg-surface-50 dark:hover:bg-surface-900/60">
+              <td class="px-3 py-2 font-medium text-surface-900 dark:text-surface-0">
+                {{ claim.claimNo }}
+              </td>
+              <td class="px-3 py-2 text-surface-700 dark:text-surface-200">
+                {{ claim.customerName }}
+              </td>
+              <td class="px-3 py-2 text-surface-500">
+                {{ claim.createdAt }}
+              </td>
+              <td class="px-3 py-2">
+                <span
+                  class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">
+                  {{ claim.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </p-panel>
+  </div>
+</div>

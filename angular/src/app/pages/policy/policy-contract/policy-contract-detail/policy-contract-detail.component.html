@@ -1,0 +1,369 @@
+<div class="flex flex-col gap-4">
+  <!-- Thông tin hợp đồng -->
+  <div class="flex-1" *ngIf="!loadingContract">
+    <p-panel [header]="'Policy::Policy:ContractInformation' | translate">
+      <div class="grid grid-cols-12 gap-4 p-4">
+        <!-- Row 1 -->
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:PrimaryInsurancePartner' | translate }}</label>
+          <input
+            pInputText
+            [value]="getInsurerLabel(formData.insurerId)"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:ContractName' | translate }}</label>
+          <input
+            pInputText
+            [value]="formData.name"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:EffectiveDate' | translate }}</label>
+          <input
+            pInputText
+            [value]="formatDateDisplay(formData.effectDate)"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:ContractStatus' | translate }}</label>
+          <input
+            pInputText
+            [value]="formatStatus(formData.status)"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+
+        <!-- Row 2 -->
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:ChooseContractFile' | translate }}</label>
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+              <p-button
+                [label]="'Policy::Policy:ChooseContractFile' | translate"
+                icon="pi pi-upload"
+                severity="secondary"
+                (onClick)="contractFileInput.click()"
+              />
+              <p-button
+                *ngIf="uploadedContractFile"
+                [label]="'Policy::Save' | translate"
+                icon="pi pi-save"
+                (onClick)="saveContractFile()"
+                [loading]="savingFile"
+              />
+            </div>
+            <input
+              #contractFileInput
+              type="file"
+              class="hidden"
+              accept=".pdf,.doc,.docx,.xlsx,.xls"
+              (change)="onContractFileSelect($event)"
+            />
+            <div *ngIf="contractFileName" class="mt-1 flex flex-col gap-1">
+              <div class="flex items-center gap-2">
+                <small class="text-gray-600 flex-1">
+                  {{ contractDocumentUrl ? ('Policy::Policy:UploadedFile' | translate) : ('Policy::Policy:SelectedFile' | translate) }}:
+                  {{ contractFileName }}
+                </small>
+                <p-button
+                  icon="pi pi-times"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="secondary"
+                  [pTooltip]="'Policy::PolicyContract:RemoveFile' | translate"
+                  (onClick)="removeContractFile()"
+                />
+              </div>
+              <a
+                *ngIf="contractDocumentUrl"
+                [href]="contractDocumentUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-sm text-primary-600 hover:underline"
+              >
+                <i class="pi pi-external-link mr-1"></i>{{ 'Policy::Policy:ViewFile' | translate }}
+              </a>
+            </div>
+            <span *ngIf="!contractFileName && !uploadedContractFile" class="text-gray-500">-</span>
+          </div>
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:SystemContractNo' | translate }}</label>
+          <input
+            pInputText
+            [value]="formData.code"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:ContractType' | translate }}</label>
+          <input
+            pInputText
+            [value]="formatType(formData.type)"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:ExpireDate' | translate }}</label>
+          <input
+            pInputText
+            [value]="formatDateDisplay(formData.expireDate)"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+
+        <!-- Row 3 -->
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:Seller' | translate }}</label>
+          <input
+            pInputText
+            [value]="getEmployeeLabel(formData.employeeId)"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3 flex items-end pb-2">
+          <div class="flex items-center gap-2">
+            <p-checkbox
+              [ngModel]="formData.isReciveInvoice"
+              [binary]="true"
+              [disabled]="true"
+            />
+            <label>{{ 'Policy::Policy:IsReceiveInvoice' | translate }}</label>
+          </div>
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:InsurerContractCode' | translate }}</label>
+          <input
+            pInputText
+            [value]="formData.insurerContractCode"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:Customer' | translate }}</label>
+          <input
+            pInputText
+            [value]="getCustomerLabel(formData.customerId)"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+
+        <!-- Row 4 -->
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:LineOfBusiness' | translate }}</label>
+          <input
+            pInputText
+            [value]="getLobLabel(formData.lobId)"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:Payer' | translate }}</label>
+          <input
+            pInputText
+            [value]="formData.payerName"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:Quantity' | translate }}</label>
+          <input
+            pInputText
+            [value]="formData.quantity"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:CurrentQuantity' | translate }}</label>
+          <input
+            pInputText
+            [value]="formData.currentQuantity"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+          />
+        </div>
+
+        <!-- Row 5: Mô tả -->
+        <div class="col-span-12">
+          <label class="block mb-2 font-medium">{{ 'Policy::Policy:Description' | translate }}</label>
+          <textarea
+            pTextarea
+            [value]="formData.description"
+            readonly
+            [disabled]="true"
+            class="w-full bg-gray-100"
+            [rows]="3"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="flex justify-end gap-2 p-4 border-t">
+        <p-button
+          [label]="'Policy::Policy:Close' | translate"
+          severity="secondary"
+          (onClick)="close()"
+        />
+        <p-button
+          [label]="'Policy::PolicyContract:CancelContract' | translate"
+          severity="secondary"
+          icon="pi pi-times"
+          (onClick)="cancelContract()"
+          *ngIf="formData.status !== PolicyContractStatus.Cancelled"
+        />
+        <p-button
+          [label]="'Policy::Policy:TerminateContract' | translate"
+          severity="secondary"
+          icon="pi pi-stop"
+          (onClick)="terminateContract()"
+          *ngIf="formData.status === PolicyContractStatus.Active"
+        />
+        <p-button
+          [label]="'Policy::Policy:EditContract' | translate"
+          icon="pi pi-pencil"
+          (onClick)="editContract()"
+          *ngIf="formData.status !== PolicyContractStatus.Cancelled"
+        />
+      </div>
+    </p-panel>
+  </div>
+
+  <div *ngIf="loadingContract" class="flex items-center justify-center p-8">
+    <i class="pi pi-spin pi-spinner text-4xl text-gray-400"></i>
+  </div>
+
+  <!-- Danh sách đơn bảo hiểm -->
+  <div *ngIf="!loadingContract && contractId" class="flex-1">
+    <p-panel [header]="'Policy::Policy:PolicyList' | translate">
+      <div class="flex flex-col gap-4">
+        <div class="flex gap-2">
+          <p-button
+            [label]="'Policy::Policy:IssuePolicy' | translate"
+            icon="pi pi-plus"
+            (onClick)="issuePolicy()"
+          />
+          <p-button
+            [label]="'Policy::Policy:ImportPolicy' | translate"
+            icon="pi pi-upload"
+            (onClick)="importPolicy()"
+          />
+        </div>
+
+        <p-table
+          [value]="policies"
+          [lazy]="true"
+          [paginator]="true"
+          [rows]="policyPageSize"
+          [rowsPerPageOptions]="[10, 20, 50, 100]"
+          [totalRecords]="totalPolicyCount"
+          [loading]="loadingPolicies"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="{{ 'Policy::Policy:ShowingRecords' | translate }}"
+          (onLazyLoad)="loadPolicies($event)"
+          [scrollable]="true"
+          scrollHeight="400px"
+          styleClass="p-datatable-sm p-datatable-gridlines"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 50px">{{ 'Policy::Policy:No' | translate }}</th>
+              <th style="min-width: 100px">{{ 'Policy::Policy:ContractNo' | translate }}</th>
+              <th style="min-width: 100px">{{ 'Policy::Policy:PolicyNo' | translate }}</th>
+              <th style="min-width: 100px">{{ 'Policy::Policy:CertificateNo' | translate }}</th>
+              <th style="min-width: 150px">{{ 'Policy::Policy:ProductName' | translate }}</th>
+              <th style="min-width: 100px">{{ 'Policy::Policy:RootInsuranceName' | translate }}</th>
+              <th style="min-width: 150px">{{ 'Policy::Policy:CustomerName' | translate }}</th>
+              <th style="min-width: 110px">{{ 'Policy::Policy:OrgEffectDate' | translate }}</th>
+              <th style="min-width: 110px">{{ 'Policy::Policy:OrgExpireDate' | translate }}</th>
+              <th style="min-width: 100px">{{ 'Policy::Policy:VehiclePlate' | translate }}</th>
+              <th style="min-width: 120px">{{ 'Policy::Policy:ChassisEngine' | translate }}</th>
+              <th style="min-width: 120px">{{ 'Policy::Policy:PremiumTotal' | translate }}</th>
+              <th style="min-width: 120px">{{ 'Policy::Policy:ChannelName' | translate }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-policy let-rowIndex="rowIndex">
+            <tr
+              class="cursor-pointer hover:bg-gray-50"
+              (click)="viewPolicy(policy)"
+            >
+              <td>{{ policyFirst + rowIndex + 1 }}</td>
+              <td>{{ policy.contractNo || '-' }}</td>
+              <td>{{ policy.policyNo || '-' }}</td>
+              <td>{{ policy.certificateNo || '-' }}</td>
+              <td>{{ policy.productName || '-' }}</td>
+              <td>{{ policy.rootInsuranceName || '-' }}</td>
+              <td>{{ policy.customerName || '-' }}</td>
+              <td>{{ formatDateDisplay(policy.orgEffectDate) }}</td>
+              <td>{{ formatDateDisplay(policy.orgExpireDate) }}</td>
+              <td>{{ policy.vehiclePlate || '-' }}</td>
+              <td>{{ getChassisEngine(policy) }}</td>
+              <td class="text-right">{{ formatNumber(policy.premiumTotal) }}</td>
+              <td>{{ policy.channelName || '-' }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td [attr.colspan]="13" class="text-center py-8 text-gray-500">
+                {{ 'Policy::Policy:NoPolicies' | translate }}
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="footer">
+            <tr class="font-semibold bg-gray-50">
+              <td [attr.colspan]="11" class="text-right">{{ 'Policy::Policy:Total' | translate }}:</td>
+              <td class="text-right">{{ formatNumber(totalPremiumSum) }}</td>
+              <td></td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-panel>
+  </div>
+</div>
+
+<app-contract-termination-modal
+  [contractId]="contractId"
+  [(visible)]="terminateModalVisible"
+  (submitted)="onTerminateSubmitted()"
+/>
+
+<app-import-policy-modal
+  #importPolicyModal
+  [fromPolicyList]="false"
+  [primaryInsurancePartnerOptions]="insurerOptions"
+  (imported)="onImportPolicyDone()"
+/>
+
+<p-toast />
+<p-confirmDialog />

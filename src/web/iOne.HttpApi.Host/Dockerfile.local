@@ -1,0 +1,62 @@
+FROM mcr.microsoft.com/dotnet/aspnet:9.0  AS base
+USER root
+
+# python3: computeScript; fontconfig + fonts: Spire.Doc Word→PDF on Linux
+# Times New Roman → Tinos / Liberation Serif (not bundled on Linux).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        python3 \
+        libgdiplus \
+        libreoffice-writer \
+        fontconfig \
+        fonts-dejavu-core \
+        fonts-freefont-ttf \
+        fonts-liberation \
+        fonts-noto-core \
+        fonts-noto-extra \
+        fonts-croscore \
+        fonts-crosextra-carlito \
+        fonts-crosextra-caladea \
+    && printf '%s\n' \
+        '<?xml version="1.0"?>' \
+        '<!DOCTYPE fontconfig SYSTEM "fonts.dtd">' \
+        '<fontconfig>' \
+        '  <alias binding="same">' \
+        '    <family>Times New Roman</family>' \
+        '    <prefer>' \
+        '      <family>Tinos</family>' \
+        '      <family>Liberation Serif</family>' \
+        '      <family>Noto Serif</family>' \
+        '    </prefer>' \
+        '  </alias>' \
+        '  <alias binding="same">' \
+        '    <family>Times</family>' \
+        '    <prefer>' \
+        '      <family>Tinos</family>' \
+        '      <family>Liberation Serif</family>' \
+        '    </prefer>' \
+        '  </alias>' \
+        '</fontconfig>' \
+        > /etc/fonts/conf.d/69-ione-times-new-roman.conf \
+    && fc-cache -f \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV IONE_PYTHON=/usr/bin/python3
+
+USER $APP_UID
+EXPOSE 8080
+EXPOSE 8081
+
+COPY bin/Release/net9.0/publish/ app/
+WORKDIR /app
+
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+RUN dotnet dev-certs https -v -ep openiddict.pfx -p f4e2aebe-2402-411d-855e-c3314c44dea2
+RUN chmod 644 openiddict.pfx
+
+FROM base AS final
+WORKDIR /app
+COPY --from=build /src .
+
+ENTRYPOINT ["dotnet", "iOne.HttpApi.Host.dll"]

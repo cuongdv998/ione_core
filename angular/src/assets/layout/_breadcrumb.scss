@@ -1,0 +1,97 @@
+.layout-breadcrumb {
+    position: fixed !important;
+    top: 4rem !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 995 !important;
+    background: var(--surface-ground) !important;
+    background-color: #ffffff !important;
+    border-bottom: 1px solid var(--surface-border) !important;
+    padding: 0.75rem 2rem !important;
+    transition: margin-left var(--layout-section-transition-duration) !important;
+    min-height: 3rem !important;
+    height: 3rem !important;
+    display: flex !important;
+    align-items: center !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    
+    .app-dark & {
+        background-color: #1e1e1e !important;
+    }
+
+    .breadcrumb-content {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .breadcrumb-home {
+        text-decoration: none;
+        color: var(--text-color-secondary);
+        display: flex;
+        align-items: center;
+        transition: color 0.2s;
+        font-size: 1rem;
+
+        &:hover {
+            color: var(--primary-color);
+        }
+
+        i {
+            font-size: 1rem;
+        }
+    }
+
+    .breadcrumb-separator {
+        color: var(--text-color-secondary);
+        margin: 0 0.25rem;
+        font-size: 0.875rem;
+    }
+
+    .breadcrumb-link {
+        text-decoration: none;
+        color: var(--text-color-secondary);
+        font-size: 0.875rem;
+        transition: color 0.2s;
+
+        &:hover {
+            color: var(--primary-color);
+        }
+    }
+
+    .breadcrumb-current {
+        color: var(--text-color);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+}
+
+.layout-wrapper {
+    &.layout-static {
+        .layout-breadcrumb {
+            margin-left: 22rem;
+        }
+
+        &.layout-static-inactive {
+            .layout-breadcrumb {
+                margin-left: 0;
+            }
+        }
+    }
+
+    &.layout-overlay {
+        .layout-breadcrumb {
+            margin-left: 0;
+        }
+    }
+}
+
+@media (max-width: 991px) {
+    .layout-breadcrumb {
+        margin-left: 0 !important;
+    }
+}
+

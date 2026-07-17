@@ -1,0 +1,608 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Tìm theo Code -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="code" class="block mb-2 font-medium">{{ 'Hr::HrEmployee:Code' | translate }}</label>
+          <input
+            pInputText
+            id="code"
+            [(ngModel)]="searchForm.code"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Tìm theo FullName -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="fullName" class="block mb-2 font-medium">{{ 'Hr::HrEmployee:FullName' | translate }}</label>
+          <input
+            pInputText
+            id="fullName"
+            [(ngModel)]="searchForm.fullName"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Filter theo Status -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="status" class="block mb-2 font-medium">{{ 'Hr::HrEmployee:Status' | translate }}</label>
+          <p-select
+            id="status"
+            [(ngModel)]="searchForm.status"
+            [options]="statusOptions"
+            [placeholder]="'Hr::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button
+            [label]="'AbpAuditLogging::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button
+            [label]="'AbpAuditLogging::Search' | translate"
+            icon="pi pi-search"
+            (onClick)="search()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Hr::HrEmployee:New' | translate"
+            icon="pi pi-plus"
+            (onClick)="openCreateDialog()"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu: Tree bên trái, Table bên phải với resizable splitter -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <p-splitter 
+        [style]="{ height: 'calc(105vh - 400px)' }" 
+        [panelSizes]="[30, 70]" 
+        [minSizes]="[20, 30]" 
+        layout="horizontal"
+        styleClass="w-full"
+      >
+        <!-- Tree bên trái -->
+        <ng-template pTemplate>
+          <div class="h-full flex flex-col p-2">
+            <p-panel [header]="'Hr::HrDepartment:TreeView' | translate" [toggleable]="false" styleClass="h-full flex flex-col">
+              <p-tree
+                [value]="treeNodes"
+                [selectionMode]="'single'"
+                [(selection)]="selectedTreeNode"
+                (onNodeSelect)="onTreeNodeSelect($event)"
+                (onNodeUnselect)="onTreeNodeUnselect()"
+                [loading]="treeLoading"
+                [scrollHeight]="'calc(100vh - 460px)'"
+                styleClass="w-full h-full"
+              >
+                <ng-template let-node pTemplate="default">
+                  <div class="flex items-center gap-2">
+                    <i class="pi pi-sitemap text-blue-500"></i>
+                    <span class="font-medium">{{ node.label }}</span>
+                  </div>
+                </ng-template>
+              </p-tree>
+            </p-panel>
+          </div>
+        </ng-template>
+
+        <!-- Table bên phải -->
+        <ng-template pTemplate>
+          <div class="h-full p-2">
+            <app-v-table
+              [columns]="columns"
+              [data]="employees"
+              [actions]="actions"
+              [totalCount]="totalCount"
+              [loading]="loading"
+              [rows]="pageSize"
+              [rowsPerPageOptions]="[10, 20, 50, 100]"
+              [showGridlines]="true"
+              [stripedRows]="true"
+              [rowHover]="true"
+              size="small"
+              [scrollHeight]="'calc(100vh - 450px)'"
+              (lazyLoad)="loadData($event)"
+            />
+          </div>
+        </ng-template>
+      </p-splitter>
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create/Edit Employee -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Hr::HrEmployee:New' : 'Hr::HrEmployee:Edit') | translate"
+  [modal]="true"
+  [style]="{ width: '1000px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflow: 'hidden', padding: '0' }"
+>
+  <div class="flex flex-col gap-4 p-4" style="max-height: calc(90vh - 140px); overflow-y: auto; overflow-x: hidden;">
+    <div class="grid grid-cols-12 gap-4">
+      <!-- Code field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formCode" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:Code' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input
+          pInputText
+          id="formCode"
+          [(ngModel)]="formData.code"
+          [readonly]="dialogMode === 'edit'"
+          class="w-full"
+          [class.bg-gray-100]="dialogMode === 'edit'"
+          (input)="onCodeInput($event)"
+          maxlength="50"
+        />
+        <small class="text-gray-500">{{ 'Hr::HrEmployee:CodeInvalid' | translate }}</small>
+        <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+          {{ 'Hr::HrEmployee:CodeCannotBeChanged' | translate }}
+        </small>
+      </div>
+
+      <!-- FullName field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formFullName" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:FullName' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <input
+          pInputText
+          id="formFullName"
+          [(ngModel)]="formData.fullName"
+          class="w-full"
+          maxlength="50"
+        />
+      </div>
+
+      <!-- Status field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formStatus" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:Status' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="formStatus"
+          [(ngModel)]="formData.status"
+          [options]="statusOptions"
+          [placeholder]="'Hr::HrEmployee:Status' | translate"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- DepartmentId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formDepartmentId" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:DepartmentId' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="formDepartmentId"
+          [(ngModel)]="formData.departmentId"
+          [options]="departmentOptions"
+          [placeholder]="'Hr::HrEmployee:DepartmentId' | translate"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- OrgId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formOrgId" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:OrgId' | translate }}
+        </label>
+        <p-select
+          id="formOrgId"
+          [(ngModel)]="formData.orgId"
+          [options]="orgOptions"
+          [placeholder]="'Hr::HrEmployee:OrgId' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- PartnerId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formPartnerId" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:PartnerId' | translate }}
+        </label>
+        <p-select
+          id="formPartnerId"
+          [(ngModel)]="formData.partnerId"
+          [options]="partnerOptions"
+          [placeholder]="'Hr::HrEmployee:PartnerId' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- PositionId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formPositionId" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:PositionId' | translate }}
+        </label>
+        <p-select
+          id="formPositionId"
+          [(ngModel)]="formData.positionId"
+          [options]="positionOptions"
+          [placeholder]="'Hr::HrEmployee:PositionId' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- LevelId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formLevelId" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:LevelId' | translate }}
+        </label>
+        <p-select
+          id="formLevelId"
+          [(ngModel)]="formData.levelId"
+          [options]="levelOptions"
+          [placeholder]="'Hr::HrEmployee:LevelId' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- IsManager field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formIsManager" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:IsManager' | translate }}
+        </label>
+        <p-checkbox
+          id="formIsManager"
+          [(ngModel)]="formData.isManager"
+          [binary]="true"
+          inputId="isManager"
+        />
+      </div>
+
+      <!-- ManagerId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formManagerId" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:ManagerId' | translate }}
+        </label>
+        <p-select
+          id="formManagerId"
+          [(ngModel)]="formData.managerId"
+          [options]="managerOptions"
+          [placeholder]="'Hr::HrEmployee:ManagerId' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- ProvinceId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formProvinceId" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:ProvinceId' | translate }}
+        </label>
+        <p-select
+          id="formProvinceId"
+          [(ngModel)]="formData.provinceId"
+          (ngModelChange)="updateFullAddress()"
+          [options]="provinceOptions"
+          [placeholder]="'Hr::HrEmployee:ProvinceId' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- WardId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formWardId" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:WardId' | translate }}
+        </label>
+        <p-select
+          id="formWardId"
+          [(ngModel)]="formData.wardId"
+          (ngModelChange)="updateFullAddress()"
+          [options]="wardOptions"
+          [placeholder]="'Hr::HrEmployee:WardId' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+
+      <!-- Address field -->
+      <div class="col-span-12">
+        <label for="formAddress" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:Address' | translate }}
+        </label>
+        <input
+          pInputText
+          id="formAddress"
+          [(ngModel)]="formData.address"
+          (ngModelChange)="updateFullAddress()"
+          class="w-full"
+          maxlength="250"
+        />
+      </div>
+
+      <!-- FullAddress field (auto-generated, disabled) -->
+      <div class="col-span-12">
+        <label for="formFullAddress" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:FullAddress' | translate }}
+        </label>
+        <input
+          pInputText
+          id="formFullAddress"
+          [(ngModel)]="formData.fullAddress"
+          [readonly]="true"
+          class="w-full bg-gray-100"
+          maxlength="500"
+        />
+        <small class="text-gray-500">{{ 'Hr::HrEmployee:FullAddressAutoGenerated' | translate }}</small>
+      </div>
+
+      <!-- Phone field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formPhone" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:Phone' | translate }}
+        </label>
+        <input
+          pInputText
+          id="formPhone"
+          [(ngModel)]="formData.phone"
+          class="w-full"
+          maxlength="15"
+        />
+      </div>
+
+      <!-- Email field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formEmail" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:Email' | translate }}
+        </label>
+        <input
+          pInputText
+          id="formEmail"
+          [(ngModel)]="formData.email"
+          class="w-full"
+          maxlength="50"
+          type="email"
+        />
+      </div>
+
+      <!-- UserId field -->
+      <div class="col-span-12 md:col-span-6">
+        <label for="formUserId" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployee:UserId' | translate }}
+        </label>
+        <p-select
+          id="formUserId"
+          [(ngModel)]="formData.userId"
+          [options]="userOptions"
+          [placeholder]="'Hr::HrEmployee:UserId' | translate"
+          [showClear]="true"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Hr::Cancel' | translate"
+        severity="secondary"
+        (onClick)="dialogVisible = false"
+        [disabled]="loading"
+      />
+      <p-button
+        [label]="'Hr::Save' | translate"
+        (onClick)="save()"
+        [loading]="loading"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog Role Management -->
+<p-dialog
+  [(visible)]="roleDialogVisible"
+  [header]="'Hr::HrEmployee:ManageRoles' | translate"
+  [modal]="true"
+  [style]="{ width: '900px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflow: 'hidden', padding: '0' }"
+>
+  <div class="flex flex-col gap-4 p-4" style="max-height: calc(90vh - 140px); overflow-y: auto; overflow-x: hidden;">
+    <!-- Add/Edit Role Form -->
+    <div class="grid grid-cols-12 gap-4 border-b pb-4">
+      <div class="col-span-12 flex justify-between items-center">
+        <h3 class="text-lg font-semibold mb-2">
+          {{ (roleDialogMode === 'create' ? 'Hr::HrEmployeeRoleRel:New' : 'Hr::HrEmployeeRoleRel:Edit') | translate }}
+        </h3>
+        <p-button
+          *ngIf="roleDialogMode === 'edit'"
+          [label]="'Hr::HrEmployeeRoleRel:New' | translate"
+          icon="pi pi-plus"
+          severity="secondary"
+          size="small"
+          (onClick)="openAddRoleDialog()"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-6">
+        <label for="roleFormRoleId" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployeeRoleRel:RoleId' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          id="roleFormRoleId"
+          [(ngModel)]="roleFormData.roleId"
+          [options]="roleOptions"
+          [placeholder]="'Hr::HrEmployeeRoleRel:RoleId' | translate"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-3">
+        <label for="roleFormEffectDate" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployeeRoleRel:EffectDate' | translate }}
+          <span class="text-red-500">*</span>
+        </label>
+        <p-datepicker
+          id="roleFormEffectDate"
+          [(ngModel)]="roleFormData.effectDate"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          [showButtonBar]="true"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+      <div class="col-span-12 md:col-span-3">
+        <label for="roleFormExpireDate" class="block mb-2 font-medium">
+          {{ 'Hr::HrEmployeeRoleRel:ExpireDate' | translate }}
+        </label>
+        <p-datepicker
+          id="roleFormExpireDate"
+          [(ngModel)]="roleFormData.expireDate"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          [showButtonBar]="true"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+      <div class="col-span-12 flex gap-2">
+        <p-button
+          [label]="'Hr::Save' | translate"
+          icon="pi pi-check"
+          (onClick)="saveRole()"
+        />
+        <p-button
+          [label]="'Hr::Cancel' | translate"
+          severity="secondary"
+          icon="pi pi-times"
+          (onClick)="openAddRoleDialog()"
+        />
+      </div>
+    </div>
+
+    <!-- Roles List -->
+    <div class="col-span-12">
+      <h3 class="text-lg font-semibold mb-2">{{ 'Hr::HrEmployeeRoleRel:List' | translate }}</h3>
+      <p-table
+        [value]="employeeRoles"
+        [paginator]="false"
+        [rows]="10"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ 'Hr::HrEmployeeRoleRel:RoleName' | translate }}</th>
+            <th>{{ 'Hr::HrEmployeeRoleRel:EffectDate' | translate }}</th>
+            <th>{{ 'Hr::HrEmployeeRoleRel:ExpireDate' | translate }}</th>
+            <th style="width: 150px;">{{ 'Hr::Actions' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-role>
+          <tr>
+            <td>{{ role.roleName }}</td>
+            <td>{{ formatDate(role.effectDate) }}</td>
+            <td>{{ formatDate(role.expireDate) }}</td>
+            <td>
+              <div class="flex gap-2">
+                <p-button
+                  icon="pi pi-pencil"
+                  [text]="true"
+                  severity="info"
+                  (onClick)="openEditRoleDialog(role)"
+                  [pTooltip]="'Hr::Edit' | translate"
+                />
+                <p-button
+                  icon="pi pi-trash"
+                  [text]="true"
+                  severity="danger"
+                  (onClick)="deleteRole(role)"
+                  [pTooltip]="'Hr::Delete' | translate"
+                />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="4" class="text-center py-4">
+              {{ 'Hr::HrEmployeeRoleRel:NoRoles' | translate }}
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Hr::Close' | translate"
+        severity="secondary"
+        (onClick)="roleDialogVisible = false"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Messages -->
+<p-toast />
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog />
+

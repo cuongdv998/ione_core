@@ -1,0 +1,292 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="searchOrganizationId" class="block mb-2 font-medium">{{ 'Master::BusinessFlow:OrganizationId' | translate }}</label>
+          <p-select
+            id="searchOrganizationId"
+            [(ngModel)]="searchForm.organizationId"
+            [options]="organizationOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="searchInsurerId" class="block mb-2 font-medium">{{ 'Master::BusinessFlow:InsurerId' | translate }}</label>
+          <p-select
+            id="searchInsurerId"
+            [(ngModel)]="searchForm.insurerId"
+            [options]="insurerOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="searchBusinessCode" class="block mb-2 font-medium">{{ 'Master::BusinessFlow:BusinessCode' | translate }}</label>
+          <p-select
+            id="searchBusinessCode"
+            [(ngModel)]="searchForm.businessCode"
+            [options]="businessCodeOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="searchWorkflowName" class="block mb-2 font-medium">{{ 'Master::BusinessFlow:WorkflowName' | translate }}</label>
+          <input
+            pInputText
+            id="searchWorkflowName"
+            [(ngModel)]="searchForm.workflowName"
+            class="w-full"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="searchWorkflowVersion" class="block mb-2 font-medium">{{ 'Master::BusinessFlow:WorkflowVersion' | translate }}</label>
+          <input
+            pInputText
+            id="searchWorkflowVersion"
+            [(ngModel)]="searchForm.workflowVersion"
+            class="w-full"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="searchStatus" class="block mb-2 font-medium">{{ 'Master::BusinessFlow:Status' | translate }}</label>
+          <p-select
+            id="searchStatus"
+            [(ngModel)]="searchForm.status"
+            [options]="statusOptions"
+            [placeholder]="'Master::All' | translate"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="effectDateFrom" class="block mb-2 font-medium">{{ 'Master::BusinessFlow:EffectDate' | translate }} ({{ 'AbpAuditLogging::FromDate' | translate }})</label>
+          <p-datepicker
+            id="effectDateFrom"
+            [(ngModel)]="effectDateFromPicker"
+            (ngModelChange)="searchForm.effectDateFrom = $event"
+            [showIcon]="true"
+            dateFormat="dd/mm/yy"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-3">
+          <label for="effectDateTo" class="block mb-2 font-medium">{{ 'Master::BusinessFlow:EffectDate' | translate }} ({{ 'AbpAuditLogging::ToDate' | translate }})</label>
+          <p-datepicker
+            id="effectDateTo"
+            [(ngModel)]="effectDateToPicker"
+            (ngModelChange)="searchForm.effectDateTo = $event"
+            [showIcon]="true"
+            dateFormat="dd/mm/yy"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button
+            [label]="'AbpAuditLogging::Reset' | translate"
+            icon="pi pi-refresh"
+            severity="secondary"
+            (onClick)="resetSearch()"
+          />
+          <p-button
+            [label]="'AbpAuditLogging::Search' | translate"
+            icon="pi pi-search"
+            (onClick)="search()"
+          />
+          <p-button
+            *ngIf="PERMISSIONS.CREATE | appPermission"
+            [label]="'Master::BusinessFlow:New' | translate"
+            icon="pi pi-plus"
+            (onClick)="openCreateDialog()"
+          />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table
+        [columns]="columns"
+        [data]="items"
+        [actions]="actions"
+        [totalCount]="totalCount"
+        [loading]="loading"
+        [rows]="pageSize"
+        [rowsPerPageOptions]="[10, 20, 50, 100]"
+        [showGridlines]="true"
+        [stripedRows]="true"
+        [rowHover]="true"
+        size="small"
+        [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadData($event)"
+      />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create/Edit -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Master::BusinessFlow:New' : 'Master::BusinessFlow:Edit') | translate"
+  [modal]="true"
+  [style]="{ width: '620px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [contentStyle]="{ overflow: 'visible' }"
+>
+  <div class="flex flex-col gap-4 p-4">
+    <!-- Đơn vị (OrganizationId) - chỉ khi tạo mới -->
+    <div>
+      <label for="formOrganizationId" class="block mb-2 font-medium">{{ 'Master::BusinessFlow:OrganizationId' | translate }}</label>
+      <p-select
+        id="formOrganizationId"
+        [(ngModel)]="formData.organizationId"
+        [options]="organizationOptions"
+        [placeholder]="'Master::BusinessFlow:OrganizationId' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+        [disabled]="dialogMode === 'edit'"
+      />
+    </div>
+
+    <!-- Công ty bảo hiểm (InsurerId) - chỉ khi tạo mới -->
+    <div>
+      <label for="formInsurerId" class="block mb-2 font-medium">{{ 'Master::BusinessFlow:InsurerId' | translate }}</label>
+      <p-select
+        id="formInsurerId"
+        [(ngModel)]="formData.insurerId"
+        [options]="insurerOptions"
+        [placeholder]="'Master::BusinessFlow:InsurerId' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+        [disabled]="dialogMode === 'edit'"
+      />
+    </div>
+
+    <!-- Mã nghiệp vụ (BusinessCode) - chỉ khi tạo mới -->
+    <div>
+      <label for="formBusinessCode" class="block mb-2 font-medium">
+        {{ 'Master::BusinessFlow:BusinessCode' | translate }}
+        <span class="text-red-500" *ngIf="dialogMode === 'create'">*</span>
+      </label>
+      <p-select
+        id="formBusinessCode"
+        [(ngModel)]="formData.businessCode"
+        [options]="businessCodeOptions"
+        [placeholder]="'Master::BusinessFlow:BusinessCode' | translate"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+        [disabled]="dialogMode === 'edit'"
+      />
+    </div>
+
+    <!-- Tên quy trình (WorkflowName) -->
+    <div>
+      <label for="formWorkflowName" class="block mb-2 font-medium">
+        {{ 'Master::BusinessFlow:WorkflowName' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formWorkflowName"
+        [(ngModel)]="formData.workflowName"
+        class="w-full"
+        maxlength="50"
+      />
+    </div>
+
+    <!-- Phiên bản quy trình (WorkflowVersion) -->
+    <div>
+      <label for="formWorkflowVersion" class="block mb-2 font-medium">
+        {{ 'Master::BusinessFlow:WorkflowVersion' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input
+        pInputText
+        id="formWorkflowVersion"
+        [(ngModel)]="formData.workflowVersion"
+        class="w-full"
+        maxlength="50"
+      />
+    </div>
+
+    <!-- Ngày hiệu lực (EffectDate) - chỉ khi tạo mới -->
+    <div>
+      <label for="formEffectDate" class="block mb-2 font-medium">
+        {{ 'Master::BusinessFlow:EffectDate' | translate }}
+        <span class="text-red-500" *ngIf="dialogMode === 'create'">*</span>
+      </label>
+      <p-datepicker
+        id="formEffectDate"
+        [(ngModel)]="effectDatePicker"
+        (ngModelChange)="onEffectDateSelect()"
+        [showIcon]="true"
+        dateFormat="dd/mm/yy"
+        styleClass="w-full"
+        appendTo="body"
+        [disabled]="dialogMode === 'edit'"
+      />
+    </div>
+
+    <!-- Ngày hết hạn (ExpireDate) -->
+    <div>
+      <label for="formExpireDate" class="block mb-2 font-medium">{{ 'Master::BusinessFlow:ExpireDate' | translate }}</label>
+      <p-datepicker
+        id="formExpireDate"
+        [(ngModel)]="expireDatePicker"
+        (ngModelChange)="onExpireDateSelect()"
+        [showIcon]="true"
+        dateFormat="dd/mm/yy"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="'Master::Cancel' | translate"
+        severity="secondary"
+        (onClick)="dialogVisible = false"
+        [disabled]="loading"
+      />
+      <p-button
+        [label]="'Master::Save' | translate"
+        (onClick)="save()"
+        [loading]="loading"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

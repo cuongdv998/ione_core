@@ -1,0 +1,196 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Search panel -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="approvalTypeFilter" class="font-medium whitespace-nowrap min-w-[140px]">{{
+            'Policy::PolicyRequestApproval:ApprovalType' | translate }}</label>
+          <p-select id="approvalTypeFilter" [(ngModel)]="searchForm.approvalTypeFilter" [options]="approvalTypeOptions"
+            class="flex-1 min-w-0" optionLabel="label" optionValue="value"
+            styleClass="w-full approval-type-select" panelStyleClass="approval-type-select-panel"
+            appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="channelId" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Policy::Policy:Channel' |
+            translate }}</label>
+          <p-select id="channelId" [(ngModel)]="searchForm.channelId" [options]="channelOptions"
+            [showClear]="true" optionLabel="label" optionValue="value"
+            styleClass="w-full" appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="customerId" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Policy::Policy:Customer' |
+            translate }}</label>
+          <app-multicolumn-combobox id="customerId" [(ngModel)]="searchForm.customerId" [options]="customerOptions"
+            [showClear]="true" [filter]="true" filterBy="label,phone,email,idNo,address"
+            (onFilter)="onCustomerFilter($event)" styleClass="w-full" appendTo="body"
+            [columns]="customerColumns" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="contractId" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Policy::Policy:ContractId' |
+            translate }}</label>
+          <p-select id="contractId" [(ngModel)]="searchForm.contractId" [options]="contractOptions"
+            [showClear]="true" [filter]="true" optionLabel="label"
+            optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="contractType" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Policy::Policy:ContractType'
+            | translate }}</label>
+          <p-select id="contractType" [(ngModel)]="searchForm.contractType" [options]="contractTypeOptions"
+            [showClear]="true" optionLabel="label" optionValue="value"
+            styleClass="w-full" appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="contractStatus" class="font-medium whitespace-nowrap min-w-[140px]">{{
+            'Policy::Policy:ContractStatus' | translate }}</label>
+          <p-select id="contractStatus" [(ngModel)]="searchForm.contractStatus" [options]="contractStatusOptions"
+            [showClear]="true" optionLabel="label" optionValue="value"
+            styleClass="w-full" appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="certificateNo" class="font-medium whitespace-nowrap min-w-[140px]">{{
+            'Policy::Policy:CertificateNo' | translate }}</label>
+          <input pInputText id="certificateNo" [(ngModel)]="searchForm.certificateNo" class="w-full" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="policyNo" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Policy::Policy:PolicyNo' |
+            translate }}</label>
+          <input pInputText id="policyNo" [(ngModel)]="searchForm.policyNo" class="w-full" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="status" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Policy::Policy:Status' | translate
+            }}</label>
+          <p-select id="status" [(ngModel)]="searchForm.status" [options]="statusOptions"
+            [showClear]="true" optionLabel="label" optionValue="value"
+            styleClass="w-full" appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="approvalStatus" class="font-medium whitespace-nowrap min-w-[140px]">{{
+            'Policy::Policy:ApprovalStatus' | translate }}</label>
+          <p-select id="approvalStatus" [(ngModel)]="searchForm.approvalStatus" [options]="approvalStatusOptions"
+            [showClear]="true" optionLabel="label" optionValue="value"
+            styleClass="w-full" appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="partnerId" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Policy::Policy:PartnerId' |
+            translate }}</label>
+          <p-select id="partnerId" [(ngModel)]="searchForm.partnerId" [options]="partnerOptions"
+            [showClear]="true" [filter]="true" filterBy="label,code"
+            optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="implementerId" class="font-medium whitespace-nowrap min-w-[140px]">{{
+            'Policy::Policy:PolicyIssuer' | translate }}</label>
+          <p-select id="implementerId" [(ngModel)]="searchForm.implementerId" [options]="implementerOptions"
+            [showClear]="true" [filter]="true" filterBy="label,employeeCode"
+            optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="effectiveDateFrom" class="font-medium whitespace-nowrap min-w-[140px]">{{
+            'Policy::Policy:EffectiveDateFrom' | translate }}</label>
+          <p-datepicker inputId="effectiveDateFrom" [(ngModel)]="searchForm.effectiveDateFrom" [showIcon]="true"
+            dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="effectiveDateTo" class="font-medium whitespace-nowrap min-w-[140px]">{{
+            'Policy::Policy:EffectiveDateTo' | translate }}</label>
+          <p-datepicker inputId="effectiveDateTo" [(ngModel)]="searchForm.effectiveDateTo" [showIcon]="true"
+            dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="expiryDateFrom" class="font-medium whitespace-nowrap min-w-[140px]">{{
+            'Policy::Policy:ExpiryDateFrom' | translate }}</label>
+          <p-datepicker inputId="expiryDateFrom" [(ngModel)]="searchForm.expiryDateFrom" [showIcon]="true"
+            dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="expiryDateTo" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Policy::Policy:ExpiryDateTo'
+            | translate }}</label>
+          <p-datepicker inputId="expiryDateTo" [(ngModel)]="searchForm.expiryDateTo" [showIcon]="true"
+            dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="carPlate" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Policy::Policy:CarPlate' |
+            translate }}</label>
+          <input pInputText id="carPlate" [(ngModel)]="searchForm.carPlate" class="w-full" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="carVin" class="font-medium whitespace-nowrap min-w-[140px]">{{ 'Policy::Policy:CarVin' | translate
+            }}</label>
+          <input pInputText id="carVin" [(ngModel)]="searchForm.carVin" class="w-full" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="carEngineNumber" class="font-medium whitespace-nowrap min-w-[140px]">{{
+            'Policy::Policy:CarEngineNumber' | translate }}</label>
+          <input pInputText id="carEngineNumber" [(ngModel)]="searchForm.carEngineNumber" class="w-full" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="primaryInsurancePartnerId" class="font-medium whitespace-nowrap min-w-[140px]">{{
+            'Policy::Policy:PrimaryInsurancePartner' | translate }}</label>
+          <p-select id="primaryInsurancePartnerId" [(ngModel)]="searchForm.primaryInsurancePartnerId"
+            [options]="primaryInsurancePartnerOptions" [showClear]="true"
+            [filter]="true" filterBy="label,code" optionLabel="label" optionValue="value" styleClass="w-full"
+            appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-6 lg:col-span-4 flex items-center gap-2">
+          <label for="importLotNumber" class="font-medium whitespace-nowrap min-w-[140px]">{{
+            'Policy::Policy:ImportLotNumber' | translate }}</label>
+          <input pInputText id="importLotNumber" [(ngModel)]="searchForm.importLotNumber" class="w-full" />
+        </div>
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button [label]="'AbpAuditLogging::Search' | translate" icon="pi pi-search" (onClick)="search()" />
+          <p-button
+            *ngIf="(PERMISSIONS.APPROVE | appPermission) || (PERMISSIONS.TERMINATE_APPROVE | appPermission) || (PERMISSIONS.ENDORSEMENT_APPROVE | appPermission)"
+            [label]="'Policy::Policy:Approve' | translate" icon="pi pi-check" (onClick)="bulkApprove()"
+            [disabled]="!selectedPolicies.length || actionLoading || !hasAnyApprovableSelected()" />
+          <p-button
+            *ngIf="(PERMISSIONS.APPROVE | appPermission) || (PERMISSIONS.TERMINATE_APPROVE | appPermission) || (PERMISSIONS.ENDORSEMENT_APPROVE | appPermission)"
+            [label]="'Policy::Policy:Reject' | translate" icon="pi pi-times" severity="secondary"
+            (onClick)="bulkReject()"
+            [disabled]="!selectedPolicies.length || actionLoading || !hasAnyApprovableSelected()" />
+          <p-button [label]="'Policy::Policy:Export' | translate" icon="pi pi-download" severity="secondary"
+            [outlined]="true" (onClick)="exportFile()" [loading]="exporting" [disabled]="exporting" />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Data list -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table [columns]="columns" [data]="policies" [actions]="actions" [totalCount]="totalCount"
+        [loading]="loading" [rows]="pageSize" [rowsPerPageOptions]="[10, 20, 50, 100]" [showGridlines]="true"
+        [stripedRows]="true" [rowHover]="true" size="small" [scrollable]="true" [scrollHeight]="'calc(100vh - 450px)'"
+        [resizableColumns]="true" [showIndex]="false" [useCustomSelectionColumn]="true"
+        [isRowSelectable]="isRowSelectableFn" selectionMode="multiple" [(selection)]="selectedPolicies"
+        (lazyLoad)="loadData($event)" />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Reject reason modal -->
+<p-dialog [(visible)]="rejectReasonModalVisible" [header]="'Policy::PolicyRequestApproval:RejectReason' | translate"
+  [modal]="true" [style]="{ width: '450px' }" [draggable]="false" [resizable]="false" (onHide)="cancelRejectReason()">
+  <div class="flex flex-col gap-4 py-2">
+    <div>
+      <label for="rejectReasonId" class="block mb-2 font-medium">{{ 'Policy::PolicyRequestApproval:Reason' | translate
+        }} <span class="text-red-500">*</span></label>
+      <p-select id="rejectReasonId" [(ngModel)]="rejectReasonId" [options]="rejectReasonOptions" optionLabel="label"
+        optionValue="value" [loading]="rejectReasonOptionsLoading" styleClass="w-full" appendTo="body" />
+    </div>
+    <div>
+      <label for="rejectReasonDescription" class="block mb-2 font-medium">{{
+        'Policy::PolicyRequestApproval:ReasonDescription' | translate }} <span class="text-red-500">*</span></label>
+      <textarea pTextarea id="rejectReasonDescription" [(ngModel)]="rejectReasonDescription" [rows]="3"
+        class="w-full"></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button [label]="'Policy::Cancel' | translate" severity="secondary" (onClick)="cancelRejectReason()" />
+    <p-button [label]="'Policy::PolicyRequestApproval:Continue' | translate" icon="pi pi-check"
+      (onClick)="confirmRejectReason()" />
+  </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

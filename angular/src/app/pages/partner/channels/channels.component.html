@@ -1,0 +1,116 @@
+<div class="grid grid-cols-12 gap-4">
+  <!-- Panel tìm kiếm -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::SearchInformation' | translate" [toggleable]="true">
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Tìm theo Code -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="code" class="block mb-2 font-medium">{{ 'Partner::ResChannel:Code' | translate }}</label>
+          <input pInputText id="code" [(ngModel)]="searchForm.code" class="w-full" />
+        </div>
+
+        <!-- Tìm theo Name -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="name" class="block mb-2 font-medium">{{ 'Partner::ResChannel:Name' | translate }}</label>
+          <input pInputText id="name" [(ngModel)]="searchForm.name" class="w-full" />
+        </div>
+
+        <!-- Filter theo Status -->
+        <div class="col-span-12 md:col-span-6 lg:col-span-4">
+          <label for="status" class="block mb-2 font-medium">{{ 'Partner::ResChannel:Status' | translate }}</label>
+          <p-select id="status" [(ngModel)]="searchForm.status" [options]="statusOptions"
+            [placeholder]="'Partner::All' | translate" [showClear]="true" optionLabel="label" optionValue="value"
+            styleClass="w-full" appendTo="body" />
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-span-12 flex gap-2 justify-end">
+          <p-button [label]="'AbpAuditLogging::Reset' | translate" icon="pi pi-refresh" severity="secondary"
+            (onClick)="resetSearch()" />
+          <p-button [label]="'AbpAuditLogging::Search' | translate" icon="pi pi-search" (onClick)="search()" />
+          <p-button *ngIf="PERMISSIONS.CREATE | appPermission" [label]="'Partner::ResChannel:New' | translate"
+            icon="pi pi-plus" (onClick)="openCreateDialog()" />
+        </div>
+      </div>
+    </p-panel>
+  </div>
+
+  <!-- Panel dữ liệu -->
+  <div class="col-span-12">
+    <p-panel [header]="'AbpAuditLogging::DataList' | translate">
+      <app-v-table [columns]="columns" [data]="channels" [actions]="actions" [totalCount]="totalCount"
+        [loading]="loading" [rows]="pageSize" [rowsPerPageOptions]="[10, 20, 50, 100]" [showGridlines]="true"
+        [stripedRows]="true" [rowHover]="true" size="small" [scrollHeight]="'calc(100vh - 400px)'"
+        (lazyLoad)="loadData($event)" />
+    </p-panel>
+  </div>
+</div>
+
+<!-- Dialog Create/Edit -->
+<p-dialog [(visible)]="dialogVisible"
+  [header]="(dialogMode === 'create' ? 'Partner::ResChannel:New' : 'Partner::ResChannel:Edit') | translate"
+  [modal]="true" [style]="{ width: '600px', maxHeight: '90vh' }" [draggable]="false" [resizable]="false"
+  [contentStyle]="{ overflow: 'visible' }">
+  <div class="flex flex-col gap-4 p-4">
+    <!-- Code field -->
+    <div>
+      <label for="formCode" class="block mb-2 font-medium">
+        {{ 'Partner::ResChannel:Code' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input pInputText id="formCode" [(ngModel)]="formData.code" [readonly]="dialogMode === 'edit'" class="w-full"
+        [class.bg-gray-100]="dialogMode === 'edit'" (input)="onCodeInput($event)" maxlength="50" />
+      <small class="text-gray-500">{{ 'Partner::ResChannel:CodeInvalid' | translate }}</small>
+      <small *ngIf="dialogMode === 'edit'" class="text-gray-500 block mt-1">
+        {{ 'Partner::ResChannel:CodeCannotBeChanged' | translate }}
+      </small>
+    </div>
+
+    <!-- Name field -->
+    <div>
+      <label for="formName" class="block mb-2 font-medium">
+        {{ 'Partner::ResChannel:Name' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <input pInputText id="formName" [(ngModel)]="formData.name"
+        class="w-full" maxlength="50" />
+    </div>
+
+    <!-- Status field -->
+    <div>
+      <label for="formStatus" class="block mb-2 font-medium">
+        {{ 'Partner::ResChannel:Status' | translate }}
+        <span class="text-red-500">*</span>
+      </label>
+      <p-select id="formStatus" [(ngModel)]="formData.status" [options]="statusOptions"
+        [placeholder]="'Partner::ResChannel:Status' | translate" optionLabel="label" optionValue="value"
+        styleClass="w-full" appendTo="body" />
+    </div>
+
+    <!-- Description field -->
+    <div>
+      <label for="formDescription" class="block mb-2 font-medium">
+        {{ 'Partner::ResChannel:Description' | translate }}
+      </label>
+      <textarea pTextarea id="formDescription" [(ngModel)]="formData.description" [rows]="4" [autoResize]="true" class="w-full"
+        maxlength="500"></textarea>
+      <small class="text-gray-500">
+        {{ (formData.description?.length || 0) }}/500
+      </small>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button [label]="'Partner::Cancel' | translate" severity="secondary" (onClick)="dialogVisible = false"
+        [disabled]="loading" />
+      <p-button [label]="'Partner::Save' | translate" (onClick)="save()" [loading]="loading" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Messages -->
+<p-toast />
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog />

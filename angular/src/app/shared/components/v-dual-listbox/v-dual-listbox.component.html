@@ -1,0 +1,87 @@
+<div class="v-dual-listbox" [class.disabled]="disabled">
+  <div class="dual-listbox-container">
+    <!-- Available List -->
+    <div class="listbox-section">
+      <label class="listbox-label">{{ availableLabel }}</label>
+      <input 
+        *ngIf="filter"
+        pInputText 
+        type="text" 
+        [(ngModel)]="availableFilter"
+        class="w-full mb-2"
+        [disabled]="disabled" />
+      <p-listbox
+        [options]="filteredAvailableOptions"
+        [(ngModel)]="selectedAvailableItems"
+        [multiple]="true"
+        [disabled]="disabled"
+        [style]="listStyle"
+        [scrollHeight]="listStyle['height'] ?? '300px'"
+        [styleClass]="'w-full'"
+        optionLabel="label"
+        optionValue="value"
+        [metaKeySelection]="false">
+      </p-listbox>
+    </div>
+
+    <!-- Control Buttons -->
+    <div class="control-buttons">
+      <p-button
+        icon="pi pi-angle-right"
+        [text]="true"
+        [disabled]="disabled || selectedAvailableItems.length === 0"
+        (onClick)="moveToSelected()"
+        pTooltip="Move selected"
+        tooltipPosition="top">
+      </p-button>
+      <p-button
+        icon="pi pi-angle-double-right"
+        [text]="true"
+        [disabled]="disabled || availableOptions.length === 0"
+        (onClick)="moveAllToSelected()"
+        pTooltip="Move all"
+        tooltipPosition="top">
+      </p-button>
+      <p-button
+        icon="pi pi-angle-left"
+        [text]="true"
+        [disabled]="disabled || selectedSelectedItems.length === 0"
+        (onClick)="moveToAvailable()"
+        pTooltip="Remove selected"
+        tooltipPosition="top">
+      </p-button>
+      <p-button
+        icon="pi pi-angle-double-left"
+        [text]="true"
+        [disabled]="disabled || selectedOptions.length === 0"
+        (onClick)="moveAllToAvailable()"
+        pTooltip="Remove all"
+        tooltipPosition="top">
+      </p-button>
+    </div>
+
+    <!-- Selected List -->
+    <div class="listbox-section">
+      <label class="listbox-label">{{ selectedLabel }}</label>
+      <input 
+        *ngIf="filter"
+        pInputText 
+        type="text" 
+        [(ngModel)]="selectedFilter"
+        class="w-full mb-2"
+        [disabled]="disabled" />
+      <p-listbox
+        [options]="filteredSelectedOptions"
+        [(ngModel)]="selectedSelectedItems"
+        [multiple]="true"
+        [disabled]="disabled"
+        [style]="listStyle"
+        [scrollHeight]="listStyle['height'] ?? '300px'"
+        [styleClass]="'w-full'"
+        optionLabel="label"
+        optionValue="value"
+        [metaKeySelection]="false">
+      </p-listbox>
+    </div>
+  </div>
+</div>

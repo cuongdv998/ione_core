@@ -1,0 +1,1511 @@
+<div class="policy-form-page">
+  <div class="page-header" *ngIf="!hideHeader">
+    <div class="titles">
+      <h2 class="page-title">
+        {{ policyFormPageTitleKey | translate }}
+      </h2>
+      <div class="subtitle" *ngIf="formData?.policyNo">
+        {{ 'Policy::Policy:PolicyNo' | translate }}: <strong>{{ formData.policyNo }}</strong>
+      </div>
+    </div>
+
+    <div class="page-actions">
+      <p-button icon="pi pi-arrow-left" severity="secondary" [outlined]="true" [label]="'Policy::Back' | translate"
+        (onClick)="backToList()" />
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="flex flex-col gap-6 p-4 bg-white rounded-md border border-gray-200">
+      <!-- (Copied from the old dialog body) -->
+      <!-- Section 1: Thông tin hợp đồng (Contract Information) -->
+      <div class="border-b pb-4">
+        <h3 class="text-lg font-semibold mb-4 underline">{{ 'Policy::Policy:ContractInformation' | translate }}</h3>
+        <div class="grid grid-cols-12 gap-4">
+          <!-- Row 1: Đối tác BH gốc *, Loại hợp đồng, Số hợp đồng, Nghiệp vụ BH * -->
+          <!-- Primary Insurance Partner -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formPrimaryInsurancePartnerId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:PrimaryInsurancePartner' | translate }}
+              <span class="text-red-500">*</span>
+            </label>
+            <p-select id="formPrimaryInsurancePartnerId" [(ngModel)]="formData.primaryInsurancePartnerId"
+              (ngModelChange)="loadProducts()" [options]="primaryInsurancePartnerOptions" [showClear]="true"
+              [filter]="true" [disabled]="isViewMode" optionLabel="label" optionValue="value" styleClass="w-full"
+              appendTo="body" />
+          </div>
+
+          <!-- Loại hợp đồng + Số hợp đồng: sau đối tác BH gốc; gom nhóm để md/lg luôn cùng hàng -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-6">
+            <div class="grid grid-cols-12 gap-4">
+              <!-- Contract Type (trước Số hợp đồng) -->
+              <div class="col-span-12 md:col-span-6 lg:col-span-6">
+                <label for="formContractType" class="block mb-2 font-medium">
+                  {{ 'Policy::Policy:ContractType' | translate }}
+                  <span class="text-red-500">*</span>
+                </label>
+                <p-select id="formContractType" [(ngModel)]="formData.contractType" [options]="contractTypeOptions"
+                  (ngModelChange)="onContractTypeChanged($event)"
+                  [showClear]="true" [disabled]="isViewMode" optionLabel="label" optionValue="value" styleClass="w-full"
+                  appendTo="body" />
+              </div>
+
+              <!-- Contract Number (Số hợp đồng) - Always select from ResContract (contractId from API detail); required when type is Group -->
+              <div class="col-span-12 md:col-span-6 lg:col-span-6">
+                <label for="formContractId" class="block mb-2 font-medium">
+                  {{ 'Policy::Policy:ContractNo' | translate }}
+                  <span class="text-red-500" *ngIf="formData.contractType === 1">*</span>
+                </label>
+                <p-select id="formContractId" [(ngModel)]="formData.contractId"
+                  (ngModelChange)="onContractIdChanged($event)" [options]="formContractOptions" [showClear]="true"
+                  [filter]="true" [disabled]="isViewMode" optionLabel="label" optionValue="value" styleClass="w-full"
+                  appendTo="body" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Line of Business -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formLobId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:LineOfBusiness' | translate }}
+              <span class="text-red-500">*</span>
+            </label>
+            <p-select id="formLobId" [(ngModel)]="formData.lobId" (ngModelChange)="loadProducts()"
+              [options]="lobOptions" [showClear]="true" [filter]="true" [disabled]="true" optionLabel="label"
+              optionValue="value" styleClass="w-full" appendTo="body" required />
+          </div>
+
+          <!-- Row 2: Khách hàng *, Người thanh toán, Nhận hóa đơn, uploadfile -->
+          <!-- Customer -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formCustomerId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:Customer' | translate }}
+              <span class="text-red-500">*</span>
+            </label>
+            <div class="flex gap-2">
+              <app-multicolumn-combobox id="formCustomerId" [(ngModel)]="formData.customerId"
+                (ngModelChange)="onCustomerChanged($event)" [options]="customerOptions" [showClear]="true"
+                [filter]="true" filterBy="label,phone,email,idNo,address" (onFilter)="onCustomerFilter($event)"
+                [disabled]="isViewMode" styleClass="flex-1 v-ellipsis-select"
+                appendTo="body" [required]="true" [columns]="customerColumns" />
+              <p-button icon="pi pi-plus" [rounded]="true" [text]="true" severity="secondary" [disabled]="isViewMode"
+                (onClick)="openCustomerDialog('customer')" [title]="'Policy::Policy:AddCustomer' | translate" />
+            </div>
+          </div>
+
+          <!-- Payer (Người thanh toán) - Select from ResCustomer -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formPayerId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:Payer' | translate }}
+            </label>
+            <ng-container *ngIf="dialogMode === 'create'; else payerSnapshot">
+              <div class="flex gap-2">
+                <app-multicolumn-combobox id="formPayerId" [(ngModel)]="formData.payerId" [options]="payerOptions"
+                  [showClear]="true" [filter]="true" filterBy="label,phone,email,idNo,address"
+                  (onFilter)="onCustomerFilter($event)" [disabled]="isViewMode" styleClass="flex-1 v-ellipsis-select"
+                  appendTo="body" [columns]="customerColumns" />
+                <p-button icon="pi pi-plus" [rounded]="true" [text]="true" severity="secondary" [disabled]="isViewMode"
+                  (onClick)="openCustomerDialog('payer')" [title]="'Policy::Policy:AddCustomer' | translate" />
+              </div>
+            </ng-container>
+            <ng-template #payerSnapshot>
+              <div class="flex gap-2">
+                <input pInputText [value]="formData.payerName || ''" disabled class="flex-1 bg-gray-100" />
+                <p-button *ngIf="!isViewMode" icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
+                  (onClick)="openCustomerDialog('payer', formData.payerId)"
+                  [title]="'Policy::Policy:EditPayer' | translate" />
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- Receive Invoice (Có nhận hoá đơn) - Checkbox -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formIsReceiveInvoice" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:IsReceiveInvoice' | translate }}
+            </label>
+            <div class="flex items-center">
+              <p-checkbox id="formIsReceiveInvoice" [(ngModel)]="formData.isReceiveInvoice" [binary]="true"
+                [disabled]="isViewMode" inputId="isReceiveInvoice" />
+            </div>
+          </div>
+
+          <!-- Upload File -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <div class="flex items-center gap-2 w-full">
+              <p-fileUpload id="formUploadFile" mode="basic" [customUpload]="true"
+                (uploadHandler)="onUploadContractDocuments($event)" [auto]="true" [multiple]="true"
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                chooseLabel="{{ 'Policy::Policy:ContractAttachFile' | translate }}" styleClass="flex-1"
+                [maxFileSize]="5000000" [disabled]="isViewMode || documentUploadLoading" />
+              <button *ngIf="uploadedContractDocumentIds?.length" type="button"
+                class="text-xs text-blue-600 underline whitespace-nowrap" (click)="contractDocsPreviewVisible = true"
+                [disabled]="documentUploadLoading">
+                {{ 'Policy::Policy:FileAttachment' | translate }} ({{ uploadedContractDocumentIds.length }})
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Thông tin chung (General Information) -->
+      <div class="border-b pb-4">
+        <h3 class="text-lg font-semibold mb-4 underline">{{ 'Policy::Policy:GeneralInformation' | translate }}</h3>
+        <div class="grid grid-cols-12 gap-4">
+          <!-- Row 1: Số đơn BH, Số đơn BH gốc, Số GCN + Loại đơn (Policy Type) -->
+          <!-- Policy Number (Số đơn BH) - Generated by BE in create mode -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formPolicyNo" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:PolicyNo' | translate }}
+            </label>
+            <input pInputText id="formPolicyNo" [(ngModel)]="formData.policyNo" [disabled]="true"
+              class="w-full bg-gray-100" />
+          </div>
+
+          <!-- Root Policy Number -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formRootPolicyNo" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:RootPolicyNo' | translate }}
+            </label>
+            <input pInputText id="formRootPolicyNo" [(ngModel)]="formData.insurerPolicyNo" [disabled]="isViewMode"
+              class="w-full" />
+          </div>
+
+          <!-- Certificate No + Policy Type -->
+          <div class="col-span-12 md:col-span-12 lg:col-span-6">
+            <div class="grid grid-cols-12 gap-4">
+              <!-- Certificate Number -->
+              <div class="col-span-12 md:col-span-6">
+                <label for="formCertificateNo" class="block mb-2 font-medium">
+                  {{ 'Policy::Policy:CertificateNo' | translate }}
+                </label>
+                <input pInputText id="formCertificateNo" [(ngModel)]="formData.certificateNo" [disabled]="isViewMode"
+                  class="w-full" />
+              </div>
+
+              <!-- Policy Type -->
+              <div class="col-span-12 md:col-span-6">
+                <label for="formPolicyTypeId" class="block mb-2 font-medium">
+                  {{ 'Policy::Policy:PolicyTypeId' | translate }}
+                  <span class="text-red-500">*</span>
+                </label>
+                <p-select id="formPolicyTypeId" [(ngModel)]="formData.policyTypeId" [options]="policyTypeOptions"
+                  required [showClear]="true" [filter]="true" [disabled]="isViewMode" optionLabel="label"
+                  optionValue="value" styleClass="w-full" appendTo="body" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Version (Phiên bản) - Disabled (next line) -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formVersionNo" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:Version' | translate }}
+            </label>
+            <input pInputText id="formVersionNo" [(ngModel)]="formData.versionNo" class="w-full bg-gray-100"
+              [disabled]="true" />
+          </div>
+
+          <!-- Row 2: Có sử dụng khoản vay, Đối tượng thụ hưởng *, Tiền tệ *, Tỷ giá * -->
+          <!-- Is Bank Loan (Có sử dụng khoản vay) - Checkbox -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formIsBankLoan" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:IsBankLoan' | translate }}
+            </label>
+            <div class="flex items-center">
+              <p-checkbox id="formIsBankLoan" [(ngModel)]="formData.isBankLoan" [binary]="true" [disabled]="isViewMode"
+                inputId="isBankLoan" />
+            </div>
+          </div>
+
+          <!-- Beneficiary (Đối tượng thụ hưởng *) - Select from ResCustomer -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formBeneficiaryId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:Beneficiary' | translate }}
+              <span class="text-red-500" *ngIf="!hasSelectedTndsbbProduct()">*</span>
+            </label>
+            <ng-container *ngIf="dialogMode === 'create'; else beneficiarySnapshot">
+              <div class="flex gap-2">
+                <app-multicolumn-combobox id="formBeneficiaryId" [(ngModel)]="formData.beneficiaryId"
+                  [options]="beneficiaryOptions" [showClear]="true" [filter]="true"
+                  filterBy="label,phone,email,idNo,address" (onFilter)="onCustomerFilter($event)" [disabled]="isViewMode"
+                  styleClass="flex-1 v-ellipsis-select" appendTo="body"
+                  [required]="!hasSelectedTndsbbProduct()" [columns]="customerColumns" />
+                <p-button icon="pi pi-plus" [rounded]="true" [text]="true" severity="secondary"
+                  (onClick)="openCustomerDialog('beneficiary')" [title]="'Policy::Policy:AddCustomer' | translate" />
+              </div>
+            </ng-container>
+            <ng-template #beneficiarySnapshot>
+              <div class="flex gap-2">
+                <input pInputText [value]="formData.beneficiaryName || ''" disabled class="flex-1 bg-gray-100" />
+                <p-button *ngIf="!isViewMode" icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
+                  (onClick)="openCustomerDialog('beneficiary', formData.beneficiaryId)"
+                  [title]="'Policy::Policy:EditBeneficiary' | translate" />
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- Currency -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formCurrencyId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:Currency' | translate }}
+              <span class="text-red-500">*</span>
+            </label>
+            <p-select id="formCurrencyId" [(ngModel)]="formData.currencyId" [options]="currencyOptions"
+              [showClear]="true" [filter]="true" [disabled]="isViewMode" optionLabel="label" optionValue="value"
+              styleClass="w-full" appendTo="body" required />
+          </div>
+
+          <!-- Exchange Rate -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formExchangeRate" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:ExchangeRate' | translate }}
+              <span class="text-red-500">*</span>
+            </label>
+            <p-inputNumber id="formExchangeRate" [(ngModel)]="formData.exchangeRate" [disabled]="isViewMode"
+              styleClass="w-full" [min]="0" [maxFractionDigits]="4" />
+          </div>
+
+          <!-- Row 3: Hình thức khai thác (SellType) *, Kênh khai thác, Người khai thác *, Người cấp đơn *, Đơn tái tục -->
+          <!-- Sell Type -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formSellType" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:SellType' | translate }}
+              <span class="text-red-500">*</span>
+            </label>
+            <p-select id="formSellType" [(ngModel)]="formData.sellType" [options]="sellTypeOptions" [showClear]="true"
+              [disabled]="isViewMode" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+          </div>
+
+          <!-- Channel (Kênh khai thác) -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formChannelId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:Channel' | translate }}
+              <span class="text-red-500">*</span>
+            </label>
+            <p-select id="formChannelId" [(ngModel)]="formData.channelId" [options]="channelOptions" [showClear]="true"
+              [filter]="true" [disabled]="isViewMode || channelLockedBySeller" optionLabel="label" optionValue="value" styleClass="w-full"
+              appendTo="body" (ngModelChange)="onFormChannelChanged($event)" />
+          </div>
+
+          <!-- Seller (Người khai thác) -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formSellerId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:Seller' | translate }}
+              <span class="text-red-500">*</span>
+            </label>
+            <p-select id="formSellerId" [(ngModel)]="formData.sellerId" [options]="sellerOptions" [showClear]="true"
+              [filter]="true" filterBy="label,employeeCode" [disabled]="isViewMode"
+              optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body"
+              (ngModelChange)="fillChannelFromEmployee($event)" />
+          </div>
+
+          <!-- Implementer (Người cấp đơn) -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formImplementerId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:Implementer' | translate }}
+              <span class="text-red-500">*</span>
+            </label>
+            <p-select id="formImplementerId" [(ngModel)]="formData.implementerId" [options]="implementerOptions"
+              [showClear]="true" [filter]="true" filterBy="label,employeeCode" [disabled]="isViewMode"
+              optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body"
+              (ngModelChange)="onFormImplementerChangedForSellerSync($event)" />
+          </div>
+
+          <!-- Is Renewal (Đơn tái tục) - Checkbox -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formIsRenewal" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:IsRenewal' | translate }}
+            </label>
+            <div class="flex items-center">
+              <p-checkbox id="formIsRenewal" [(ngModel)]="formData.isRenewal" [binary]="true" [disabled]="isViewMode"
+                inputId="isRenewal" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Thông tin Đối tượng bảo hiểm (Insured Object Information) -->
+      <div class="border-b pb-4">
+        <div class="flex items-center gap-4 mb-4">
+          <h3 class="text-lg font-semibold underline leading-none">
+            {{ 'Policy::Policy:InsuredObjectInformation' | translate }}
+          </h3>
+          <img *ngIf="!isMotorbikeReducedInsuredObjectSection" src="assets/images/ocr-icon.png" alt="OCR"
+            class="h-8 w-8 object-contain shrink-0 self-center cursor-pointer"
+            [title]="'Policy::Policy:OCR' | translate" (click)="openOcrUploadModal()" />
+        </div>
+        <div class="grid grid-cols-12 gap-4">
+          <!-- Vehicle Owner -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formVehicleOwnerId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:VehicleOwner' | translate }}
+              <span class="text-red-500" *ngIf="dialogMode === 'create' || isInsuredObjectFieldRequired('repName')">*</span>
+            </label>
+            <ng-container *ngIf="dialogMode === 'create' && !formData.isRenewal; else vehicleOwnerSnapshot">
+              <div class="flex gap-2">
+                <app-multicolumn-combobox id="formVehicleOwnerId" [(ngModel)]="formData.vehicleOwnerId"
+                  [options]="vehicleOwnerOptions" [showClear]="true" [filter]="true"
+                  filterBy="label,phone,email,idNo,address" (onFilter)="onCustomerFilter($event)" [disabled]="isViewMode"
+                  styleClass="flex-1 v-ellipsis-select" appendTo="body"
+                  [required]="isInsuredObjectFieldRequired('repName')" [columns]="customerColumns" />
+                <p-button icon="pi pi-plus" [rounded]="true" [text]="true" severity="secondary"
+                  (onClick)="openCustomerDialog('vehicleOwner')" [title]="'Policy::Policy:AddCustomer' | translate" />
+              </div>
+            </ng-container>
+            <ng-template #vehicleOwnerSnapshot>
+              <div class="flex gap-2">
+                <input pInputText [value]="formData.vehicleOwnerName || ''" disabled class="flex-1 bg-gray-100" />
+                <p-button *ngIf="!isViewMode" icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
+                  (onClick)="openCustomerDialog('vehicleOwner', formData.vehicleOwnerId)"
+                  [title]="'Policy::Policy:EditVehicleOwner' | translate" />
+              </div>
+            </ng-template>
+          </div>
+
+          <ng-container *ngIf="!isMotorbikeReducedInsuredObjectSection">
+          <!-- Car Usage -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formCarUsage" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:BusinessPurpose' | translate }}
+              <span class="text-red-500" *ngIf="isInsuredObjectFieldRequired('carUsage')">*</span>
+            </label>
+            <p-select id="formCarUsage" [(ngModel)]="formData.carUsage"
+              (ngModelChange)="onCarUsageChange($event); onInsuredObjectChange()" [options]="businessPurposeOptions"
+              [showClear]="true" [disabled]="isViewMode" optionLabel="label" optionValue="value" styleClass="w-full"
+              appendTo="body" />
+          </div>
+
+          <!-- Car Brand -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formCarBrandId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:CarBrand' | translate }}
+              <span class="text-red-500" *ngIf="isInsuredObjectFieldRequired('carBrandCode')">*</span>
+            </label>
+            <p-select id="formCarBrandId" [(ngModel)]="formData.carBrandId"
+              (ngModelChange)="loadCarModels($event); onInsuredObjectChange()" [options]="carBrandOptions"
+              [showClear]="true" [filter]="true" [disabled]="isViewMode" optionLabel="label" optionValue="value"
+              styleClass="w-full" appendTo="body" />
+          </div>
+
+          <!-- Car Model -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formCarModelId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:CarModel' | translate }}
+              <span class="text-red-500"
+                *ngIf="isInsuredObjectFieldRequired('carModelCode') || isInsuredObjectFieldRequired('carCategoryCode')">*</span>
+            </label>
+            <p-select id="formCarModelId" [(ngModel)]="formData.carCategoryId"
+              (ngModelChange)="onCarCategoryChanged($event)" [options]="carModelOptions" [showClear]="true"
+              [filter]="true" [disabled]="isViewMode || !formData.carBrandId" optionLabel="label" optionValue="value"
+              styleClass="w-full" appendTo="body" />
+          </div>
+
+          <!-- Seating Capacity -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formSeatingCapacity" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:SeatingCapacity' | translate }}
+              <span class="text-red-500" *ngIf="isInsuredObjectFieldRequired('carSeatNumber')">*</span>
+            </label>
+            <p-inputNumber id="formSeatingCapacity" [(ngModel)]="formData.seatingCapacity"
+              (ngModelChange)="onInsuredObjectChange()" [disabled]="isViewMode" styleClass="w-full" [min]="0"
+              [maxFractionDigits]="0" />
+          </div>
+
+          <!-- Weight -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formWeight" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:Weight' | translate }} ({{ 'Policy::Policy:Tons' | translate }})
+              <span class="text-red-500" *ngIf="isInsuredObjectFieldRequired('carPayloadCapacity')">*</span>
+            </label>
+            <p-inputNumber id="formWeight" [(ngModel)]="formData.weight" (ngModelChange)="onInsuredObjectChange()"
+              [disabled]="isViewMode" styleClass="w-full" [min]="0" [maxFractionDigits]="3" />
+          </div>
+
+          </ng-container>
+
+          <!-- Vehicle Plate -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formVehiclePlate" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:VehiclePlate' | translate }}
+              <span class="text-red-500" *ngIf="isInsuredObjectFieldRequired('carPlate')">*</span>
+            </label>
+            <div *ngIf="!isMotorbikeReducedInsuredObjectSection; else motorbikePlateInputOnly" class="flex gap-2 items-stretch">
+              <input pInputText id="formVehiclePlate" [(ngModel)]="formData.vehiclePlate"
+                (ngModelChange)="formData.vehiclePlate = normalizeVehiclePlate($event); onInsuredObjectChange()"
+                [disabled]="isViewMode" class="flex-1 min-w-0" />
+              <p-select [(ngModel)]="formData.vehiclePlateType" [options]="carPlateTypeOptions" [showClear]="true"
+                [disabled]="isViewMode" optionLabel="label" optionValue="value" styleClass="w-40 flex-shrink-0"
+                appendTo="body" />
+            </div>
+            <ng-template #motorbikePlateInputOnly>
+              <input pInputText id="formVehiclePlate" [(ngModel)]="formData.vehiclePlate"
+                (ngModelChange)="formData.vehiclePlate = normalizeVehiclePlate($event); onInsuredObjectChange()"
+                [disabled]="isViewMode" class="w-full" />
+            </ng-template>
+          </div>
+
+          <!-- Chassis Number -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formChassisNumber" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:ChassisNumber' | translate }}
+              <span class="text-red-500" *ngIf="isInsuredObjectFieldRequired('carVin')">*</span>
+            </label>
+            <input pInputText id="formChassisNumber" [(ngModel)]="formData.chassisNumber"
+              (ngModelChange)="onInsuredObjectChange()" [disabled]="isViewMode" class="w-full" />
+          </div>
+
+          <!-- Engine Number -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formEngineNumber" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:EngineNumber' | translate }}
+              <span class="text-red-500" *ngIf="isInsuredObjectFieldRequired('carEngineNumber')">*</span>
+            </label>
+            <input pInputText id="formEngineNumber" [(ngModel)]="formData.engineNumber"
+              (ngModelChange)="onInsuredObjectChange()" [disabled]="isViewMode" class="w-full" />
+          </div>
+
+          <ng-container *ngIf="!isMotorbikeReducedInsuredObjectSection">
+          <!-- Production Year -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formProductionYear" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:ProductionYear' | translate }}
+              <span class="text-red-500" *ngIf="isInsuredObjectFieldRequired('carProductionYear')">*</span>
+            </label>
+            <p-datepicker inputId="formProductionYear" [(ngModel)]="formData.productionYear"
+              (ngModelChange)="onInsuredObjectChange()" [showIcon]="true" [disabled]="isViewMode" dateFormat="dd/mm/yy"
+              styleClass="w-full" appendTo="body" />
+          </div>
+
+          <!-- Car Line -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formCarLineId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:CarLineCode' | translate }}
+              <span class="text-red-500" *ngIf="isInsuredObjectFieldRequired('carLineCode')">*</span>
+            </label>
+            <p-select id="formCarLineId" [(ngModel)]="formData.carLineId"
+              (ngModelChange)="onCarLineChange($event); onInsuredObjectChange()" [options]="carLineOptions"
+              [showClear]="true" [filter]="true" [disabled]="isViewMode" optionLabel="label" optionValue="value"
+              styleClass="w-full" appendTo="body" />
+          </div>
+
+          <!-- Car Group -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formCarGroupId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:CarGroupCode' | translate }}
+              <span class="text-red-500" *ngIf="isInsuredObjectFieldRequired('carGroupCode')">*</span>
+            </label>
+            <p-select id="formCarGroupId" [(ngModel)]="formData.carGroupId" (ngModelChange)="onInsuredObjectChange()"
+              [options]="carGroupOptionsFiltered" [showClear]="true" [filter]="true" [disabled]="isViewMode"
+              optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+          </div>
+          </ng-container>
+
+          <!-- Vehicle Type -->
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formVehicleTypeId" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:VehicleType' | translate }}
+              <span class="text-red-500" *ngIf="isInsuredObjectFieldRequired('carTypeCode')">*</span>
+            </label>
+            <p-select id="formVehicleTypeId" [(ngModel)]="formData.vehicleTypeId"
+              (ngModelChange)="onInsuredObjectChange()" [options]="carTypeOptions" [showClear]="true" [filter]="true"
+              [disabled]="isViewMode" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Phạm vi bảo hiểm (Insurance Coverage Scope) -->
+      <div class="border-b pb-4">
+        <h3 class="text-lg font-semibold mb-4 underline">{{ 'Policy::Policy:InsuranceCoverageScope' | translate }}</h3>
+
+        <div class="grid grid-cols-12 gap-4 mb-6">
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formInsurancePeriodFrom" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:InsurancePeriodFrom' | translate }}
+              <span class="text-red-500">*</span>
+            </label>
+            <p-datepicker inputId="formInsurancePeriodFrom" [(ngModel)]="formData.insurancePeriodFrom" [showIcon]="true"
+              [showTime]="true" [disabled]="isViewMode" hourFormat="24" [showSeconds]="true" dateFormat="dd/mm/yy"
+              styleClass="w-full" appendTo="body" (ngModelChange)="onInsurancePeriodFromChange($event)" required />
+          </div>
+
+          <div class="col-span-12 md:col-span-6 lg:col-span-3">
+            <label for="formInsurancePeriodTo" class="block mb-2 font-medium">
+              {{ 'Policy::Policy:InsurancePeriodTo' | translate }}
+              <span class="text-red-500">*</span>
+            </label>
+            <p-datepicker inputId="formInsurancePeriodTo" [(ngModel)]="formData.insurancePeriodTo" [showIcon]="true"
+              [showTime]="true" [disabled]="isViewMode" hourFormat="24" [showSeconds]="true" dateFormat="dd/mm/yy"
+              styleClass="w-full" appendTo="body" (ngModelChange)="onInsurancePeriodToChange($event)" required />
+          </div>
+        </div>
+
+        <!-- Dynamic Product Switches -->
+        <div *ngFor="let product of products" class="mb-4">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="relative inline-block w-12 h-6">
+              <input type="checkbox" [id]="'product-' + product.id" [checked]="isProductSelected(product.id || '')"
+                (change)="toggleProduct(product.id || '')" [disabled]="isViewMode" class="sr-only peer" />
+              <label [for]="'product-' + product.id"
+                class="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full transition-colors duration-200 peer-checked:bg-blue-600">
+                <span
+                  class="absolute h-5 w-5 bg-white rounded-full top-0.5 left-0.5 transition-transform duration-200 peer-checked:translate-x-6"></span>
+              </label>
+            </div>
+            <span class="font-medium">{{ product.name }}</span>
+          </div>
+
+          <div *ngIf="isProductSelected(product.id || '') && isVcxProductCode(product) && !isMotorbikeReducedInsuredObjectSection"
+            class="mb-4">
+            <div class="grid grid-cols-12 gap-4">
+              <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <label class="block mb-2 font-medium" [attr.for]="'vcx-carValue-' + product.id">
+                  {{ 'Policy::Policy:CarValue' | translate }} (VNĐ)
+                  <span class="text-red-500" *ngIf="isInsuredObjectFieldRequired('riskObjectValue')">*</span>
+                </label>
+                <p-inputNumber [inputId]="'vcx-carValue-' + product.id" [(ngModel)]="formData.carValue"
+                  (ngModelChange)="onCarValueChange(); onInsuredObjectChange()" [disabled]="isViewMode" styleClass="w-full"
+                  [min]="0" [maxFractionDigits]="0" [useGrouping]="true" locale="vi-VN" />
+              </div>
+              <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <label class="block mb-2 font-medium" [attr.for]="'vcx-carColor-' + product.id">
+                  {{ 'Policy::Policy:CarColor' | translate }}
+                  <span class="text-red-500" *ngIf="isInsuredObjectFieldRequired('carColor')">*</span>
+                </label>
+                <p-select [inputId]="'vcx-carColor-' + product.id" [(ngModel)]="formData.carColor"
+                  (ngModelChange)="onInsuredObjectChange()" [options]="carColorOptions" [showClear]="true" [filter]="true"
+                  [disabled]="isViewMode" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+              </div>
+              <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <label class="block mb-2 font-medium" [attr.for]="'vcx-origin-' + product.id">
+                  {{ 'Policy::Policy:Origin' | translate }}
+                  <span class="text-red-500" *ngIf="isInsuredObjectFieldRequired('carOrigin')">*</span>
+                </label>
+                <p-select [inputId]="'vcx-origin-' + product.id" [(ngModel)]="formData.origin"
+                  (ngModelChange)="onInsuredObjectChange()" [options]="carOriginOptions" [showClear]="true"
+                  [filter]="true" [disabled]="isViewMode" optionLabel="label" optionValue="value" styleClass="w-full"
+                  appendTo="body" />
+              </div>
+              <div class="col-span-12 md:col-span-6 lg:col-span-3">
+                <label class="block mb-2 font-medium" [attr.for]="'vcx-isNewCar-' + product.id">
+                  {{ 'Policy::Policy:IsNewCar' | translate }}
+                </label>
+                <div class="flex items-center gap-3">
+                  <p-checkbox [(ngModel)]="formData.isNewCar" (ngModelChange)="onInsuredObjectChange()" [binary]="true"
+                    [disabled]="isViewMode" [inputId]="'vcx-isNewCar-' + product.id" />
+                  <p-button type="button" [label]="'Policy::Policy:CarPhotos' | translate" (onClick)="openCarPhotos()" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="isProductSelected(product.id || '')" class="overflow-x-auto">
+            <p-table [value]="getAllCoveragesWithSections(product.id || '')"
+              styleClass="p-datatable-sm coverage-table-fixed" [rowHover]="true">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width:400px">{{ 'Policy::Policy:Benefit' | translate }}</th>
+                  <th style="width:150px">{{ 'Policy::Policy:InsuranceAmount' | translate }}</th>
+                  <th style="width:90px">{{ 'Policy::Policy:Quantity' | translate }}</th>
+                  <th style="width:60px">{{ 'Policy::Policy:TaxRate' | translate }}</th>
+                  <th style="width:110px">{{ 'Policy::Policy:PremiumRate' | translate }}</th>
+                  <th style="width:150px">{{ 'Policy::Policy:Premium' | translate }}</th>
+                  <th style="width:120px">{{ 'Policy::Policy:VAT' | translate }}</th>
+                  <th style="width:150px">{{ 'Policy::Policy:PremiumWithVAT' | translate }}</th>
+                  <th style="width:150px">{{ 'Policy::Policy:Deductible' | translate }}</th>
+                  <th *ngIf="isTerminationView" style="width:150px">{{ 'Policy::Policy:RefundAmount' | translate }}</th>
+                  <th *ngIf="showEndorsementTotalPremiumChange" style="width:130px">{{ 'Policy::Policy:PremiumChange' |
+                    translate }}</th>
+                  <th style="width:200px">{{ 'Policy::Policy:Description' | translate }}</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-item>
+                <tr *ngIf="item.isSectionHeader" class="bg-gray-100 font-semibold">
+                  <td>{{ item.benefit }}</td>
+                  <td [colSpan]="9 + (isTerminationView ? 1 : 0) + (showEndorsementTotalPremiumChange ? 1 : 0)"></td>
+                </tr>
+                <tr *ngIf="!item.isSectionHeader">
+                  <td>
+                    <div class="flex items-center gap-2" *ngIf="item.coverageType !== 0"
+                      [style.paddingLeft.px]="(item.hierarchyLevel || 0) * 16">
+                      <p-checkbox [(ngModel)]="item.selected"
+                        (ngModelChange)="onCoverageCheckboxChange(product.id || '', item)" [binary]="true"
+                        [inputId]="'coverage-checkbox-' + item.benefit"
+                        [disabled]="isViewMode || item.isCheckboxDisabled" />
+                      <span>{{ item.benefit }}</span>
+                    </div>
+                    <span *ngIf="item.coverageType === 0" [style.paddingLeft.px]="(item.hierarchyLevel || 0) * 16">
+                      {{ item.benefit }}
+                    </span>
+                  </td>
+                  <td>
+                    <ng-container *ngIf="hasLiabilityAmountSelect(item); else liabilityAmountNumberInputPage">
+                      <p-select [(ngModel)]="item.insuranceAmount"
+                        (ngModelChange)="onInsuranceAmountChange(product.id || '', item)"
+                        [options]="item.liabilityAmountOptions"
+                        optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body"
+                        [disabled]="isViewMode || (item.coverageType !== 0 && !item.selected) || (((product.productTypeCode || '').toString().trim().toUpperCase() === 'TNDSBB') && item.coverageType === 0)" />
+                    </ng-container>
+                    <ng-template #liabilityAmountNumberInputPage>
+                      <!-- VCX: for selected non-main coverages, amount is implicit (same as main) -> keep input, but show empty -->
+                      <p-inputNumber
+                        [ngModel]="(((product.productTypeCode || '').toString().trim().toUpperCase() === 'VCX') && item.coverageType !== 0 && item.selected && (item.liabilityAmountFixed === null || item.liabilityAmountFixed === undefined) && !hasLiabilityAmountSelect(item)) ? null : item.insuranceAmount"
+                        (ngModelChange)="item.insuranceAmount = $event; onInsuranceAmountChange(product.id || '', item)"
+                        [useGrouping]="true" locale="vi-VN" styleClass="w-full"
+                        [min]="item.liabilityAmountMin ?? undefined" [max]="item.liabilityAmountMax ?? undefined"
+                        [disabled]="isViewMode || (item.coverageType !== 0 && !item.selected) || (item.liabilityAmountFixed !== null && item.liabilityAmountFixed !== undefined) || (((product.productTypeCode || '').toString().trim().toUpperCase() === 'VCX') && item.coverageType !== 0 && item.selected) || (((product.productTypeCode || '').toString().trim().toUpperCase() === 'TNDSBB') && item.coverageType === 0)" />
+                    </ng-template>
+                  </td>
+                  <td>
+                    <p-inputNumber [(ngModel)]="item.quantity" [maxFractionDigits]="0" [min]="0" locale="vi-VN"
+                      styleClass="w-full" (ngModelChange)="onCoverageQuantityChange(product.id || '', item)"
+                      [disabled]="isViewMode || (item.coverageType !== 0 && !item.selected) || ((item.enableQuantity || '').toUpperCase() !== 'Y')" />
+                  </td>
+                  <td class="text-center">{{ item.taxCode || '-' }}</td>
+                  <td><p-inputNumber [(ngModel)]="item.premiumRate" [maxFractionDigits]="2" locale="vi-VN"
+                      styleClass="w-full" [disabled]="true" /></td>
+                  <td>{{ item.premium | number:'1.0-0':'vi-VN' }}</td>
+                  <td>{{ item.vat | number:'1.0-0':'vi-VN' }}</td>
+                  <td>{{ item.premiumWithVAT | number:'1.0-0':'vi-VN' }}</td>
+                  <td>
+                    <ng-container *ngIf="item.deductibleOptions?.length; else deductibleReadonly">
+                      <p-select [(ngModel)]="item.deductible" (ngModelChange)="onDeductibleChange(product.id || '')"
+                        [options]="item.deductibleOptions" optionLabel="label" optionValue="value" styleClass="w-full"
+                        appendTo="body" [disabled]="isViewMode || (item.coverageType !== 0 && !item.selected)" />
+                    </ng-container>
+                    <ng-template #deductibleReadonly>
+                      <input pInputText
+                        [ngModel]="item.deductible != null && item.deductible !== '' ? (item.deductible | number:'1.0-0':'vi') : ''"
+                        class="w-full" [disabled]="true" />
+                    </ng-template>
+                  </td>
+                  <td *ngIf="isTerminationView">
+                    <span class="text-red-500 font-bold">{{ (item.refundAmount ?? 0) | number:'1.0-0':'vi-VN' }}</span>
+                  </td>
+                  <td *ngIf="showEndorsementTotalPremiumChange">
+                    <span [class.text-green-600]="(item.premiumChange ?? 0) > 0"
+                      [class.text-red-600]="(item.premiumChange ?? 0) < 0">{{ (item.premiumChange ?? 0) |
+                      number:'1.0-0':'vi-VN' }}</span>
+                  </td>
+                  <td>
+                    <input pInputText [(ngModel)]="item.description" class="w-full"
+                      [disabled]="isViewMode || (item.coverageType !== 0 && !item.selected)" />
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="footer">
+                <tr class="font-bold bg-gray-50">
+                  <td>{{ 'Policy::Policy:Total' | translate }}</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td>{{ getProductTotals(product.id || '').premium | number:'1.0-0':'vi-VN' }}</td>
+                  <td>{{ getProductTotals(product.id || '').vat | number:'1.0-0':'vi-VN' }}</td>
+                  <td>{{ getProductTotals(product.id || '').premiumWithVAT | number:'1.0-0':'vi-VN' }}</td>
+                  <td></td>
+                  <td *ngIf="isTerminationView"></td>
+                  <td *ngIf="showEndorsementTotalPremiumChange"></td>
+                  <td></td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 5: Tổng hợp (Summary) -->
+      <div class="pb-4">
+        <h3 class="text-lg font-semibold mb-4 underline">{{ 'Policy::Policy:Summary' | translate }}</h3>
+        <div class="grid grid-cols-12 gap-4">
+          <div class="col-span-12 lg:col-span-6 min-w-0">
+            <div class="policy-summary-table-wrap overflow-x-auto">
+            <p-table [value]="getSummaryItems()" styleClass="p-datatable-sm policy-summary-datatable">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>{{ 'Policy::Policy:Category' | translate }}</th>
+                  <th>{{ 'Policy::Policy:PremiumWithVAT' | translate }}</th>
+                  <th>{{ 'Policy::Policy:DiscountAmount' | translate }}</th>
+                  <th>{{ 'Policy::Policy:MarkupAmount' | translate }}</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-item>
+                <tr
+                  [class.font-bold]="item.category === 'Tổng mức trách nhiệm' || item.category === 'Tổng phí BH (có VAT)'">
+                  <td>{{ item.category }}</td>
+                  <td>{{ item.premiumWithVAT | number:'1.0-0':'vi-VN' }}</td>
+                  <td>
+                    <p-inputNumber *ngIf="item.productId" [ngModel]="getProductDiscount(item.productId)"
+                      (ngModelChange)="setProductDiscount(item.productId, $event)" [disabled]="isViewMode" [min]="0"
+                      [maxFractionDigits]="0" [minFractionDigits]="0" [useGrouping]="true" locale="vi-VN"
+                      styleClass="w-full" />
+                    <span *ngIf="!item.productId">{{ (item.category === 'Tổng phí BH (có VAT)' ? totalDiscount :
+                      item.discount) | number:'1.0-0':'vi-VN' }}</span>
+                  </td>
+                  <td>
+                    <p-inputNumber *ngIf="item.productId" [ngModel]="getProductMarkup(item.productId)"
+                      (ngModelChange)="setProductMarkup(item.productId, $event)" [disabled]="isViewMode" [min]="0"
+                      [maxFractionDigits]="0" [minFractionDigits]="0" [useGrouping]="true" locale="vi-VN"
+                      styleClass="w-full" />
+                    <span *ngIf="!item.productId">{{ (item.category === 'Tổng phí BH (có VAT)' ? totalMarkup :
+                      item.markup) | number:'1.0-0':'vi-VN' }}</span>
+                  </td>
+                </tr>
+                <!-- Tổng tăng/giảm phí cho đơn SĐBS (giống màn chi tiết đơn SĐBS / endorsement page) -->
+                <tr *ngIf="item.category === 'Tổng mức trách nhiệm' && showEndorsementTotalPremiumChange">
+                  <td class="font-bold">{{ 'Policy::Policy:TotalPremiumChange' | translate }}</td>
+                  <td class="font-bold" [class.text-green-600]="displayTotalPremiumChangeForView > 0"
+                    [class.text-red-600]="displayTotalPremiumChangeForView < 0" colspan="3">
+                    {{ displayTotalPremiumChangeForView | number:'1.0-0':'vi-VN' }}
+                  </td>
+                </tr>
+                <!-- Tổng tiền hoàn phí cho đơn chấm dứt -->
+                <tr *ngIf="item.category === 'Tổng mức trách nhiệm' && isTerminationView">
+                  <td class="font-bold">{{ 'Policy::Policy:TotalRefundAmount' | translate }}</td>
+                  <td class="font-bold text-red-600" colspan="3">
+                    {{ totalRefundAmount | number:'1.0-0':'vi-VN' }}
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="footer">
+                <tr>
+                  <td class="font-bold">{{ 'Policy::Policy:Total' | translate }}</td>
+                  <td class="font-bold" colspan="3">{{ (totalPremium - totalDiscount + totalMarkup) | number:'1.0-0':'vi-VN' }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+            </div>
+          </div>
+
+          <div class="col-span-12 lg:col-span-6">
+            <div class="mb-4">
+              <label for="customerNotes" class="block mb-2 font-medium">
+                {{ 'Policy::Policy:CustomerNotes' | translate }}
+              </label>
+              <textarea pTextarea id="customerNotes" [(ngModel)]="formData.customerNotes" [disabled]="isViewMode"
+                class="w-full" [rows]="3"></textarea>
+            </div>
+
+            <div class="mb-4">
+              <label for="internalNotes" class="block mb-2 font-medium">
+                {{ 'Policy::Policy:InternalNotes' | translate }}
+              </label>
+              <textarea pTextarea id="internalNotes" [(ngModel)]="formData.internalNotes" [disabled]="isViewMode"
+                class="w-full" [rows]="3"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contract attachments preview -->
+  <p-dialog [(visible)]="contractDocsPreviewVisible" [modal]="true" [draggable]="false" [resizable]="false"
+    [style]="{ width: '720px' }" [header]="'Policy::Policy:FileAttachment' | translate">
+    <div class="flex flex-col gap-2">
+      <div *ngIf="uploadedContractDocuments?.length; else noContractFiles">
+        <div *ngFor="let doc of uploadedContractDocuments" class="flex items-center justify-between gap-3 py-1">
+          <a *ngIf="doc?.url" [href]="doc.url" target="_blank" rel="noopener noreferrer"
+            class="text-blue-600 underline">
+            {{ doc?.fileName || doc?.id }}
+          </a>
+          <span *ngIf="!doc?.url" class="text-gray-600">{{ doc?.fileName || doc?.id }}</span>
+          <p-button *ngIf="!isViewMode && doc?.id" icon="pi pi-trash" severity="secondary" [text]="true"
+            [rounded]="true" (onClick)="removeContractDocument(doc.id)"
+            [pTooltip]="'Policy::PolicyContract:RemoveFile' | translate" />
+        </div>
+      </div>
+      <ng-template #noContractFiles>
+        <div class="text-gray-600">No files.</div>
+      </ng-template>
+    </div>
+  </p-dialog>
+
+  <!-- Policy attachments preview -->
+  <p-dialog [(visible)]="policyDocsPreviewVisible" [modal]="true" [draggable]="false" [resizable]="false"
+    [style]="{ width: '720px' }" [header]="'Policy::Policy:FileAttachment' | translate">
+    <div class="flex flex-col gap-2">
+      <div *ngIf="uploadedDocuments?.length; else noPolicyFiles">
+        <div *ngFor="let doc of uploadedDocuments" class="flex items-center justify-between gap-3 py-1">
+          <a *ngIf="doc?.url" [href]="doc.url" target="_blank" rel="noopener noreferrer"
+            class="text-blue-600 underline">
+            {{ doc?.fileName || doc?.id }}
+          </a>
+          <span *ngIf="!doc?.url" class="text-gray-600">{{ doc?.fileName || doc?.id }}</span>
+          <p-button *ngIf="!isViewMode && doc?.id" icon="pi pi-trash" severity="secondary" [text]="true"
+            [rounded]="true" (onClick)="removePolicyDocument(doc.id)"
+            [pTooltip]="'Policy::PolicyContract:RemoveFile' | translate" />
+        </div>
+      </div>
+      <ng-template #noPolicyFiles>
+        <div class="text-gray-600">No files.</div>
+      </ng-template>
+    </div>
+  </p-dialog>
+
+  <!-- Car photos modal -->
+  <p-dialog [(visible)]="carPhotosVisible" [modal]="true" [draggable]="false" [resizable]="false"
+    [style]="{ width: '900px' }" [header]="'Policy::Policy:CarPhotos' | translate">
+    <div class="grid grid-cols-12 gap-6">
+      <!-- Left: Chọn loại ảnh / video -->
+      <div class="col-span-12 md:col-span-5">
+        <div class="bg-gray-50 rounded-xl p-4 h-full flex flex-col gap-4">
+          <div>
+            <h3 class="text-base font-semibold mb-1">
+              {{ 'Policy::Policy:CarPhotos' | translate }}
+            </h3>
+            <p class="text-xs text-gray-500">
+              Chọn loại ảnh / video tương ứng với từng vị trí của xe.
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <!-- Front -->
+            <div class="flex items-center justify-between p-3 rounded-lg border"
+              [ngClass]="carPhotos.front ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'">
+              <div class="flex items-center gap-3">
+                <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                  <i class="pi pi-image text-sm"></i>
+                </span>
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium">{{ 'Policy::Policy:CarPhotosFront' | translate }}</span>
+                  <span class="text-[11px] text-gray-500">JPG, PNG</span>
+                </div>
+              </div>
+              <p-fileUpload mode="basic" [customUpload]="true" [auto]="true"
+                (uploadHandler)="onUploadCarPhoto('front', $event)" accept="image/*" [chooseLabel]="'Chọn tệp'"
+                styleClass="p-button-sm p-button-outlined" [disabled]="isViewMode || carPhotosUploading['front']" />
+            </div>
+
+            <!-- Back -->
+            <div class="flex items-center justify-between p-3 rounded-lg border"
+              [ngClass]="carPhotos.back ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'">
+              <div class="flex items-center gap-3">
+                <span
+                  class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                  <i class="pi pi-image text-sm"></i>
+                </span>
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium">{{ 'Policy::Policy:CarPhotosBack' | translate }}</span>
+                  <span class="text-[11px] text-gray-500">JPG, PNG</span>
+                </div>
+              </div>
+              <p-fileUpload mode="basic" [customUpload]="true" [auto]="true"
+                (uploadHandler)="onUploadCarPhoto('back', $event)" accept="image/*" [chooseLabel]="'Chọn tệp'"
+                styleClass="p-button-sm p-button-outlined" [disabled]="isViewMode || carPhotosUploading['back']" />
+            </div>
+
+            <!-- Left -->
+            <div class="flex items-center justify-between p-3 rounded-lg border"
+              [ngClass]="carPhotos.left ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'">
+              <div class="flex items-center gap-3">
+                <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 text-teal-600">
+                  <i class="pi pi-image text-sm"></i>
+                </span>
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium">{{ 'Policy::Policy:CarPhotosLeft' | translate }}</span>
+                  <span class="text-[11px] text-gray-500">JPG, PNG</span>
+                </div>
+              </div>
+              <p-fileUpload mode="basic" [customUpload]="true" [auto]="true"
+                (uploadHandler)="onUploadCarPhoto('left', $event)" accept="image/*" [chooseLabel]="'Chọn tệp'"
+                styleClass="p-button-sm p-button-outlined" [disabled]="isViewMode || carPhotosUploading['left']" />
+            </div>
+
+            <!-- Right -->
+            <div class="flex items-center justify-between p-3 rounded-lg border"
+              [ngClass]="carPhotos.right ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'">
+              <div class="flex items-center gap-3">
+                <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                  <i class="pi pi-image text-sm"></i>
+                </span>
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium">{{ 'Policy::Policy:CarPhotosRight' | translate }}</span>
+                  <span class="text-[11px] text-gray-500">JPG, PNG</span>
+                </div>
+              </div>
+              <p-fileUpload mode="basic" [customUpload]="true" [auto]="true"
+                (uploadHandler)="onUploadCarPhoto('right', $event)" accept="image/*" [chooseLabel]="'Chọn tệp'"
+                styleClass="p-button-sm p-button-outlined" [disabled]="isViewMode || carPhotosUploading['right']" />
+            </div>
+
+            <!-- Video -->
+            <div class="flex items-center justify-between p-3 rounded-lg border"
+              [ngClass]="carPhotos.video ? 'bg-purple-50 border-purple-300' : 'bg-white border-gray-200'">
+              <div class="flex items-center gap-3">
+                <span
+                  class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-purple-100 text-purple-600">
+                  <i class="pi pi-video text-sm"></i>
+                </span>
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium">{{ 'Policy::Policy:CarPhotosVideo' | translate }}</span>
+                  <span class="text-[11px] text-gray-500">MP4, MOV</span>
+                </div>
+              </div>
+              <p-fileUpload mode="basic" [customUpload]="true" [auto]="true"
+                (uploadHandler)="onUploadCarPhoto('video', $event)" accept="video/*" [chooseLabel]="'Chọn tệp'"
+                styleClass="p-button-sm p-button-outlined" [disabled]="isViewMode || carPhotosUploading['video']" />
+            </div>
+          </div>
+
+          <!-- Nút Upload tất cả đã bỏ theo yêu cầu, upload tự động từng file khi chọn -->
+        </div>
+      </div>
+
+      <!-- Right: Danh sách ảnh đã upload -->
+      <div class="col-span-12 md:col-span-7">
+        <div class="bg-white rounded-xl border border-gray-200 p-4 h-full flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-base font-semibold">
+              Danh sách ảnh đã upload
+            </h3>
+          </div>
+
+          <div class="flex-1 flex flex-col gap-2 overflow-y-auto max-h-80">
+            <!-- Front items -->
+            <div *ngFor="let doc of carPhotos.front"
+              class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
+              <div class="flex items-center gap-3">
+                <img *ngIf="doc.url" [src]="doc.url" class="h-10 w-16 object-cover rounded border" />
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium text-blue-600">{{ 'Policy::Policy:CarPhotosFront' | translate
+                    }}</span>
+                  <span class="text-xs text-gray-500">
+                    {{ doc.fileName }}
+                  </span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1">
+                <p-button icon="pi pi-eye" severity="secondary" [text]="true" [rounded]="true"
+                  (onClick)="previewCarPhoto(doc)" [pTooltip]="'Policy::Policy:Preview' | translate" />
+                <p-button *ngIf="!isViewMode" icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+                  (onClick)="removeCarPhoto('front', doc.id)"></p-button>
+              </div>
+            </div>
+
+            <!-- Back items -->
+            <div *ngFor="let doc of carPhotos.back"
+              class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
+              <div class="flex items-center gap-3">
+                <img *ngIf="doc.url" [src]="doc.url" class="h-10 w-16 object-cover rounded border" />
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium text-green-600">{{ 'Policy::Policy:CarPhotosBack' | translate
+                    }}</span>
+                  <span class="text-xs text-gray-500">
+                    {{ doc.fileName }}
+                  </span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1">
+                <p-button icon="pi pi-eye" severity="secondary" [text]="true" [rounded]="true"
+                  (onClick)="previewCarPhoto(doc)" [pTooltip]="'Policy::Policy:Preview' | translate" />
+                <p-button *ngIf="!isViewMode" icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+                  (onClick)="removeCarPhoto('back', doc.id)"></p-button>
+              </div>
+            </div>
+
+            <!-- Left items -->
+            <div *ngFor="let doc of carPhotos.left"
+              class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
+              <div class="flex items-center gap-3">
+                <img *ngIf="doc.url" [src]="doc.url" class="h-10 w-16 object-cover rounded border" />
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium text-emerald-600">{{ 'Policy::Policy:CarPhotosLeft' | translate
+                    }}</span>
+                  <span class="text-xs text-gray-500">
+                    {{ doc.fileName }}
+                  </span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1">
+                <p-button icon="pi pi-eye" severity="secondary" [text]="true" [rounded]="true"
+                  (onClick)="previewCarPhoto(doc)" [pTooltip]="'Policy::Policy:Preview' | translate" />
+                <p-button *ngIf="!isViewMode" icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+                  (onClick)="removeCarPhoto('left', doc.id)"></p-button>
+              </div>
+            </div>
+
+            <!-- Right items -->
+            <div *ngFor="let doc of carPhotos.right"
+              class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
+              <div class="flex items-center gap-3">
+                <img *ngIf="doc.url" [src]="doc.url" class="h-10 w-16 object-cover rounded border" />
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium text-amber-600">{{ 'Policy::Policy:CarPhotosRight' | translate
+                    }}</span>
+                  <span class="text-xs text-gray-500">
+                    {{ doc.fileName }}
+                  </span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1">
+                <p-button icon="pi pi-eye" severity="secondary" [text]="true" [rounded]="true"
+                  (onClick)="previewCarPhoto(doc)" [pTooltip]="'Policy::Policy:Preview' | translate" />
+                <p-button *ngIf="!isViewMode" icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+                  (onClick)="removeCarPhoto('right', doc.id)"></p-button>
+              </div>
+            </div>
+
+            <!-- Video items -->
+            <div *ngFor="let doc of carPhotos.video"
+              class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
+              <div class="flex items-center gap-3">
+                <div class="h-10 w-16 rounded border bg-black flex items-center justify-center overflow-hidden">
+                  <video *ngIf="doc.url" [src]="doc.url" class="h-full w-full object-cover"></video>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium text-purple-600">{{ 'Policy::Policy:CarPhotosVideo' | translate
+                    }}</span>
+                  <span class="text-xs text-gray-500">
+                    {{ doc.fileName }}
+                  </span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1">
+                <p-button icon="pi pi-eye" severity="secondary" [text]="true" [rounded]="true"
+                  (onClick)="previewCarPhoto(doc)" [pTooltip]="'Policy::Policy:Preview' | translate" />
+                <p-button *ngIf="!isViewMode" icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+                  (onClick)="removeCarPhoto('video', doc.id)"></p-button>
+              </div>
+            </div>
+
+            <div
+              *ngIf="!carPhotos.front.length && !carPhotos.back.length && !carPhotos.left.length && !carPhotos.right.length && !carPhotos.video.length"
+              class="text-sm text-gray-500">
+              Chưa có ảnh / video nào được upload.
+            </div>
+          </div>
+
+          <!-- Footer summary -->
+          <!-- Footer summary: just total files -->
+          <div class="mt-4 border-t pt-3 text-xs text-gray-600">
+            Tổng cộng: {{ getCarPhotoDocumentIds().length }} file
+          </div>
+        </div>
+      </div>
+    </div>
+  </p-dialog>
+
+  <p-dialog [(visible)]="carPhotoPreviewVisible" [modal]="true" [draggable]="false" [resizable]="false"
+    [style]="{ width: '900px', maxHeight: '90vh' }" [contentStyle]="{ overflow: 'auto' }"
+    [header]="'Policy::Policy:CarPhotos' | translate">
+    <ng-container *ngIf="carPhotoPreviewDoc as doc">
+      <div class="flex flex-col gap-3">
+        <div class="text-sm text-gray-700">{{ doc.fileName }}</div>
+        <div class="flex justify-center">
+          <img *ngIf="doc.mimeType?.startsWith('image')" [src]="doc.url"
+            class="max-h-[70vh] max-w-full object-contain" />
+          <video *ngIf="!doc.mimeType?.startsWith('image')" [src]="doc.url" controls
+            class="max-h-[70vh] max-w-full object-contain"></video>
+        </div>
+      </div>
+    </ng-container>
+  </p-dialog>
+
+  <div class="page-footer">
+    <div class="footer-left">
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-600">{{ 'Policy::Policy:Status' | translate }}:</span>
+        <span class="text-sm font-medium">{{ formatStatus(formData.status) }}</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-600">{{ 'Policy::Policy:ApprovalStatus' | translate }}:</span>
+        <ng-container
+          *ngIf="workTaskStatusForFooter !== undefined && workTaskStatusForFooter !== null; else policyApprovalStatus">
+          <span [class]="getWorkTaskStatusFooterClass(workTaskStatusForFooter)">{{
+            formatWorkTaskStatusForFooter(workTaskStatusForFooter) }}</span>
+        </ng-container>
+        <ng-template #policyApprovalStatus>
+          <span [class]="getPolicyApprovalStatusFooterClass(formData.approvalStatus)">{{
+            formatApprovalStatus(formData.approvalStatus) }}</span>
+        </ng-template>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-600">{{ 'Policy::Policy:PaymentStatus' | translate }}:</span>
+        <span class="text-sm font-medium">{{ formatPaymentStatus(formData.paymentStatus) }}</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-600">{{ 'Policy::Policy:TotalPolicyAmount' | translate }}:</span>
+        <span class="text-lg font-semibold text-blue-600">{{ (totalPremium - totalDiscount + totalMarkup) | number:'1.0-0':'vi-VN'
+          }}</span>
+      </div>
+      <div class="flex items-center gap-2" *ngIf="isTerminationView">
+        <span class="text-sm text-gray-600">{{ 'Policy::Policy:TotalRefundAmount' | translate }}:</span>
+        <span class="text-lg font-semibold text-red-600">{{ totalRefundAmount | number:'1.0-0':'vi-VN' }}</span>
+      </div>
+      <div class="flex items-center gap-2" *ngIf="showEndorsementTotalPremiumChange">
+        <span class="text-sm text-gray-600">{{ 'Policy::Policy:TotalPremiumChange' | translate }}:</span>
+        <span class="text-lg font-semibold" [class.text-green-600]="displayTotalPremiumChangeForView > 0"
+          [class.text-red-600]="displayTotalPremiumChangeForView < 0"
+          [class.text-gray-600]="displayTotalPremiumChangeForView === 0">{{ displayTotalPremiumChangeForView |
+          number:'1.0-0':'vi-VN' }}</span>
+      </div>
+    </div>
+
+    <div class="footer-right flex gap-2">
+      <!-- Đính kèm: hiển thị nút chỉ khi có file; (1),(2),(3),(5) thêm chức năng upload -->
+      <div class="flex items-center gap-2" *ngIf="uploadedDocumentIds?.length || (detailShowAttach && !isViewMode)">
+        <button *ngIf="uploadedDocumentIds?.length" type="button"
+          class="text-xs text-blue-600 underline whitespace-nowrap" (click)="policyDocsPreviewVisible = true"
+          [disabled]="loading || documentUploadLoading">
+          {{ 'Policy::Policy:FileAttachment' | translate }} ({{ uploadedDocumentIds.length }})
+        </button>
+        <p-fileUpload *ngIf="!isViewMode" id="policyAttachUpload" mode="basic" [customUpload]="true" [auto]="true"
+          [multiple]="true" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" [maxFileSize]="5000000"
+          chooseLabel="{{ 'Policy::Policy:AttachDocument' | translate }}" styleClass="w-auto"
+          (uploadHandler)="onUploadMultipleDocuments($event)" [disabled]="loading || documentUploadLoading" />
+      </div>
+      <!-- (2) Từ màn duyệt đơn: Đính kèm, Lịch sử, Phê duyệt, Từ chối, Quay lại -->
+      <ng-container *ngIf="(fromApprovalContext || fromTerminateApprovalContext) && isViewMode">
+        <p-button *ngIf="approvalPermission | appPermission" [label]="'Policy::Policy:Approve' | translate"
+          icon="pi pi-check" (onClick)="approveFromView()" [loading]="approvalActionLoading" />
+        <p-button *ngIf="approvalPermission | appPermission" [label]="'Policy::Policy:Reject' | translate"
+          icon="pi pi-times" severity="secondary" (onClick)="openRejectModalFromView()"
+          [disabled]="approvalActionLoading" />
+        <p-button [label]="'Policy::Policy:Close' | translate" severity="secondary" (onClick)="backToList()"
+          [disabled]="approvalActionLoading" />
+      </ng-container>
+      <!-- (1)(3)(4)(5)(6) Bình thường: Lịch sử tác động; (3) Active+chưa hết hạn thêm SĐBS; (1) thêm Lưu nháp, Lưu & T.Duyệt; Quay lại -->
+      <ng-container *ngIf="!fromApprovalContext && !fromTerminateApprovalContext">
+        <p-button *ngIf="selectedPolicy?.id" [label]="'Policy::Policy:RecordHistory' | translate"
+          (onClick)="openRecordHistoryModal()" [disabled]="loading" />
+        <p-button *ngIf="isViewMode && detailSdbsEnabled && selectedPolicy?.id"
+          [label]="'Policy::Policy:Endorsement' | translate" icon="pi pi-file-edit" (onClick)="navigateToEndorsement()"
+          [disabled]="loading" />
+        <p-button *ngIf="!isViewMode && detailCaseDraftNotPending" [label]="'Policy::SaveDraft' | translate"
+          (onClick)="save()" [loading]="loading" />
+        <p-button *ngIf="!isViewMode && detailCaseDraftNotPending" [label]="'Policy::Policy:SaveAndApprove' | translate"
+          (onClick)="saveAndApprove()" [loading]="loading" />
+        <p-button [label]="'Policy::Policy:Cancel' | translate" severity="secondary" (onClick)="confirmCancel()"
+          [disabled]="loading" />
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Record History modal -->
+  <p-dialog [(visible)]="recordHistoryModalVisible" [modal]="true" [draggable]="false" [resizable]="false"
+    [style]="{ width: '800px' }" [header]="'Policy::Policy:RecordHistory' | translate"
+    (onHide)="workTaskHistoryList = []">
+    <div class="flex flex-col gap-2">
+      <p-table [value]="workTaskHistoryList" styleClass="p-datatable-sm" [loading]="recordHistoryLoading"
+        [rowHover]="true">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ 'Policy::Policy:RecordHistoryCreationTime' | translate }}</th>
+            <th>{{ 'Policy::Policy:RecordHistoryApprovalType' | translate }}</th>
+            <th>{{ 'Policy::Policy:RecordHistoryName' | translate }}</th>
+            <th>{{ 'Policy::Policy:RecordHistoryStatus' | translate }}</th>
+            <th>{{ 'Policy::Policy:RecordHistoryDescription' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>{{ row.creationTime | date:'short' }}</td>
+            <td>{{ row.businessCodeDisplayName || row.businessCode || '-' }}</td>
+            <td>{{ row.assigneeName || 'SYSTEM' }}</td>
+            <td>{{ row.statusText ? (('Policy::WorkTaskStatus:' + row.statusText) | translate) : '-' }}</td>
+            <td>{{ row.description || '-' }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5" class="text-center text-gray-600 py-4">{{ recordHistoryLoading ?
+              ('AbpUi::LoadingWithThreeDot' |
+              translate) : ('Policy::Policy:RecordHistoryEmpty' | translate) }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-dialog>
+
+  <!-- Reject reason modal (from approval context) -->
+  <p-dialog [(visible)]="rejectReasonModalVisible" [header]="'Policy::PolicyRequestApproval:RejectReason' | translate"
+    [modal]="true" [style]="{ width: '450px' }" [draggable]="false" [resizable]="false"
+    (onHide)="cancelRejectFromView()">
+    <div class="flex flex-col gap-4 py-2">
+      <div>
+        <label for="rejectReasonIdForm" class="block mb-2 font-medium">{{ 'Policy::PolicyRequestApproval:Reason' |
+          translate }} <span class="text-red-500">*</span></label>
+        <p-select id="rejectReasonIdForm" [(ngModel)]="rejectReasonId" [options]="rejectReasonOptions"
+          optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+      </div>
+      <div>
+        <label for="rejectReasonDescriptionForm" class="block mb-2 font-medium">{{
+          'Policy::PolicyRequestApproval:ReasonDescription' | translate }} <span class="text-red-500">*</span></label>
+        <textarea pTextarea id="rejectReasonDescriptionForm" [(ngModel)]="rejectReasonDescription" [rows]="3"
+          class="w-full"></textarea>
+      </div>
+    </div>
+    <ng-template pTemplate="footer">
+      <p-button [label]="'Policy::Cancel' | translate" severity="secondary" (onClick)="cancelRejectFromView()" />
+      <p-button [label]="'Policy::PolicyRequestApproval:Continue' | translate" icon="pi pi-check"
+        (onClick)="confirmRejectFromView()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- Customer Creation Dialog (kept as modal) -->
+  <p-dialog [(visible)]="customerDialogVisible" [modal]="true" [style]="{ width: '900px' }" [draggable]="false"
+    [resizable]="false" [header]="(customerDialogHeaderKey | translate:customerDialogHeaderDefault)"
+    (onHide)="closeCustomerDialog()">
+    <div class="flex flex-col gap-4">
+      <!-- Row 1: Name, Phone, Email -->
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Name -->
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerName" class="block mb-2 font-medium">
+            {{ 'Customer::ResCustomer:Name' | translate }}
+            <span class="text-red-500">*</span>
+          </label>
+          <input pInputText id="customerName" [(ngModel)]="customerFormData.name" class="w-full" maxlength="250"
+            required />
+        </div>
+
+        <!-- Phone -->
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerPhone" class="block mb-2 font-medium">
+            {{ 'Customer::ResCustomer:Phone' | translate }}
+            <span class="text-red-500">*</span>
+          </label>
+          <input pInputText id="customerPhone" [(ngModel)]="customerFormData.phone" (keydown)="preventSpaceKey($event)"
+            (ngModelChange)="onCustomerPhoneChange($event)" class="w-full" maxlength="15" required />
+        </div>
+
+        <!-- Email -->
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerEmail" class="block mb-2 font-medium">
+            {{ 'Customer::ResCustomer:Email' | translate }}
+          </label>
+          <input pInputText id="customerEmail" type="email" [(ngModel)]="customerFormData.email"
+            (keydown)="preventSpaceKey($event)" (ngModelChange)="onCustomerEmailChange($event)" class="w-full"
+            maxlength="50" />
+        </div>
+      </div>
+
+      <!-- Row 2: Số CCCD, Tỉnh/Thành phố, Phường/Xã -->
+      <div class="grid grid-cols-12 gap-4">
+        <div
+          *ngIf="(customerDialogTargetField === 'customer' && isCustomerOrgTypeIndividual()) || customerDialogTargetField === 'beneficiary' || customerDialogTargetField === 'vehicleOwner'"
+          class="col-span-12 md:col-span-4">
+          <label for="customerIdNo" class="block mb-2 font-medium">
+            {{ 'Customer::ResCustomer:IdNo' | translate }}
+          </label>
+          <input pInputText id="customerIdNo" [(ngModel)]="customerFormData.idNo" class="w-full" maxlength="25" />
+        </div>
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerProvinceId" class="block mb-2 font-medium">
+            {{ 'Customer::ResCustomer:Province' | translate }}
+            <span class="text-red-500">*</span>
+          </label>
+          <p-select id="customerProvinceId" [(ngModel)]="customerFormData.provinceId"
+            (ngModelChange)="onCustomerProvinceChanged($event)" [options]="provinceOptions" [showClear]="true"
+            [filter]="true" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerWardId" class="block mb-2 font-medium">
+            {{ 'Customer::ResCustomer:Ward' | translate }}
+            <span class="text-red-500">*</span>
+          </label>
+          <p-select id="customerWardId" [(ngModel)]="customerFormData.wardId" [options]="wardOptions"
+            (ngModelChange)="updateCustomerFullAddress()" [showClear]="true" [filter]="true"
+            [disabled]="!customerFormData.provinceId" optionLabel="label" optionValue="value" styleClass="w-full"
+            appendTo="body" />
+        </div>
+      </div>
+
+      <!-- Row 3: Loại tổ chức (customer only), Giới tính, Ngày sinh (beneficiary modal has no Org type/Sex/DOB in DB) -->
+      <div
+        *ngIf="customerDialogTargetField === 'customer' || customerDialogTargetField === 'beneficiary' || customerDialogTargetField === 'vehicleOwner'"
+        class="grid grid-cols-12 gap-4">
+        <div *ngIf="customerDialogTargetField === 'customer'" class="col-span-12 md:col-span-4">
+          <label for="customerOrganizationTypeId" class="block mb-2 font-medium">
+            {{ 'Customer::ResCustomer:OrganizationType' | translate }}
+            <span class="text-red-500">*</span>
+          </label>
+          <p-select id="customerOrganizationTypeId" [(ngModel)]="customerFormData.organizationTypeId"
+            [options]="organizationTypeOptions" [showClear]="true" [filter]="true" optionLabel="label"
+            optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+        <div
+          *ngIf="(customerDialogTargetField === 'customer' && isCustomerOrgTypeIndividual()) || customerDialogTargetField === 'vehicleOwner'"
+          class="col-span-12 md:col-span-4">
+          <label for="customerSex" class="block mb-2 font-medium">
+            {{ 'Customer::ResCustomer:Sex' | translate }}
+          </label>
+          <p-select id="customerSex" [(ngModel)]="customerFormData.sex" [options]="sexOptions" [showClear]="true"
+            optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+        </div>
+        <div
+          *ngIf="(customerDialogTargetField === 'customer' && isCustomerOrgTypeIndividual()) || customerDialogTargetField === 'vehicleOwner'"
+          class="col-span-12 md:col-span-4">
+          <label for="customerDob" class="block mb-2 font-medium">
+            {{ 'Customer::ResCustomer:DOB' | translate }}
+          </label>
+          <p-datepicker inputId="customerDob" [(ngModel)]="customerFormData.dob" [showIcon]="true" dateFormat="dd/mm/yy"
+            styleClass="w-full" appendTo="body" />
+        </div>
+      </div>
+
+      <!-- Row 4: Địa chỉ, Địa chỉ đầy đủ -->
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Address -->
+        <div class="col-span-12 md:col-span-6">
+          <label for="customerAddress" class="block mb-2 font-medium">
+            {{ 'Customer::ResCustomer:Address' | translate }}
+            <span class="text-red-500">*</span>
+          </label>
+          <input pInputText id="customerAddress" [(ngModel)]="customerFormData.address"
+            (ngModelChange)="updateCustomerFullAddress()" class="w-full" maxlength="250" required />
+        </div>
+        <!-- Full Address -->
+        <div class="col-span-12 md:col-span-6">
+          <label for="customerFullAddress" class="block mb-2 font-medium">
+            {{ 'Customer::ResCustomer:FullAddress' | translate }}
+          </label>
+          <input pInputText id="customerFullAddress" [(ngModel)]="customerFormData.fullAddress" class="w-full"
+            [readonly]="true" [class.bg-gray-100]="true" />
+        </div>
+      </div>
+
+      <!-- Row 5a: Ngành nghề (hiển thị cho cả Cá nhân và Tổ chức) -->
+      <div *ngIf="customerDialogTargetField === 'customer'" class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerIndustryId" class="block mb-2 font-medium">
+            {{ 'Customer::ResCustomer:Industry' | translate }}
+          </label>
+          <p-select id="customerIndustryId" [(ngModel)]="customerFormData.industryId" [options]="industryOptions"
+            [showClear]="true" [filter]="true" filterBy="code" optionLabel="label" optionValue="value"
+            styleClass="w-full" appendTo="body" />
+        </div>
+      </div>
+      <!-- Row 5b: Số GPKD, MST (chỉ Tổ chức) -->
+      <div *ngIf="customerDialogTargetField === 'customer' && isCustomerOrgTypeOrganization()"
+        class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerBusinessNo" class="block mb-2 font-medium">
+            {{ 'Customer::ResCustomer:BusinessNo' | translate }}
+          </label>
+          <input pInputText id="customerBusinessNo" [(ngModel)]="customerFormData.businessNo" class="w-full"
+            maxlength="25" />
+        </div>
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerTin" class="block mb-2 font-medium">
+            {{ 'Customer::ResCustomer:TIN' | translate }}
+          </label>
+          <input pInputText id="customerTin" [(ngModel)]="customerFormData.tin" class="w-full" maxlength="50" />
+        </div>
+      </div>
+
+      <!-- Thông tin người đại diện pháp luật: ẩn khi Loại tổ chức là Cá nhân (chỉ form create customer trong policy) -->
+      <div *ngIf="customerDialogTargetField === 'customer' && !isCustomerOrgTypeIndividual()"
+        class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 font-medium mb-1">{{ 'Customer::ResCustomer:LegalRepresentativeInfo' | translate }}
+        </div>
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerRepName" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:RepName' | translate
+            }}</label>
+          <input pInputText id="customerRepName" [(ngModel)]="customerFormData.repName" class="w-full"
+            maxlength="250" />
+        </div>
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerRepPhone" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:RepPhone' | translate
+            }}</label>
+          <input pInputText id="customerRepPhone" [(ngModel)]="customerFormData.repPhone" class="w-full"
+            maxlength="15" />
+        </div>
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerRepEmail" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:RepEmail' | translate
+            }}</label>
+          <input pInputText id="customerRepEmail" type="email" [(ngModel)]="customerFormData.repEmail" class="w-full"
+            maxlength="50" />
+        </div>
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerRepIdNo" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:RepIdNo' | translate
+            }}</label>
+          <input pInputText id="customerRepIdNo" [(ngModel)]="customerFormData.repIdNo" class="w-full" maxlength="25" />
+        </div>
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerRepTitle" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:RepTitle' | translate
+            }}</label>
+          <input pInputText id="customerRepTitle" [(ngModel)]="customerFormData.repTitle" class="w-full"
+            maxlength="250" />
+        </div>
+      </div>
+
+      <!-- Thông tin người được ủy quyền: ẩn khi Loại tổ chức là Cá nhân (chỉ form create customer trong policy) -->
+      <div *ngIf="customerDialogTargetField === 'customer' && !isCustomerOrgTypeIndividual()"
+        class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 font-medium mb-1">{{ 'Customer::ResCustomer:AuthorizedPersonInfo' | translate }}</div>
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerAuthorizerName" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:Authorizer' |
+            translate }}</label>
+          <input pInputText id="customerAuthorizerName" [(ngModel)]="customerFormData.authorizerName" class="w-full"
+            maxlength="50" />
+        </div>
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerAuthorizerPhone" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:AuthorizerPhone'
+            | translate }}</label>
+          <input pInputText id="customerAuthorizerPhone" [(ngModel)]="customerFormData.authorizerPhone" class="w-full"
+            maxlength="15" />
+        </div>
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerAuthorizerEmail" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:AuthorizerEmail'
+            | translate }}</label>
+          <input pInputText id="customerAuthorizerEmail" type="email" [(ngModel)]="customerFormData.authorizerEmail"
+            class="w-full" maxlength="50" />
+        </div>
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerAuthorizerIdNo" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:AuthorizerNo' |
+            translate }}</label>
+          <input pInputText id="customerAuthorizerIdNo" [(ngModel)]="customerFormData.authorizerIdNo" class="w-full"
+            maxlength="25" />
+        </div>
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerAuthorizerTitle" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:AuthorizerTitle'
+            | translate }}</label>
+          <input pInputText id="customerAuthorizerTitle" [(ngModel)]="customerFormData.authorizerTitle" class="w-full"
+            maxlength="50" />
+        </div>
+        <div class="col-span-12 md:col-span-4">
+          <label for="customerAuthorizerDate" class="block mb-2 font-medium">{{ 'Customer::ResCustomer:AuthorizerDate' |
+            translate }}</label>
+          <p-datepicker id="customerAuthorizerDate" [(ngModel)]="customerFormData.authorizerDate" [showIcon]="true"
+            [showButtonBar]="true" dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body" />
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end gap-2">
+        <p-button [label]="'Customer::Cancel' | translate" severity="secondary" (onClick)="confirmCloseCustomerDialog()"
+          [disabled]="customerDialogLoading" />
+        <p-button [label]="'Customer::Save' | translate" (onClick)="saveCustomer()" [loading]="customerDialogLoading" />
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- OCR upload dialog: icon to + text nhỏ bên trong -->
+  <p-dialog [(visible)]="ocrUploadVisible" [modal]="true" [draggable]="false" [resizable]="false"
+    [style]="{ width: '480px' }" [header]="'Policy::Policy:OcrUpload' | translate">
+    <div class="grid grid-cols-2 gap-6">
+      <div
+        class="flex flex-col items-center justify-center gap-2 py-8 px-4 rounded-xl border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50/50 cursor-pointer transition-colors"
+        [class.opacity-60]="ocrUploadLoading" [class.pointer-events-none]="ocrUploadLoading"
+        (click)="ocrFileInputReg.click()">
+        <i class="pi pi-id-card text-5xl text-gray-500"></i>
+        <span class="text-xs text-gray-600 text-center">{{ 'Policy::Policy:OcrTypeRegistration' | translate }}</span>
+        <input #ocrFileInputReg type="file" accept="image/*" class="hidden"
+          (change)="onOcrFileSelected($event, 'registration')" />
+      </div>
+      <div
+        class="flex flex-col items-center justify-center gap-2 py-8 px-4 rounded-xl border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50/50 cursor-pointer transition-colors"
+        [class.opacity-60]="ocrUploadLoading" [class.pointer-events-none]="ocrUploadLoading"
+        (click)="ocrFileInputInsp.click()">
+        <i class="pi pi-clipboard text-5xl text-gray-500"></i>
+        <span class="text-xs text-gray-600 text-center">{{ 'Policy::Policy:OcrTypeInspection' | translate }}</span>
+        <input #ocrFileInputInsp type="file" accept="image/*" class="hidden"
+          (change)="onOcrFileSelected($event, 'inspection')" />
+      </div>
+    </div>
+  </p-dialog>
+
+  <p-toast />
+  <p-confirmDialog />
+</div>

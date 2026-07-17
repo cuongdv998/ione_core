@@ -1,0 +1,193 @@
+<div class="flex flex-col gap-2">
+  <!-- Thông tin vụ việc -->
+  <div class="info-section">
+    <h3 class="section-title">{{ 'Claim::ClaimTask:IncidentDetails' | translate }}</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-2">
+      <div class="data-row">
+        <span class="label">{{ 'Claim::ClaimTask:IncidentAddress' | translate }}</span>
+        <span class="value">{{ claim?.incidentAddress || '-' }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">{{ 'Claim::IncidentDate' | translate }}</span>
+        <span class="value">{{ formatDateTime(claim?.incidentDate) }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">{{ 'Claim::ClaimTask:OnLocation' | translate }}</span>
+        <span class="value">{{ getOnLocationDisplay() }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">{{ 'Claim::AssessmentPartner' | translate }}</span>
+        <span class="value">{{ getAssessmentPartnerDisplay() }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">{{ 'Claim::IncidentCause' | translate }}</span>
+        <span class="value">{{ getIncidentCauseDisplay() }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">{{ 'Claim::IncidentDescription' | translate }}</span>
+        <span class="value">{{ claim?.incidentDescription || '-' }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">{{ 'Claim::IncidentResult' | translate }}</span>
+        <span class="value">{{ claim?.incidentResult || '-' }}</span>
+      </div>
+      <div class="data-row">
+        <span class="label">{{ 'Claim::AssessmentDate' | translate }}</span>
+        <span class="value">{{ formatDateTime(claim?.assessmentDate) }}</span>
+      </div>
+      @if (showTotalEstimatedLoss) {
+        <div class="data-row">
+          <span class="label">{{ 'Claim::EstimatedTotalLoss' | translate }}</span>
+          <span class="value">{{ formatTotalEstimatedLossDisplay() }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Thông tin bổ sung -->
+  <div class="info-section">
+    <h3 class="section-title">{{ 'Claim::AdditionalInfo' | translate }}</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Col 1 -->
+      <div class="flex flex-col gap-2">
+        <div class="data-row">
+          <span class="label">{{ 'Claim::PersonOnCar' | translate }}</span>
+          <span class="value">{{ claim?.personOnCar != null ? claim?.personOnCar : '-' }}</span>
+        </div>
+        <div class="data-row">
+          <span class="label">{{ 'Claim::DriverRegistryNo' | translate }}</span>
+          <span class="value">{{ claim?.driverRegistryNo || '-' }}</span>
+        </div>
+        <div class="data-row">
+          <span class="label">{{ 'Claim::DriverRegistryEffectDate' | translate }}</span>
+          <span class="value">{{ formatDate(claim?.driverRegistryEffectDate) }}</span>
+        </div>
+        <div class="data-row">
+          <span class="label">{{ 'Claim::DriverRegistryExpireDate' | translate }}</span>
+          <span class="value">{{ formatDate(claim?.driverRegistryExpireDate) }}</span>
+        </div>
+        <div class="data-row">
+          <span class="label">{{ 'Claim::Note' | translate }}</span>
+          <span class="value">{{ claim?.note || '-' }}</span>
+        </div>
+      </div>
+      <!-- Col 2 -->
+      <div class="flex flex-col gap-2">
+        <div class="data-row">
+          <span class="label">{{ 'Claim::DriverName' | translate }}</span>
+          <span class="value">{{ claim?.driverName || '-' }}</span>
+        </div>
+        <div class="data-row">
+          <span class="label">{{ 'Claim::DriverSex' | translate }}</span>
+          <span class="value">{{ getDriverSexDisplay() }}</span>
+        </div>
+        <div class="data-row">
+          <span class="label">{{ 'Claim::DriverPhone' | translate }}</span>
+          <span class="value">{{ claim?.driverPhone || '-' }}</span>
+        </div>
+        <div class="data-row">
+          <span class="label">{{ 'Claim::DriverIdNo' | translate }}</span>
+          <span class="value">{{ claim?.driverIdNo || '-' }}</span>
+        </div>
+        <div class="data-row">
+          <span class="label">{{ 'Claim::SnapshotLink' | translate }}</span>
+          @if (claim?.snapshotLink) {
+          <a [href]="claim?.snapshotLink" target="_blank" rel="noopener noreferrer"
+            class="value text-blue-600 hover:underline inline-flex items-center gap-1 break-all">
+            <i class="pi pi-link text-xs"></i> {{ claim?.snapshotLink }}
+          </a>
+          } @else {
+          <span class="value">-</span>
+          }
+        </div>
+      </div>
+      <!-- Col 3 -->
+      <div class="flex flex-col gap-2">
+        <div class="data-row">
+          <span class="label">{{ 'Claim::DriverLicenseNo' | translate }}</span>
+          <span class="value">{{ claim?.driverLicenseNo || '-' }}</span>
+        </div>
+        <div class="data-row">
+          <span class="label">{{ 'Claim::DriverLicenseEffectDate' | translate }}</span>
+          <span class="value">{{ formatDate(claim?.driverLicenseEffectDate) }}</span>
+        </div>
+        <div class="data-row">
+          <span class="label">{{ 'Claim::DriverLicenseExpireDate' | translate }}</span>
+          <span class="value">{{ formatDate(claim?.driverLicenseExpireDate) }}</span>
+        </div>
+        <div class="data-row">
+          <span class="label">{{ 'Claim::DriverLicenseLevel' | translate }}</span>
+          <span class="value">{{ claim?.driverLicenseLevel || '-' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thông bảo hiểm -->
+  <div class="info-section">
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="section-title mb-0">{{ 'Claim::InsuranceInfo' | translate }}</h3>
+      <p-button icon="pi pi-refresh" [text]="true" [rounded]="true" severity="secondary"
+        (onClick)="onRefreshPolicies()" [pTooltip]="'Claim::Refresh' | translate" />
+    </div>
+    <p-table [value]="policies" [loading]="policiesLoading" [paginator]="false"
+      styleClass="p-datatable-sm custom-table" [rowHover]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>{{ 'Claim::STT' | translate }}</th>
+          <th>{{ 'Claim::LobName' | translate }}</th>
+          <th>{{ 'Claim::ContractId' | translate }}</th>
+          <th>{{ 'Claim::CertificateNo' | translate }}</th>
+          <th>{{ 'Claim::Products' | translate }}</th>
+          <th>{{ 'Claim::CarPlate' | translate }}</th>
+          <th>{{ 'Claim::OwnerName' | translate }}</th>
+          <th>{{ 'Claim::InsurancePeriod' | translate }}</th>
+          <th>{{ 'Claim::PaymentStatus' | translate }}</th>
+          <th class="w-24 border-l-0 border-r-0"></th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-policy let-rowIndex="rowIndex">
+        <tr>
+          <td>{{ rowIndex + 1 }}</td>
+          <td>{{ policy.lobName || '-' }}</td>
+          <td>{{ policy.contractId || '-' }}</td>
+          <td>{{ policy.certificateNo || '-' }}</td>
+          <td>{{ policy.products?.join(', ') || '-' }}</td>
+          <td>{{ policy.carPlate || '-' }}</td>
+          <td>{{ policy.ownerName || '-' }}</td>
+          <td>
+            {{ policy.effectDate | date:'dd/MM/yyyy' }} - {{ policy.expireDate | date:'dd/MM/yyyy' }}
+          </td>
+          <td class="text-green-600 font-bold">
+            {{ formatPaymentStatus(policy.paymentStatus) }}
+          </td>
+          <td>
+            <p-menu
+              #policyMenu
+              [popup]="true"
+              appendTo="body"
+              [model]="getPolicyMenuItems(policy)"
+            ></p-menu>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-ellipsis-h"
+              severity="secondary"
+              class="p-button-text p-button-rounded p-button-sm"
+              [pTooltip]="'Claim::Action' | translate"
+              tooltipPosition="top"
+              (mousedown)="$event.preventDefault(); $event.stopPropagation()"
+              (click)="$event.preventDefault(); $event.stopPropagation(); policyMenu.toggle($event)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="10" class="text-center text-gray-500 py-4">{{ 'Claim::NoPoliciesFound' |
+            translate }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

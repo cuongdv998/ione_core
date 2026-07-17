@@ -1,0 +1,201 @@
+<p-dialog
+  [header]="'Policy::Policy:ImportPolicy:Title' | translate"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [closable]="!importing"
+  (onHide)="onClose()"
+>
+  <div class="flex flex-col gap-4 p-4">
+    <!-- Instructions -->
+    <div class="text-sm text-gray-600 mb-2">
+      <p>{{ 'Policy::Policy:ImportPolicy:Title' | translate }}</p>
+    </div>
+
+    <!-- 1. Đối tác BH gốc (màn danh sách đơn): chọn trước để load hợp đồng theo đối tác -->
+    <div *ngIf="fromPolicyList && primaryInsurancePartnerOptions?.length" class="flex flex-col gap-2">
+      <label for="importPartnerId" class="font-medium">{{ 'Policy::Policy:PrimaryInsurancePartner' | translate }}<span class="text-red-500"> *</span></label>
+      <p-select
+        *ngIf="!partnerFromContract"
+        id="importPartnerId"
+        [(ngModel)]="primaryInsurancePartnerId"
+        [options]="primaryInsurancePartnerOptions"
+        optionLabel="label"
+        optionValue="value"
+        [showClear]="true"
+        [filter]="true"
+        styleClass="w-full"
+        appendTo="body"
+        (ngModelChange)="onPrimaryPartnerChange($event)"
+      />
+      <div *ngIf="partnerFromContract" class="text-sm text-gray-600 py-2">
+        {{ getSelectedPartnerLabel() || ('Policy::Policy:SelectPrimaryInsurancePartner' | translate) }}
+      </div>
+    </div>
+
+    <!-- 2. Hợp đồng (màn danh sách đơn): danh sách load theo đối tác đã chọn, không chọn đối tác thì load all -->
+    <div *ngIf="fromPolicyList" class="flex flex-col gap-2">
+      <label for="importContractId" class="font-medium">{{ 'Policy::Policy:ContractNo' | translate }}</label>
+      <p-select
+        id="importContractId"
+        [(ngModel)]="contractId"
+        [options]="displayedContractOptions"
+        optionLabel="label"
+        optionValue="value"
+        [showClear]="true"
+        [filter]="true"
+        styleClass="w-full"
+        appendTo="body"
+        (ngModelChange)="onContractIdChange($event)"
+      />
+    </div>
+
+    <!-- 2b. Màn chi tiết HĐ: ngữ cảnh read-only (cùng modal + cùng bước chọn loại SP như màn danh sách đơn) -->
+    <div *ngIf="!fromPolicyList && contractId" class="flex flex-col gap-2 rounded border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+      <div>
+        <span class="font-medium">{{ 'Policy::Policy:ContractNo' | translate }}:</span>
+        {{ contractDisplayLabel || contractId }}
+      </div>
+      <div *ngIf="primaryInsurancePartnerId && getSelectedPartnerLabel()">
+        <span class="font-medium">{{ 'Policy::Policy:PrimaryInsurancePartner' | translate }}:</span>
+        {{ getSelectedPartnerLabel() }}
+      </div>
+    </div>
+
+    <!-- 3. Loại sản phẩm: lọc cột sản phẩm động trên file mẫu / khi import (dùng mở từ danh sách đơn hoặc chi tiết HĐ) -->
+    <div class="flex flex-col gap-2">
+      <label for="importProductTypeId" class="font-medium">{{ 'Policy::Policy:ImportPolicy:ProductType' | translate }}</label>
+      <p-select
+        id="importProductTypeId"
+        [(ngModel)]="productTypeId"
+        [options]="productTypeOptions"
+        optionLabel="label"
+        optionValue="value"
+        [showClear]="true"
+        [filter]="true"
+        [loading]="loadingProductTypes"
+        [disabled]="loadingProductTypes"
+        [placeholder]="'Policy::Policy:ImportPolicy:ProductType' | translate"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- File selection and template download -->
+    <div class="border border-gray-300 rounded p-4 bg-gray-50">
+      <div class="flex flex-wrap gap-2 mb-3">
+        <p-button
+          [label]="'Policy::Policy:ImportPolicy:SelectFile' | translate"
+          icon="pi pi-upload"
+          severity="secondary"
+          (onClick)="fileInput.click()"
+          [disabled]="importing"
+        />
+        <p-button
+          [label]="'Policy::Policy:ImportPolicy:DownloadTemplate' | translate"
+          icon="pi pi-download"
+          severity="info"
+          [outlined]="true"
+          (onClick)="downloadTemplate()"
+          [disabled]="importing || !canProceed()"
+        />
+      </div>
+      <input
+        #fileInput
+        type="file"
+        accept=".xlsx,.xls"
+        class="hidden"
+        (change)="onFileSelected($event)"
+      />
+      <div class="text-sm text-gray-600">
+        {{ selectedFileName || ('Policy::Policy:ImportPolicy:SelectFile' | translate) }}
+      </div>
+    </div>
+
+    <!-- Import result -->
+    <div *ngIf="importResult" class="border rounded p-4" [ngClass]="{
+      'border-green-300 bg-green-50': importResult.errorCount === 0,
+      'border-yellow-300 bg-yellow-50': importResult.errorCount > 0 && importResult.successCount > 0,
+      'border-red-300 bg-red-50': importResult.successCount === 0 && importResult.errorCount > 0
+    }">
+      <div class="font-medium mb-2">
+        {{ getResultSummary() }}
+      </div>
+
+      <!-- Mã lô import chung + danh sách dòng Excel import thành công -->
+      <div *ngIf="importResult.importLotCode || importResult.lotImportCodes?.length" class="mt-3">
+        <div *ngIf="importResult.importLotCode" class="font-medium mb-2">
+          {{ 'Policy::Policy:ImportLotNumber' | translate }}: {{ importResult.importLotCode }}
+        </div>
+        <div *ngIf="importResult.lotImportCodes?.length" class="max-h-40 overflow-auto text-sm">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="border-b">
+                <th class="py-1 px-2">{{ 'Policy::Policy:No' | translate }}</th>
+                <th class="py-1 px-2">{{ 'Policy::Policy:ExcelRowNumber' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of importResult.lotImportCodes; let i = index" class="border-b border-gray-200">
+                <td class="py-1 px-2">{{ i + 1 }}</td>
+                <td class="py-1 px-2">{{ item.rowNumber }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="mb-2" *ngIf="importResult.errorFileBase64">
+        <p-button
+          label="Tải file chi tiết lỗi"
+          icon="pi pi-download"
+          severity="warn"
+          [outlined]="true"
+          (onClick)="downloadErrorFileIfAny(importResult)"
+        />
+      </div>
+      <div *ngIf="importResult.errors && importResult.errors.length > 0" class="max-h-48 overflow-auto text-sm">
+        <table class="w-full text-left">
+          <thead>
+            <tr class="border-b">
+              <th class="py-1 px-2">{{ 'Policy::Policy:No' | translate }}</th>
+              <th class="py-1 px-2">{{ 'Policy::Policy:ExcelRowNumber' | translate }}</th>
+              <th class="py-1 px-2">{{ 'Policy::Policy:Field' | translate }}</th>
+              <th class="py-1 px-2">{{ 'Policy::Policy:Message' | translate }}</th>
+              <th class="py-1 px-2">{{ 'Policy::Policy:Value' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let err of importResult.errors; let i = index" class="border-b border-gray-200">
+              <td class="py-1 px-2">{{ i + 1 }}</td>
+              <td class="py-1 px-2">{{ getErrorRowNumber(err) }}</td>
+              <td class="py-1 px-2">{{ err.field }}</td>
+              <td class="py-1 px-2">{{ err.message }}</td>
+              <td class="py-1 px-2">{{ err.value }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        [label]="importing ? ('Policy::Policy:ImportPolicy:Importing' | translate) : ('Policy::Policy:ImportPolicy:Import' | translate)"
+        icon="pi pi-check"
+        (onClick)="onExecute()"
+        [loading]="importing"
+        [disabled]="!selectedFile || importing || !canProceed() || importSuccess"
+      />
+      <p-button
+        [label]="'AbpUi::Close' | translate"
+        severity="secondary"
+        (onClick)="onClose()"
+        [disabled]="importing"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-toast />

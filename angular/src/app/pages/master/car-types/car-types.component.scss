@@ -1,0 +1,16 @@
+// Car Types Component Styles
+
+// Fix scroll issue when p-select dropdown opens in dialog
+::ng-deep {
+  .p-dialog-content {
+    overflow: visible !important;
+  }
+
+  .p-dialog {
+    .p-select-overlay {
+      z-index: 10000 !important;
+    }
+  }
+}
+
+

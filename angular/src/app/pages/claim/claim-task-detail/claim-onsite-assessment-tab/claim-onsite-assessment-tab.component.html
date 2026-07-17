@@ -1,0 +1,486 @@
+<div class="onsite-form-wrap">
+  <div class="onsite-form-panel">
+    <div class="onsite-scroll-content" [class.readonly-mode]="!isEditable">
+    <h4 class="group-title">Thông tin giám định</h4>
+    <div class="grid grid-cols-12 gap-x-8 gap-y-3">
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label required">Đơn vị giám định</label>
+        <p-select [options]="[{label: assessorDeptName || claim?.processDeptName || 'Đơn vị bồi thường số 1', value: '1'}]" optionLabel="label" optionValue="value" styleClass="w-full" [ngModel]="'1'" [disabled]="true" appendTo="body" />
+      </div>
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label required">Người giám định</label>
+        <p-select [options]="[{label: assessorName || claim?.processEmpName || '--Lựa chọn--', value: '1'}]" optionLabel="label" optionValue="value" styleClass="w-full" [ngModel]="'1'" [disabled]="true" appendTo="body" />
+      </div>
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label required">Ngày giám định</label>
+        <p-datepicker [(ngModel)]="assessmentStartDate" [showTime]="true" hourFormat="24" [showIcon]="true" [disabled]="true" dateFormat="dd/mm/yy" styleClass="w-full" />
+      </div>
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label required">Ngày dự kiến hoàn thành</label>
+        <p-datepicker [(ngModel)]="assessmentEndDate" [showTime]="true" hourFormat="24" [showIcon]="true" [disabled]="true" dateFormat="dd/mm/yy" styleClass="w-full" />
+      </div>
+    </div>
+
+    <h4 class="group-title">Thông tin lái xe</h4>
+    <div class="grid grid-cols-12 gap-x-8 gap-y-3">
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label">Tên người lái xe</label>
+        <input pInputText class="w-full" [ngClass]="inputClass('driverName')" [(ngModel)]="onsiteForm.driverName" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('driverName')" />
+        @if (isInvalid('driverName')) { <small class="field-error">{{ getError('driverName') }}</small> }
+      </div>
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label">Giới tính</label>
+        <p-select [options]="driverSexOptions" optionLabel="label" optionValue="value" [styleClass]="selectClass('driverSex')" appendTo="body" [(ngModel)]="onsiteForm.driverSex" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('driverSex')" />
+        @if (isInvalid('driverSex')) { <small class="field-error">{{ getError('driverSex') }}</small> }
+      </div>
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label">Điện thoại</label>
+        <input pInputText class="w-full" [ngClass]="inputClass('driverPhone')" [(ngModel)]="onsiteForm.driverPhone" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('driverPhone')" />
+        @if (isInvalid('driverPhone')) { <small class="field-error">{{ getError('driverPhone') }}</small> }
+      </div>
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label">Số CCCD</label>
+        <input pInputText class="w-full" [ngClass]="inputClass('driverIdNo')" [(ngModel)]="onsiteForm.driverIdNo" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('driverIdNo')" />
+        @if (isInvalid('driverIdNo')) { <small class="field-error">{{ getError('driverIdNo') }}</small> }
+      </div>
+
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label">Số GPLX</label>
+        <input pInputText class="w-full" [ngClass]="inputClass('driverLicenseNo')" [(ngModel)]="onsiteForm.driverLicenseNo" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('driverLicenseNo')" />
+        @if (isInvalid('driverLicenseNo')) { <small class="field-error">{{ getError('driverLicenseNo') }}</small> }
+      </div>
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label">Ngày cấp GPLX</label>
+        <p-datepicker [(ngModel)]="onsiteForm.driverLicenseEffectDate" [showIcon]="true" [disabled]="!isEditable" dateFormat="dd/mm/yy" [styleClass]="selectClass('driverLicenseEffectDate')" (ngModelChange)="onFieldChanged('driverLicenseEffectDate')" />
+        @if (isInvalid('driverLicenseEffectDate')) { <small class="field-error">{{ getError('driverLicenseEffectDate') }}</small> }
+      </div>
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label">Ngày hết hạn GPLX</label>
+        <p-datepicker [(ngModel)]="onsiteForm.driverLicenseExpireDate" [showIcon]="true" [disabled]="!isEditable" dateFormat="dd/mm/yy" [styleClass]="selectClass('driverLicenseExpireDate')" (ngModelChange)="onFieldChanged('driverLicenseExpireDate')" />
+        @if (isInvalid('driverLicenseExpireDate')) { <small class="field-error">{{ getError('driverLicenseExpireDate') }}</small> }
+      </div>
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label">Hạng giấy phép lái xe</label>
+        <p-select [options]="driverLicenseLevelOptions" optionLabel="label" optionValue="value" [styleClass]="selectClass('driverLicenseLevel')" appendTo="body" [(ngModel)]="onsiteForm.driverLicenseLevel" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('driverLicenseLevel')" />
+        @if (isInvalid('driverLicenseLevel')) { <small class="field-error">{{ getError('driverLicenseLevel') }}</small> }
+      </div>
+
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label">Số đăng kiểm</label>
+        <input pInputText class="w-full" [ngClass]="inputClass('carRegistryNo')" [(ngModel)]="onsiteForm.carRegistryNo" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('carRegistryNo')" />
+        @if (isInvalid('carRegistryNo')) { <small class="field-error">{{ getError('carRegistryNo') }}</small> }
+      </div>
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label">Ngày đăng kiểm</label>
+        <p-datepicker [(ngModel)]="onsiteForm.carRegistryEffectDate" [showIcon]="true" [disabled]="!isEditable" dateFormat="dd/mm/yy" [styleClass]="selectClass('carRegistryEffectDate')" (ngModelChange)="onFieldChanged('carRegistryEffectDate')" />
+        @if (isInvalid('carRegistryEffectDate')) { <small class="field-error">{{ getError('carRegistryEffectDate') }}</small> }
+      </div>
+      <div class="col-span-12 md:col-span-3">
+        <label class="field-label">Ngày hết hạn đăng kiểm</label>
+        <p-datepicker [(ngModel)]="onsiteForm.carRegistryExpireDate" [showIcon]="true" [disabled]="!isEditable" dateFormat="dd/mm/yy" [styleClass]="selectClass('carRegistryExpireDate')" (ngModelChange)="onFieldChanged('carRegistryExpireDate')" />
+        @if (isInvalid('carRegistryExpireDate')) { <small class="field-error">{{ getError('carRegistryExpireDate') }}</small> }
+      </div>
+    </div>
+
+    <h4 class="group-title">Thông tin hạng mục</h4>
+    <div class="evaluation-wrap">
+      <div class="evaluation-row">
+        <label class="evaluation-label required">Vị trí tổn thất</label>
+        <div class="loss-position-list">
+          @for (item of lossPositionOptions; track item.value) {
+            <div class="loss-item">
+              <p-checkbox [inputId]="'loss-' + item.value" [value]="item.value" [(ngModel)]="onsiteForm.lossPositions" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('lossPositions')" />
+              <label [for]="'loss-' + item.value">{{ item.label }}</label>
+            </div>
+          }
+        </div>
+        @if (isInvalid('lossPositions')) { <small class="field-error">{{ getError('lossPositions') }}</small> }
+      </div>
+
+      <div class="evaluation-row">
+        <label class="evaluation-label required">Tổn thất bên thứ 3</label>
+        <button type="button" class="third-party-switch" [class.active]="onsiteForm.hasLossThirdParty" [disabled]="!isEditable" (click)="toggleThirdPartyLoss()">
+          <span class="switch-dot"></span>
+        </button>
+      </div>
+
+      <div class="evaluation-row">
+        <label class="evaluation-label required">Lời khai nhân chứng</label>
+        <textarea pTextarea class="w-full" rows="2" [ngClass]="inputClass('witnessTestimony')" [(ngModel)]="onsiteForm.witnessTestimony" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('witnessTestimony')"></textarea>
+        @if (isInvalid('witnessTestimony')) { <small class="field-error">{{ getError('witnessTestimony') }}</small> }
+      </div>
+      <div class="evaluation-row">
+        <label class="evaluation-label required">Nguyên nhân ban đầu</label>
+        <textarea pTextarea class="w-full" rows="2" [ngClass]="inputClass('causeDescription')" [(ngModel)]="onsiteForm.causeDescription" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('causeDescription')"></textarea>
+        @if (isInvalid('causeDescription')) { <small class="field-error">{{ getError('causeDescription') }}</small> }
+      </div>
+      <div class="evaluation-row">
+        <label class="evaluation-label required">Diễn biến</label>
+        <textarea pTextarea class="w-full" rows="2" [ngClass]="inputClass('description')" [(ngModel)]="onsiteForm.description" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('description')"></textarea>
+        @if (isInvalid('description')) { <small class="field-error">{{ getError('description') }}</small> }
+      </div>
+      <div class="evaluation-row">
+        <label class="evaluation-label required">Mô tả hiện trạng</label>
+        <textarea pTextarea class="w-full" rows="2" [ngClass]="inputClass('locationDescription')" [(ngModel)]="onsiteForm.locationDescription" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('locationDescription')"></textarea>
+        @if (isInvalid('locationDescription')) { <small class="field-error">{{ getError('locationDescription') }}</small> }
+      </div>
+      <div class="evaluation-row">
+        <label class="evaluation-label required">Mức độ thiệt hại</label>
+        <textarea pTextarea class="w-full" rows="2" [ngClass]="inputClass('damageDescription')" [(ngModel)]="onsiteForm.damageDescription" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('damageDescription')"></textarea>
+        @if (isInvalid('damageDescription')) { <small class="field-error">{{ getError('damageDescription') }}</small> }
+      </div>
+      <div class="evaluation-row">
+        <label class="evaluation-label required">Sơ bộ lỗi các bên tham gia giao thông</label>
+        <textarea pTextarea class="w-full" rows="2" [ngClass]="inputClass('partiesInvolvedDescription')" [(ngModel)]="onsiteForm.partiesInvolvedDescription" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('partiesInvolvedDescription')"></textarea>
+        @if (isInvalid('partiesInvolvedDescription')) { <small class="field-error">{{ getError('partiesInvolvedDescription') }}</small> }
+      </div>
+      <div class="evaluation-row">
+        <label class="evaluation-label required">Phương án giải quyết</label>
+        <textarea pTextarea class="w-full" rows="2" [ngClass]="inputClass('addressPlan')" [(ngModel)]="onsiteForm.addressPlan" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('addressPlan')"></textarea>
+        @if (isInvalid('addressPlan')) { <small class="field-error">{{ getError('addressPlan') }}</small> }
+      </div>
+      <div class="evaluation-row">
+        <label class="evaluation-label required">Kiến nghị của khách hàng</label>
+        <textarea pTextarea class="w-full" rows="2" [ngClass]="inputClass('customerRecommendation')" [(ngModel)]="onsiteForm.customerRecommendation" [disabled]="!isEditable" (ngModelChange)="onFieldChanged('customerRecommendation')"></textarea>
+        @if (isInvalid('customerRecommendation')) { <small class="field-error">{{ getError('customerRecommendation') }}</small> }
+      </div>
+      <div class="evaluation-row">
+        <label class="evaluation-label">Ý kiến khác</label>
+        <textarea pTextarea class="w-full" rows="2" [(ngModel)]="onsiteForm.otherDescription" [disabled]="!isEditable"></textarea>
+      </div>
+    </div>
+
+    <div class="extra-wrap">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label">Garage giám định chi tiết</label>
+          <p-select [options]="garageOptions" optionLabel="label" optionValue="value" [loading]="loadingGarages" [disabled]="!isEditable" [styleClass]="selectClass('garageId')" appendTo="body" [(ngModel)]="onsiteForm.garageId" (ngModelChange)="onFieldChanged('garageId')" />
+          @if (isInvalid('garageId')) { <small class="field-error">{{ getError('garageId') }}</small> }
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label">Lịch giám định chi tiết</label>
+          <p-datepicker [(ngModel)]="onsiteForm.issueDate" [showTime]="true" [showIcon]="true" [disabled]="!isEditable" dateFormat="dd/mm/yy" [styleClass]="selectClass('issueDate')" appendTo="body" (ngModelChange)="onFieldChanged('issueDate')" />
+          @if (isInvalid('issueDate')) { <small class="field-error">{{ getError('issueDate') }}</small> }
+        </div>
+      </div>
+
+      <div class="grid grid-cols-12 gap-4 mt-3">
+        <div class="col-span-12 md:col-span-3 image-type-field">
+          <label class="field-label required">Danh sách loại ảnh</label>
+          <p-select [options]="imageTypeOptions" optionLabel="label" optionValue="value" [loading]="loadingOnsiteImageType" [disabled]="!isEditable" [showClear]="true" styleClass="w-full" appendTo="body" [(ngModel)]="onsiteForm.selectedImageType" (ngModelChange)="onImageTypeChanged()" />
+        </div>
+        <div class="col-span-12 md:col-span-3 image-upload-field">
+          <input #onsiteImageUpload type="file" accept="image/*" multiple class="hidden" (change)="onOnsiteImageUpload($event)" />
+          <p-button icon="pi pi-upload" label="Tải ảnh" [disabled]="loadingOnsiteImageType || !isEditable" (onClick)="openOnsiteImageUploadDialog()" />
+        </div>
+      </div>
+
+      <div class="onsite-photos-grid">
+        @for (photo of filteredOnsitePhotos; track photo.id) {
+          <div class="onsite-photo-card">
+            @if (photo.fileType === 'pdf') {
+              <button type="button" class="onsite-photo-file" (click)="openOnsitePhoto(photo)">
+                <i class="pi pi-file-pdf"></i>
+                <span>PDF</span>
+              </button>
+            } @else {
+              <img [src]="photo.previewUrl" [alt]="photo.name" (click)="openOnsitePhoto(photo)" />
+            }
+            <div class="photo-meta">
+              <div class="truncate font-medium" [title]="photo.name">{{ photo.name }}</div>
+              <div class="text-xs text-gray-600">{{ formatDateTime(photo.uploadedAt) }} - {{ photo.uploader }}</div>
+            </div>
+            <button type="button" class="photo-remove-btn" [disabled]="!isEditable" (click)="removeOnsitePhoto(photo.id)"><i class="pi pi-times"></i></button>
+          </div>
+        }
+      </div>
+
+      <div class="doc-table-wrap mt-3">
+        <h4 class="group-title">Thông tin hồ sơ giấy tờ</h4>
+        <p-table [value]="profileDocuments" styleClass="p-datatable-sm onsite-doc-table" [rowHover]="true">
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="stt-col">STT</th>
+              <th>Tên giấy tờ</th>
+              <th class="flag-col">Đã đầy đủ</th>
+              <th class="flag-col">Là bản sao</th>
+              <th class="flag-col">Cần bổ sung</th>
+              <th>Ghi chú</th>
+              <th style="width: 150px">Ngày cấp</th>
+              <th class="file-col">Tải lên</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-doc let-rowIndex="rowIndex">
+            <tr>
+              <td class="stt-col">{{ rowIndex + 1 }}</td>
+              <td>{{ doc.name }}</td>
+              <td class="flag-col"><p-checkbox [binary]="true" [(ngModel)]="doc.complete" [disabled]="!isEditable" /></td>
+              <td class="flag-col"><p-checkbox [binary]="true" [(ngModel)]="doc.isCopy" [disabled]="!isEditable" /></td>
+              <td class="flag-col"><p-checkbox class="need-supplement-checkbox" [binary]="true" [ngModel]="getNeedSupplement(doc)" [readonly]="true" [disabled]="true" /></td>
+              <td><textarea pTextarea rows="1" class="w-full onsite-doc-textarea" [(ngModel)]="doc.note" [disabled]="!isEditable"></textarea></td>
+              <td style="width: 150px"><p-datepicker [(ngModel)]="doc.issueDate" [showIcon]="true" [disabled]="!isEditable" dateFormat="dd/mm/yy" styleClass="w-full" appendTo="body" /></td>
+              <td class="file-col">
+                <div class="file-actions">
+                  <button type="button" class="file-link" [disabled]="loadingOnsiteImageType || !isEditable" (click)="openProfileUploadDialog(doc.id)">
+                    {{ doc.attachments.length ? (doc.attachments.length + ' tệp') : '-' }}
+                  </button>
+                  <p-button icon="pi pi-upload" [text]="true" [disabled]="loadingOnsiteImageType || !isEditable" (onClick)="openProfileUploadDialog(doc.id)" />
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+    </div>
+
+    <div class="onsite-action-bar">
+      @if (actionWorkTaskStatus != null) {
+        <p-tag
+          [value]="getWorkTaskStatusDisplay()"
+          [severity]="getWorkTaskStatusSeverity()"
+        />
+      }
+      <div class="flex gap-2 flex-wrap items-center">
+        <p-button label="Đóng" severity="secondary" (onClick)="closeScreen()" />
+        @if (showOnsiteActions && actionWorkTaskStatus === WorkTaskStatus.New) {
+          <p-button label="Tiếp nhận" class="btn-orange" (onClick)="acceptTask()" />
+          <p-button label="Từ chối" class="btn-orange" (onClick)="rejectTask()" />
+          <p-button label="Điều chuyển" class="btn-orange" (onClick)="transferTask()" />
+        }
+        @if (canShowReassignAction) {
+          <p-button label="Giao lại" severity="info" (onClick)="reassignTask()" />
+        }
+        @if (showOnsiteActions && actionWorkTaskStatus === WorkTaskStatus.InProgress) {
+          <p-button label="Tải biên bản" class="btn-orange" [loading]="downloadingMinutes" (onClick)="downloadOnsiteMinutes()" />
+          <p-button label="Lưu" class="btn-orange" [loading]="savingDraft" (onClick)="saveOnsiteAssessment()" />
+          <p-button label="Hoàn thành GĐ" class="btn-orange" [loading]="completing" (onClick)="completeOnsiteAssessment()" />
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<p-confirmDialog styleClass="close-screen-confirm-dialog" />
+<p-toast />
+
+<p-dialog
+  [(visible)]="previewImageVisible"
+  [modal]="true"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(92vw, 960px)' }"
+  [contentStyle]="{ padding: '0' }"
+  (onHide)="closePreviewImage()"
+  [header]="previewImageName || 'Xem ảnh hiện trường'"
+>
+  @if (previewImageUrl && previewImageType === 'image') {
+    <div class="onsite-image-preview-wrap">
+      <img [src]="previewImageUrl" [alt]="previewImageName || 'Onsite image'" class="onsite-image-preview" />
+    </div>
+  }
+  @if (previewImageResourceUrl && previewImageType === 'pdf') {
+    <iframe [src]="previewImageResourceUrl" class="profile-file-preview-frame" title="PDF preview"></iframe>
+  }
+  @if (previewImageType === 'other') {
+    <div class="profile-upload-preview-empty">
+      <p>Không hỗ trợ xem trực tiếp tệp này.</p>
+    </div>
+  }
+</p-dialog>
+
+<p-dialog
+  [(visible)]="onsiteImageUploadDialogVisible"
+  [modal]="true"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(96vw, 1240px)' }"
+  [header]="'Ảnh hiện trường - Tải tệp'"
+  (onHide)="closeOnsiteImageUploadDialog()"
+>
+  <div class="onsite-upload-dialog">
+    <div class="onsite-upload-toolbar">
+      <div class="onsite-upload-toolbar__action">
+        <label class="field-label required">Tải tệp theo loại ảnh</label>
+        <div class="image-type-upload-buttons">
+          @for (imageType of imageTypeOptions; track imageType.value) {
+            <input #onsiteImageUploadInDialog type="file" accept="image/*,.pdf,application/pdf" multiple class="hidden" (change)="onOnsiteImageUpload($event, imageType.value)" />
+            <p-button
+              icon="pi pi-upload"
+              [label]="imageType.label"
+              [disabled]="loadingOnsiteImageType || !isEditable"
+              (onClick)="triggerOnsiteImageUpload(onsiteImageUploadInDialog, imageType.value)"
+            />
+          }
+          @if (!loadingOnsiteImageType && imageTypeOptions.length === 0) {
+            <span class="image-type-empty">Chưa cấu hình loại ảnh hiện trường.</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="onsite-upload-layout">
+      <div class="onsite-upload-file-list">
+        @for (photo of onsitePhotos; track photo.id) {
+          <div
+            class="onsite-upload-file-item"
+            [class.is-uploading]="photo.uploading"
+            [class.is-selected]="selectedOnsitePhotoId === photo.id"
+            (click)="selectOnsitePhoto(photo.id)"
+          >
+            <div class="onsite-upload-file-thumb">
+              @if (getOnsitePhotoPreviewType(photo) === 'image') {
+                <img [src]="photo.previewUrl" [alt]="photo.name" />
+              } @else if (getOnsitePhotoPreviewType(photo) === 'pdf') {
+                <i class="pi pi-file-pdf"></i>
+              } @else {
+                <i class="pi pi-file"></i>
+              }
+            </div>
+            <div class="onsite-upload-file-info">
+              <span class="onsite-upload-file-type" [title]="photo.type || 'Khác'">{{ photo.type || 'Khác' }}</span>
+              <span class="onsite-upload-file-name" [title]="photo.name">{{ photo.name }}</span>
+            </div>
+            <div class="onsite-upload-file-actions">
+              <button
+                type="button"
+                class="onsite-upload-file-download"
+                [disabled]="photo.uploading"
+                (click)="$event.stopPropagation(); downloadOnsitePhoto(photo)"
+              >
+                <i class="pi pi-download"></i>
+              </button>
+              <button
+                type="button"
+                class="onsite-upload-file-delete"
+                [disabled]="photo.uploading || !isEditable"
+                (click)="$event.stopPropagation(); removeOnsitePhoto(photo.id)"
+              >
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </div>
+        }
+        @if (onsitePhotos.length === 0) {
+          <div class="onsite-upload-empty">Chưa có ảnh hiện trường được tải lên.</div>
+        }
+      </div>
+
+      <div class="onsite-upload-preview">
+        @if (getSelectedOnsitePhoto(); as photo) {
+          @if (getOnsitePhotoPreviewType(photo) === 'image') {
+            <div class="onsite-upload-preview-stage">
+              <img [src]="photo.sourceUrl || photo.previewUrl" [alt]="photo.name" class="onsite-upload-preview-image" />
+            </div>
+          }
+          @if (getOnsitePhotoPreviewType(photo) === 'pdf') {
+            @if (getSafeResourceUrl(photo.sourceUrl || photo.previewUrl); as photoPdfUrl) {
+              <iframe [src]="photoPdfUrl" class="profile-file-preview-frame" title="Onsite PDF preview"></iframe>
+            }
+          }
+          @if (getOnsitePhotoPreviewType(photo) === 'other') {
+            <div class="onsite-upload-preview-empty">
+              <p>Không hỗ trợ xem trực tiếp tệp này.</p>
+            </div>
+          }
+        } @else {
+          <div class="onsite-upload-preview-empty">
+            <p>Chọn một ảnh ở bên trái để xem trước.</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</p-dialog>
+
+<p-dialog
+  [(visible)]="profileUploadDialogVisible"
+  [modal]="true"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(96vw, 1240px)' }"
+  [header]="(getActiveProfileDocument()?.name || 'Hồ sơ giấy tờ') + ' - Tải tệp'"
+  (onHide)="closeProfileUploadDialog()"
+>
+  <div class="profile-upload-dialog">
+    <div class="profile-upload-toolbar">
+      <input #profileUploadInput type="file" accept=".pdf,image/*" multiple class="hidden" (change)="onProfileFileUpload($event)" />
+      <p-button icon="pi pi-upload" label="Tải tệp" [disabled]="loadingOnsiteImageType || !isEditable" (onClick)="profileUploadInput.click()" />
+    </div>
+
+    <div class="profile-upload-layout">
+      <div class="profile-upload-file-list">
+        @for (file of getActiveProfileDocument()?.attachments || []; track file.id) {
+          <div
+            class="profile-upload-file-item"
+            [class.is-uploading]="file.uploading"
+            [class.is-selected]="isSelectedProfileUploadFile(file)"
+            (click)="selectProfileUploadFile(file)"
+          >
+            <div class="profile-upload-file-thumb">
+              @if (getProfileFilePreviewType(file) === 'image' && (file.thumbnailUrl || file.url)) {
+                <img [src]="file.thumbnailUrl || file.url" [alt]="file.name" />
+              } @else if (getProfileFilePreviewType(file) === 'pdf') {
+                <i class="pi pi-file-pdf"></i>
+              } @else {
+                <i class="pi pi-file"></i>
+              }
+            </div>
+            <div class="profile-upload-file-info">
+              <span class="profile-upload-file-type" [title]="getActiveProfileDocument()?.name || 'Hồ sơ giấy tờ'">
+                {{ getActiveProfileDocument()?.name || 'Hồ sơ giấy tờ' }}
+              </span>
+              <span class="profile-upload-file-name" [title]="file.name">{{ file.name }}</span>
+            </div>
+            <div class="profile-upload-file-actions">
+              <button
+                type="button"
+                class="profile-upload-file-download"
+                [disabled]="file.uploading"
+                (click)="$event.stopPropagation(); downloadProfileDocumentFile(file)"
+                title="Tải xuống"
+              >
+                <i class="pi pi-download"></i>
+              </button>
+              <button
+                type="button"
+                class="profile-upload-file-delete"
+                [disabled]="file.uploading || !isEditable"
+                (click)="$event.stopPropagation(); removeProfileDocumentFile(file)"
+                title="Xóa"
+              >
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </div>
+        }
+        @if ((getActiveProfileDocument()?.attachments || []).length === 0) {
+          <div class="profile-upload-empty">Chưa có tệp được tải lên.</div>
+        }
+      </div>
+
+      <div class="profile-upload-preview">
+        @if (profileFilePreviewUrl && profileFilePreviewType === 'image') {
+          <div class="profile-upload-preview-stage">
+            <img [src]="profileFilePreviewUrl" [alt]="profileFilePreviewName || 'Preview file'" class="profile-upload-preview-image" />
+          </div>
+        }
+        @if (profileFilePreviewResourceUrl && profileFilePreviewType === 'pdf') {
+          <iframe [src]="profileFilePreviewResourceUrl" class="profile-file-preview-frame" title="File preview"></iframe>
+        }
+        @if ((profileFilePreviewType === 'other' && selectedProfileUploadFileId) || !selectedProfileUploadFileId) {
+          <div class="profile-upload-preview-empty">
+            @if (selectedProfileUploadFileId) {
+              <p>Không hỗ trợ xem trực tiếp tệp này.</p>
+            } @else {
+              <p>Chọn một tệp ở bên trái để xem trước.</p>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</p-dialog>

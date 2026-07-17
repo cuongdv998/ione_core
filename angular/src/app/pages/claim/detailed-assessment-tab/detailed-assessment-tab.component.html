@@ -1,0 +1,558 @@
+<div class="detailed-assessment-wrap">
+  @if (loading) {
+    <div class="flex justify-center p-8"><i class="pi pi-spin pi-spinner text-3xl"></i></div>
+  } @else {
+    <div class="detailed-scroll-content" [class.readonly-mode]="!isEditable">
+      <h4 class="group-title">Thông tin giám định</h4>
+      <div class="grid grid-cols-12 gap-x-8 gap-y-3">
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label required">Đơn vị giám định</label>
+          <input pInputText class="w-full" [ngModel]="form.assessorDeptName" [disabled]="true" />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label required">Người giám định</label>
+          <input pInputText class="w-full" [ngModel]="form.assessorName" [disabled]="true" />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label required">Ngày giám định</label>
+          <p-datepicker [(ngModel)]="form.startDate" [showIcon]="true" [disabled]="true" [showTime]="true" [showSeconds]="true" hourFormat="24" dateFormat="dd/mm/yy" styleClass="w-full" />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label required">Ngày dự kiến hoàn thành</label>
+          <p-datepicker [(ngModel)]="form.endDate" [showIcon]="true" [disabled]="true" [showTime]="true" [showSeconds]="true" hourFormat="24" dateFormat="dd/mm/yy" styleClass="w-full" />
+        </div>
+      </div>
+
+      <h4 class="group-title">Thông tin lái xe</h4>
+      <div class="grid grid-cols-12 gap-x-8 gap-y-3">
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label required">Tên người lái xe</label>
+          <input pInputText class="w-full" [(ngModel)]="form.driverName" (ngModelChange)="clearError('driverName')" />
+          @if (hasError('driverName')) {
+            <small class="field-error">{{ getError('driverName') }}</small>
+          }
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label required">Giới tính</label>
+          <p-select
+            [options]="[{ label: 'Nam', value: 'M' }, { label: 'Nữ', value: 'F' }]"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            styleClass="w-full"
+            [(ngModel)]="form.driverSex"
+            (ngModelChange)="clearError('driverSex')"
+          />
+          @if (hasError('driverSex')) {
+            <small class="field-error">{{ getError('driverSex') }}</small>
+          }
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label required">Điện thoại</label>
+          <input pInputText class="w-full" [(ngModel)]="form.driverPhone" (ngModelChange)="clearError('driverPhone')" />
+          @if (hasError('driverPhone')) {
+            <small class="field-error">{{ getError('driverPhone') }}</small>
+          }
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label">Số CCCD</label>
+          <input pInputText class="w-full" [(ngModel)]="form.driverIdNo" />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label">Số GPLX</label>
+          <input pInputText class="w-full" [(ngModel)]="form.driverLicenseNo" />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label">Ngày cấp GPLX</label>
+          <p-datepicker [(ngModel)]="form.driverLicenseEffectDate" [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full" />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label">Ngày hết hạn GPLX</label>
+          <p-datepicker [(ngModel)]="form.driverLicenseExpireDate" [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full" />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label required">Hạng giấy phép lái xe</label>
+          <p-select
+            [options]="licenseLevelOptions"
+            optionLabel="name"
+            optionValue="id"
+            appendTo="body"
+            styleClass="w-full"
+            [(ngModel)]="form.driverLicenseLevel"
+            (ngModelChange)="clearError('driverLicenseLevel')"
+          />
+          @if (hasError('driverLicenseLevel')) {
+            <small class="field-error">{{ getError('driverLicenseLevel') }}</small>
+          }
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label">Số đăng kiểm</label>
+          <input pInputText class="w-full" [(ngModel)]="form.carRegistryNo" />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label">Ngày đăng kiểm</label>
+          <p-datepicker [(ngModel)]="form.carRegistryEffectDate" [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full" />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <label class="field-label">Ngày hết hạn đăng kiểm</label>
+          <p-datepicker [(ngModel)]="form.carRegistryExpireDate" [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full" />
+        </div>
+      </div>
+
+      <h4 class="group-title">Thông tin hạng mục</h4>
+      <div class="coverage-toolbar">
+        <div class="coverage-select" [pTooltip]="getCoverageTooltip(form.selectedCoverageId)" tooltipPosition="top" [tooltipDisabled]="!getCoverageTooltip(form.selectedCoverageId)">
+          <label class="field-label required">Hạng mục giám định (Phạm vi giám định)</label>
+          <p-select
+            [options]="coverageOptions"
+            optionLabel="displayName"
+            optionValue="optionKey"
+            appendTo="body"
+            styleClass="w-full"
+            [(ngModel)]="form.selectedCoverageId"
+          />
+        </div>
+        <div class="coverage-add">
+          <p-button label="Thêm" class="btn-orange" (onClick)="addCoverageSection()" />
+        </div>
+      </div>
+
+      <input #itemFileInput type="file" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" (change)="onItemFilesSelected($event)" />
+      <input #documentFileInput type="file" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" (change)="onDocumentFilesSelected($event)" />
+
+      @for (section of form.sections; track section.id) {
+        <div class="section-card">
+          <div class="section-header">
+            <h5>{{ section.coverageName }}</h5>
+            <div class="section-actions">
+              <p-button label="Thêm" class="btn-orange" (onClick)="addItem(section)" />
+              <p-button icon="pi pi-trash" [text]="true" severity="danger" (onClick)="removeSection(section.id)" />
+            </div>
+          </div>
+
+          <div class="detail-table-wrap">
+            @if (isPersonSection(section)) {
+              <table class="detail-table section-detail-table person-detail-table">
+                <thead>
+                  <tr>
+                    <th class="item-stt-col">STT</th>
+                    <th>Họ tên</th>
+                    <th>CCCD</th>
+                    <th>Tình trạng</th>
+                    <th>Tỷ lệ thương tật</th>
+                    <th>Ngày ra viện</th>
+                    <th>Ngày cung cấp</th>
+                    <th>Tài liệu</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of section.items; track item.id; let rowIndex = $index) {
+                    <tr>
+                      <td class="item-stt-col">{{ rowIndex + 1 }}</td>
+                      <td>
+                        <input pInputText class="w-full" [(ngModel)]="item.personName" (ngModelChange)="clearError('personName-' + section.id + '-' + rowIndex)" />
+                        @if (hasError('personName-' + section.id + '-' + rowIndex)) {
+                          <small class="field-error">{{ getError('personName-' + section.id + '-' + rowIndex) }}</small>
+                        }
+                      </td>
+                      <td><input pInputText class="w-full" [(ngModel)]="item.personIdNo" /></td>
+                      <td>
+                        <p-select [options]="getFilteredRiskOptions(section, item.riskId)" optionLabel="name" optionValue="id" appendTo="body" styleClass="w-full compact-select" [filter]="true" filterBy="name,code" [(ngModel)]="item.riskId" />
+                      </td>
+                      <td>
+                        <input pInputText class="w-full" [(ngModel)]="item.claimPlanId" />
+                      </td>
+                      <td>
+                        <p-datepicker [(ngModel)]="item.dischargeDate" [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full compact-date" (ngModelChange)="clearError('dischargeDate-' + section.id + '-' + rowIndex)" />
+                        @if (hasError('dischargeDate-' + section.id + '-' + rowIndex)) {
+                          <small class="field-error">{{ getError('dischargeDate-' + section.id + '-' + rowIndex) }}</small>
+                        }
+                      </td>
+                      <td>
+                        <p-datepicker [(ngModel)]="item.issueDate" [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full compact-date" (ngModelChange)="clearError('issueDate-' + section.id + '-' + rowIndex)" />
+                        @if (hasError('issueDate-' + section.id + '-' + rowIndex)) {
+                          <small class="field-error">{{ getError('issueDate-' + section.id + '-' + rowIndex) }}</small>
+                        }
+                      </td>
+                      <td>
+                        <div class="document-file-actions-inline">
+                          <button type="button" class="document-file-link" [disabled]="!isEditable" (click)="openItemUploadDialog(section.id, item.id)">
+                            {{ item.attachments.length ? (item.attachments.length + ' tệp') : '-' }}
+                          </button>
+                          <p-button icon="pi pi-upload" [text]="true" [disabled]="!isEditable" (onClick)="openItemUploadDialog(section.id, item.id)" />
+                          <p-button icon="pi pi-trash" [text]="true" severity="danger" (onClick)="removeItem(section, item.id)" />
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            } @else {
+              <table class="detail-table section-detail-table">
+                <thead>
+                  <tr>
+                    <th class="item-stt-col">STT</th>
+                    <th class="item-col">Hạng mục</th>
+                    <th>Mô tả</th>
+                    <th class="quantity-col">Số lượng</th>
+                    <th class="risk-col">Tình trạng</th>
+                    <th>Phương án</th>
+                    <th>Loại phụ tùng</th>
+                    <th>Thu hồi</th>
+                    <th>Ngày cung cấp</th>
+                    <th>Tài liệu</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of section.items; track item.id; let rowIndex = $index) {
+                    <tr>
+                      <td class="item-stt-col">{{ rowIndex + 1 }}</td>
+                      <td class="item-col" [pTooltip]="getItemTooltip(section, item.itemId)" tooltipPosition="top" [tooltipDisabled]="!getItemTooltip(section, item.itemId)">
+                        <p-select [options]="getFilteredItemOptions(section, item.itemId)" optionLabel="name" optionValue="id" appendTo="body" styleClass="w-full compact-select" [filter]="true" filterBy="name,code" [(ngModel)]="item.itemId" (ngModelChange)="clearError('item-' + section.id + '-' + rowIndex)" />
+                        @if (hasError('item-' + section.id + '-' + rowIndex)) {
+                          <small class="field-error">{{ getError('item-' + section.id + '-' + rowIndex) }}</small>
+                        }
+                      </td>
+                      <td>
+                        <textarea pTextarea rows="1" class="w-full compact-textarea" [(ngModel)]="item.description"></textarea>
+                      </td>
+                      <td class="quantity-col">
+                        <p-inputNumber
+                          [(ngModel)]="item.quantity"
+                          [useGrouping]="true"
+                          locale="vi-VN"
+                          styleClass="w-full compact-number"
+                          [min]="0.001"
+                          [minFractionDigits]="0"
+                          [maxFractionDigits]="3"
+                          (ngModelChange)="clearError('quantity-' + section.id + '-' + rowIndex)"
+                        />
+                        @if (hasError('quantity-' + section.id + '-' + rowIndex)) {
+                          <small class="field-error">{{ getError('quantity-' + section.id + '-' + rowIndex) }}</small>
+                        }
+                      </td>
+                      <td class="risk-col" [pTooltip]="getRiskTooltip(section, item.riskId)" tooltipPosition="top" [tooltipDisabled]="!getRiskTooltip(section, item.riskId)">
+                        <p-select [options]="getFilteredRiskOptions(section, item.riskId)" optionLabel="name" optionValue="id" appendTo="body" styleClass="w-full compact-select" [filter]="true" filterBy="name,code" [(ngModel)]="item.riskId" />
+                      </td>
+                      <td [pTooltip]="getClaimPlanTooltip(item.claimPlanId)" tooltipPosition="top" [tooltipDisabled]="!getClaimPlanTooltip(item.claimPlanId)">
+                        <p-select [options]="claimPlanOptions" optionLabel="name" optionValue="id" appendTo="body" styleClass="w-full compact-select" [filter]="true" filterBy="name,code" [(ngModel)]="item.claimPlanId" />
+                      </td>
+                      <td [pTooltip]="getGenuineTooltip(item.isGenuine)" tooltipPosition="top" [tooltipDisabled]="!getGenuineTooltip(item.isGenuine)">
+                        <p-select
+                          [options]="[{ label: '--Lựa chọn--', value: null }, { label: 'Chính hãng', value: 'Y' }, { label: 'Khác', value: 'N' }]"
+                          optionLabel="label"
+                          optionValue="value"
+                          appendTo="body"
+                          styleClass="w-full compact-select"
+                          [filter]="true"
+                          filterBy="label,value"
+                          [(ngModel)]="item.isGenuine"
+                        />
+                      </td>
+                      <td class="text-center">
+                        <p-checkbox [binary]="true" [(ngModel)]="item.isRecovery" />
+                      </td>
+                      <td>
+                        <p-datepicker [(ngModel)]="item.issueDate" [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full compact-date" (ngModelChange)="clearError('issueDate-' + section.id + '-' + rowIndex)" />
+                        @if (hasError('issueDate-' + section.id + '-' + rowIndex)) {
+                          <small class="field-error">{{ getError('issueDate-' + section.id + '-' + rowIndex) }}</small>
+                        }
+                      </td>
+                      <td>
+                        <div class="document-file-actions-inline">
+                          <button type="button" class="document-file-link" [disabled]="!isEditable" (click)="openItemUploadDialog(section.id, item.id)">
+                            {{ item.attachments.length ? (item.attachments.length + ' tệp') : '-' }}
+                          </button>
+                          <p-button icon="pi pi-upload" [text]="true" [disabled]="!isEditable" (onClick)="openItemUploadDialog(section.id, item.id)" />
+                          <p-button icon="pi pi-trash" [text]="true" severity="danger" (onClick)="removeItem(section, item.id)" />
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="paper-section">
+        <h4 class="group-title">Thông tin hồ sơ giấy tờ</h4>
+        <div class="detail-table-wrap">
+          <table class="detail-table doc-table">
+            <thead>
+              <tr>
+                <th class="stt-col">STT</th>
+                <th>Tên giấy tờ</th>
+                <th class="flag-col">Đã đầy đủ</th>
+                <th class="flag-col">Là bản sao</th>
+                <th class="flag-col">Cần bổ sung</th>
+                <th>Ghi chú</th>
+                <th style="width: 150px">Ngày cấp</th>
+                <th class="doc-file-col">Tải lên</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of form.documentRows; track row.id; let rowIndex = $index) {
+                <tr>
+                  <td class="stt-col">{{ rowIndex + 1 }}</td>
+                  <td>{{ row.name }}</td>
+                  <td class="text-center"><p-checkbox [binary]="true" [(ngModel)]="row.complete" /></td>
+                  <td class="text-center"><p-checkbox [binary]="true" [(ngModel)]="row.isCopy" /></td>
+                  <td class="text-center"><p-checkbox class="need-supplement-checkbox" [binary]="true" [ngModel]="getNeedSupplement(row)" [readonly]="true" /></td>
+                  <td><textarea pTextarea rows="1" class="w-full compact-textarea" [(ngModel)]="row.note"></textarea></td>
+                  <td style="width: 150px"><p-datepicker [(ngModel)]="row.issueDate" [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full compact-date" /></td>
+                  <td class="doc-file-col">
+                    <div class="document-file-actions-inline">
+                      <button type="button" class="document-file-link" [disabled]="!isEditable" (click)="openDocumentUploadDialog(row.id)">
+                        {{ row.attachments.length ? (row.attachments.length + ' tệp') : '-' }}
+                      </button>
+                      <p-button
+                        icon="pi pi-upload"
+                        [text]="true"
+                        [disabled]="!isEditable"
+                        (onClick)="openDocumentUploadDialog(row.id)"
+                      />
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-action-bar">
+      @if (actionWorkTaskStatus != null) {
+        <p-tag
+          [value]="getWorkTaskStatusDisplay()"
+          [severity]="getWorkTaskStatusSeverity()"
+        />
+      }
+      <div class="flex gap-2 flex-wrap items-center">
+        <p-button label="Đóng" severity="secondary" (onClick)="close()" />
+        @if (showDetailedActions && actionWorkTaskStatus === WorkTaskStatus.New) {
+          <p-button label="Tiếp nhận" (onClick)="acceptTask()" />
+          <p-button label="Từ chối" (onClick)="rejectTask()" />
+          <p-button label="Điều chuyển" (onClick)="transferTask()" />
+        }
+        @if (canShowReassignAction) {
+          <p-button label="Giao lại" severity="info" (onClick)="reassignTask()" />
+        }
+        @if (canShowSaveAction) {
+          <p-button label="Lưu" class="btn-orange" [loading]="saving" (onClick)="save()" />
+        }
+        @if (showDetailedActions && actionWorkTaskStatus === WorkTaskStatus.InProgress) {
+          <p-button label="Hoàn thành GĐ" class="btn-orange" [loading]="completing" (onClick)="complete()" />
+        }
+      </div>
+    </div>
+  }
+</div>
+
+<p-dialog
+  [(visible)]="documentFilePreviewVisible"
+  [modal]="true"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(92vw, 960px)' }"
+  [contentStyle]="{ padding: '0' }"
+  [header]="documentFilePreviewName || 'Xem tệp'"
+  (onHide)="closeDocumentFilePreview()"
+>
+  @if (documentFilePreviewUrl && documentFilePreviewType === 'image') {
+    <div class="document-file-preview-wrap">
+      <img [src]="documentFilePreviewUrl" [alt]="documentFilePreviewName || 'Preview file'" class="document-file-preview-image" />
+    </div>
+  }
+  @if (documentFilePreviewResourceUrl && documentFilePreviewType === 'pdf') {
+    <iframe [src]="documentFilePreviewResourceUrl" class="document-file-preview-frame" title="File preview"></iframe>
+  }
+  @if (documentFilePreviewType === 'other') {
+    <div class="document-file-preview-unsupported">
+      <p>Tệp này không hỗ trợ xem trực tiếp trong popup.</p>
+    </div>
+  }
+</p-dialog>
+
+<p-dialog
+  [(visible)]="itemUploadDialogVisible"
+  [modal]="true"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(96vw, 1240px)' }"
+  [header]="getActiveItemUploadTitle() + ' - Tải tệp'"
+  (onHide)="closeItemUploadDialog()"
+>
+  <div class="detail-upload-dialog">
+    <div class="detail-upload-toolbar">
+      <input #itemUploadInput type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" multiple class="hidden" (change)="onItemFilesSelected($event)" />
+      <p-button icon="pi pi-upload" label="Tải tệp" [disabled]="!isEditable" (onClick)="triggerActiveItemUpload(itemUploadInput)" />
+    </div>
+
+    <div class="detail-upload-layout">
+      <div class="detail-upload-file-list">
+        @for (file of getActiveItemUpload()?.attachments || []; track file.id) {
+          <div
+            class="detail-upload-file-item"
+            [class.is-uploading]="file.uploading"
+            [class.is-selected]="isSelectedItemUploadFile(file)"
+            (click)="selectItemUploadFile(file)"
+          >
+            <div class="detail-upload-file-thumb">
+              @if (getDetailUploadFileType(file) === 'image' && (file.thumbnailUrl || file.url)) {
+                <img [src]="file.thumbnailUrl || file.url" [alt]="file.fileName" />
+              } @else if (getDetailUploadFileType(file) === 'pdf') {
+                <i class="pi pi-file-pdf"></i>
+              } @else {
+                <i class="pi pi-file"></i>
+              }
+            </div>
+            <div class="detail-upload-file-info">
+              <span class="detail-upload-file-type" [title]="getActiveItemUploadTitle()">{{ getActiveItemUploadTitle() }}</span>
+              <span class="detail-upload-file-name" [title]="file.fileName">{{ file.fileName }}</span>
+            </div>
+            <div class="detail-upload-file-actions">
+              <button
+                type="button"
+                class="detail-upload-file-download"
+                [disabled]="file.uploading"
+                (click)="$event.stopPropagation(); downloadItemFile(file)"
+                title="Tải xuống"
+              >
+                <i class="pi pi-download"></i>
+              </button>
+              <button
+                type="button"
+                class="detail-upload-file-delete"
+                [disabled]="file.uploading || !isEditable || !getActiveItemUpload()"
+                (click)="$event.stopPropagation(); removeItemAttachment(getActiveItemUpload()!, file)"
+                title="Xóa"
+              >
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </div>
+        }
+        @if ((getActiveItemUpload()?.attachments || []).length === 0) {
+          <div class="detail-upload-empty">Chưa có tệp được tải lên.</div>
+        }
+      </div>
+
+      <div class="detail-upload-preview">
+        @if (itemUploadPreviewUrl && itemUploadPreviewType === 'image') {
+          <div class="detail-upload-preview-stage">
+            <img [src]="itemUploadPreviewUrl" [alt]="itemUploadPreviewName || 'Preview file'" class="detail-upload-preview-image" />
+          </div>
+        }
+        @if (itemUploadPreviewResourceUrl && itemUploadPreviewType === 'pdf') {
+          <iframe [src]="itemUploadPreviewResourceUrl" class="detail-upload-preview-frame" title="File preview"></iframe>
+        }
+        @if ((itemUploadPreviewType === 'other' && selectedItemUploadFileId) || !selectedItemUploadFileId) {
+          <div class="detail-upload-preview-empty">
+            @if (selectedItemUploadFileId) {
+              <p>Không hỗ trợ xem trực tiếp tệp này.</p>
+            } @else {
+              <p>Chọn một tệp ở bên trái để xem trước.</p>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</p-dialog>
+
+<p-dialog
+  [(visible)]="documentUploadDialogVisible"
+  [modal]="true"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(96vw, 1240px)' }"
+  [header]="(getActiveDocumentRow()?.name || 'Hồ sơ giấy tờ') + ' - Tải tệp'"
+  (onHide)="closeDocumentUploadDialog()"
+>
+  <div class="detail-upload-dialog">
+    <div class="detail-upload-toolbar">
+      <input #documentUploadInput type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" multiple class="hidden" (change)="onDocumentFilesSelected($event)" />
+      <p-button icon="pi pi-upload" label="Tải tệp" [disabled]="!isEditable" (onClick)="triggerDocumentUpload(getActiveDocumentRow()?.id || '', documentUploadInput)" />
+    </div>
+
+    <div class="detail-upload-layout">
+      <div class="detail-upload-file-list">
+        @for (file of getActiveDocumentRow()?.attachments || []; track file.id) {
+          <div
+            class="detail-upload-file-item"
+            [class.is-uploading]="file.uploading"
+            [class.is-selected]="isSelectedDocumentUploadFile(file)"
+            (click)="selectDocumentUploadFile(file)"
+          >
+            <div class="detail-upload-file-thumb">
+              @if (getDetailUploadFileType(file) === 'image' && (file.thumbnailUrl || file.url)) {
+                <img [src]="file.thumbnailUrl || file.url" [alt]="file.fileName" />
+              } @else if (getDetailUploadFileType(file) === 'pdf') {
+                <i class="pi pi-file-pdf"></i>
+              } @else {
+                <i class="pi pi-file"></i>
+              }
+            </div>
+            <div class="detail-upload-file-info">
+              <span class="detail-upload-file-type" [title]="getActiveDocumentRow()?.name || 'Hồ sơ giấy tờ'">
+                {{ getActiveDocumentRow()?.name || 'Hồ sơ giấy tờ' }}
+              </span>
+              <span class="detail-upload-file-name" [title]="file.fileName">{{ file.fileName }}</span>
+            </div>
+            <div class="detail-upload-file-actions">
+              <button
+                type="button"
+                class="detail-upload-file-download"
+                [disabled]="file.uploading"
+                (click)="$event.stopPropagation(); downloadDocumentRowFile(file)"
+                title="Tải xuống"
+              >
+                <i class="pi pi-download"></i>
+              </button>
+              <button
+                type="button"
+                class="detail-upload-file-delete"
+                [disabled]="file.uploading || !isEditable"
+                (click)="$event.stopPropagation(); removeDocumentRowFile(file)"
+                title="Xóa"
+              >
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </div>
+        }
+        @if ((getActiveDocumentRow()?.attachments || []).length === 0) {
+          <div class="detail-upload-empty">Chưa có tệp được tải lên.</div>
+        }
+      </div>
+
+      <div class="detail-upload-preview">
+        @if (documentUploadPreviewUrl && documentUploadPreviewType === 'image') {
+          <div class="detail-upload-preview-stage">
+            <img [src]="documentUploadPreviewUrl" [alt]="documentUploadPreviewName || 'Preview file'" class="detail-upload-preview-image" />
+          </div>
+        }
+        @if (documentUploadPreviewResourceUrl && documentUploadPreviewType === 'pdf') {
+          <iframe [src]="documentUploadPreviewResourceUrl" class="detail-upload-preview-frame" title="File preview"></iframe>
+        }
+        @if ((documentUploadPreviewType === 'other' && selectedDocumentUploadFileId) || !selectedDocumentUploadFileId) {
+          <div class="detail-upload-preview-empty">
+            @if (selectedDocumentUploadFileId) {
+              <p>Không hỗ trợ xem trực tiếp tệp này.</p>
+            } @else {
+              <p>Chọn một tệp ở bên trái để xem trước.</p>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</p-dialog>
+
+<p-toast />
