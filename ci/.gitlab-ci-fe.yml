@@ -1,5 +1,5 @@
 # GitLab CI — Frontend (Angular)
-# master: build → image → push (không deploy tự động).
+# main: build → image → push (không deploy tự động).
 
 stages:
   - build
@@ -21,8 +21,8 @@ build:angular:
   stage: build
   image: node:${NODE_VERSION}
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "push"'
-    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "master" && ($BUILD_TYPE == "FE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "main" && ($BUILD_TYPE == "FE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
   before_script:
     - corepack enable
     - apt-get update
@@ -77,8 +77,8 @@ docker:build:angular:
     # Enable Docker layer caching with registry-backed cache image
     DOCKER_BUILDKIT: "1"
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "push"'
-    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "master" && ($BUILD_TYPE == "FE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "main" && ($BUILD_TYPE == "FE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
   needs:
     - job: build:angular
       optional: false

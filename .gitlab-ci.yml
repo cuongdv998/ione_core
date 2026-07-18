@@ -1,21 +1,18 @@
 # GitLab CI Main Configuration
 # Include CI cho Backend và Frontend (tách job, có thể chạy song song).
 #
-# Nhánh master: build artifact → image → push registry (không deploy tự động trong CI).
+# Nhánh main: build artifact → image → push registry (không deploy tự động trong CI).
 # Deploy production: chạy tay trên server qua deploy/deploy.sh.
 #
-# Pipeline từ web (manual, nhánh master), chọn BUILD_TYPE:
+# Pipeline từ web (manual, nhánh main), chọn BUILD_TYPE:
 # - BE: chỉ Backend
 # - FE: chỉ Frontend
 # - ALL: cả BE và FE
 
 workflow:
   rules:
-    # Luôn chạy pipeline khi push code
-    - if: '$CI_PIPELINE_SOURCE == "push"'
-    # Chạy pipeline khi trigger từ web (manual)
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-    # Không chạy trong các trường hợp khác
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "main"'
     - when: never
 
 include:
