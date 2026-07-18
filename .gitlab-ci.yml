@@ -1,13 +1,13 @@
 # GitLab CI Main Configuration
 # Include CI cho Backend và Frontend (tách job, có thể chạy song song).
 #
-# Dev (nhánh develop): build artifact → image → push registry → docker-compose trên runner.
-# Production (nhánh master): chỉ build artifact → image → push registry (không deploy tự động).
+# Nhánh master: build artifact → image → push registry (không deploy tự động trong CI).
+# Deploy production: chạy tay trên server qua deploy/deploy.sh.
 #
-# Pipeline từ web (manual), chọn BUILD_TYPE:
-# - BE: chỉ Backend (dev đầy đủ tới deploy)
-# - FE: chỉ Frontend (dev đầy đủ tới deploy)
-# - ALL: cả BE và FE (dev đầy đủ tới deploy)
+# Pipeline từ web (manual, nhánh master), chọn BUILD_TYPE:
+# - BE: chỉ Backend
+# - FE: chỉ Frontend
+# - ALL: cả BE và FE
 
 workflow:
   rules:

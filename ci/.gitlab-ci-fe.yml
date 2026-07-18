@@ -1,11 +1,9 @@
 # GitLab CI — Frontend (Angular)
-# develop + đúng paths (hoặc web): build → image → push → deploy dev (docker-compose-fe).
-# master: build → image → push (production image; không deploy).
+# master: build → image → push (không deploy tự động).
 
 stages:
   - build
   - docker
-  - deploy
 
 variables:
   NODE_VERSION: "20"
@@ -23,14 +21,8 @@ build:angular:
   stage: build
   image: node:${NODE_VERSION}
   rules:
-    # develop: dev
-    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "push"'
-      changes:
-        - "angular/**/*"
-    # master: production — chỉ build/push image
     - if: '$CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "push"'
-    # web develop/master: chọn FE hoặc ALL
-    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "master") && ($BUILD_TYPE == "FE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "master" && ($BUILD_TYPE == "FE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
   before_script:
     - corepack enable
     - apt-get update
@@ -48,13 +40,8 @@ build:angular:
     - yarn install --frozen-lockfile --cache-folder "$YARN_CACHE_FOLDER"
   script:
     - |
-      if [ "$CI_COMMIT_BRANCH" = "master" ]; then
-        API_BASE_URL="https://api.ibds.com.vn"
-        ANGULAR_BUILD_CONFIGURATION="production"
-      else
-        API_BASE_URL="https://ione-api.vnexco.com"
-        ANGULAR_BUILD_CONFIGURATION="dev"
-      fi
+      API_BASE_URL="https://api.ibds.com.vn"
+      ANGULAR_BUILD_CONFIGURATION="production"
       export ABP_HOST="$API_BASE_URL"
       echo "Using API base URL: $API_BASE_URL"
       echo "Using Angular build configuration: $ANGULAR_BUILD_CONFIGURATION"
@@ -90,14 +77,8 @@ docker:build:angular:
     # Enable Docker layer caching with registry-backed cache image
     DOCKER_BUILDKIT: "1"
   rules:
-    # develop: dev
-    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "push"'
-      changes:
-        - "angular/**/*"
-    # master: production image
     - if: '$CI_COMMIT_BRANCH == "master" && $CI_PIPELINE_SOURCE == "push"'
-    # web develop/master: build/push image theo branch
-    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "master") && ($BUILD_TYPE == "FE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "master" && ($BUILD_TYPE == "FE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
   needs:
     - job: build:angular
       optional: false
@@ -113,50 +94,3 @@ docker:build:angular:
     - echo "Pushing Docker image for Angular..."
     - docker push $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:$DOCKER_IMAGE_TAG
     - docker push $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:buildcache
-
-# Deploy Frontend — chỉ dev (develop hoặc web); không chạy trên master
-deploy:fe:
-  stage: deploy
-  image: docker:latest
-  services:
-    - docker:dind
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "push"'
-      changes:
-        - "angular/**/*"
-    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "develop" && ($BUILD_TYPE == "FE" || $BUILD_TYPE == "ALL" || $BUILD_TYPE == null || $BUILD_TYPE == "")'
-  needs:
-    - job: docker:build:angular
-      optional: true
-  before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login "$DOCKER_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
-    - apk add --no-cache docker-compose || true
-  script:
-    - |
-      echo "Deploying frontend containers using docker-compose..."
-      
-      
-      echo "Pulling image from registry with git hash tag..."
-      REGISTRY_IMAGE="$DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:$DOCKER_IMAGE_TAG"
-      LOCAL_IMAGE="$DOCKER_IMAGE_ANGULAR:$DOCKER_IMAGE_TAG"
-      
-      
-      echo "Retagging image from registry to local with git hash tag..."
-      # Retag image from registry to local (using git hash tag)
-      docker tag $REGISTRY_IMAGE $LOCAL_IMAGE || {
-        echo "Error: Failed to retag image!"
-        exit 1
-      }
-      
-      echo "Setting IMAGE_TAG environment variable to: $DOCKER_IMAGE_TAG"
-      export IMAGE_TAG=$DOCKER_IMAGE_TAG
-      
-      echo "Stopping existing containers..."
-      docker-compose -f docker-compose-fe.yml down || true
-      
-      echo "Starting containers with docker-compose (using IMAGE_TAG=$IMAGE_TAG)..."
-      IMAGE_TAG=$DOCKER_IMAGE_TAG docker-compose -f docker-compose-fe.yml up -d
-      
-      echo "Frontend containers started successfully!"
-      docker-compose -f docker-compose-fe.yml ps
-      docker ps
