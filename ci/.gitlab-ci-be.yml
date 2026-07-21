@@ -60,14 +60,12 @@ docker:build:api:
   needs:
     - job: build:dotnet
       optional: false
-  before_script:
-    # Biến CI_REGISTRY_USER / CI_REGISTRY_PASSWORD cấu hình trong GitLab CI/CD Variables
-    - echo "$CI_REGISTRY_PASSWORD" | docker login "$DOCKER_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
   script:
     - echo "Building Docker image for API..."
+    - echo "DOCKER_REGISTRY=$DOCKER_REGISTRY"
     - cd src/web/iOne.HttpApi.Host
     - docker pull $DOCKER_REGISTRY/$DOCKER_IMAGE_API:buildcache || true
     - docker build --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $DOCKER_REGISTRY/$DOCKER_IMAGE_API:buildcache -t $DOCKER_REGISTRY/$DOCKER_IMAGE_API:$DOCKER_IMAGE_TAG -t $DOCKER_REGISTRY/$DOCKER_IMAGE_API:buildcache .
-    - echo "Pushing Docker image for API..."
+    - echo "Pushing Docker image for API to $DOCKER_REGISTRY..."
     - docker push $DOCKER_REGISTRY/$DOCKER_IMAGE_API:$DOCKER_IMAGE_TAG
     - docker push $DOCKER_REGISTRY/$DOCKER_IMAGE_API:buildcache

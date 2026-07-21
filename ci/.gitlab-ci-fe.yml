@@ -82,15 +82,13 @@ docker:build:angular:
   needs:
     - job: build:angular
       optional: false
-  before_script:
-    # Biến CI_REGISTRY_USER / CI_REGISTRY_PASSWORD cấu hình trong GitLab CI/CD Variables
-    - echo "$CI_REGISTRY_PASSWORD" | docker login "$DOCKER_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
   script:
     - echo "Building Docker image for Angular..."
+    - echo "DOCKER_REGISTRY=$DOCKER_REGISTRY"
     - cd $ANGULAR_DIR
     - echo "Build artifacts found, building Docker image..."
     - docker pull $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:buildcache || true
     - docker build --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:buildcache -t $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:$DOCKER_IMAGE_TAG -t $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:buildcache .
-    - echo "Pushing Docker image for Angular..."
+    - echo "Pushing Docker image for Angular to $DOCKER_REGISTRY..."
     - docker push $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:$DOCKER_IMAGE_TAG
     - docker push $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:buildcache
