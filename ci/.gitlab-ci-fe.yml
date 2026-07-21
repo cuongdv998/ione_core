@@ -82,9 +82,11 @@ docker:build:angular:
   needs:
     - job: build:angular
       optional: false
+  before_script:
+    - echo "DOCKER_REGISTRY=$DOCKER_REGISTRY"
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$DOCKER_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
   script:
     - echo "Building Docker image for Angular..."
-    - echo "DOCKER_REGISTRY=$DOCKER_REGISTRY"
     - cd $ANGULAR_DIR
     - echo "Build artifacts found, building Docker image..."
     - docker pull $DOCKER_REGISTRY/$DOCKER_IMAGE_ANGULAR:buildcache || true
