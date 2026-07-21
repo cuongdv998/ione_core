@@ -11,7 +11,7 @@ variables:
   API_PROJECT_PATH: "src/web/iOne.HttpApi.Host/iOne.HttpApi.Host.csproj"
   DOCKER_IMAGE_API: "ione-api"
   DOCKER_REGISTRY: "${CI_REGISTRY}"
-  DOCKER_IMAGE_TAG: "${CI_COMMIT_SHORT_SHA}"
+  # DOCKER_IMAGE_TAG: generated at docker job runtime (yyyyMMddHHmmss)
   # Make NuGet cacheable across container builds
   NUGET_PACKAGES: "${CI_PROJECT_DIR}/.nuget/packages"
 
@@ -61,7 +61,9 @@ docker:build:api:
     - job: build:dotnet
       optional: false
   before_script:
+    - export DOCKER_IMAGE_TAG="$(date +%Y%m%d%H%M%S)"
     - echo "DOCKER_REGISTRY=$DOCKER_REGISTRY"
+    - echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG"
     - echo "$CI_REGISTRY_PASSWORD" | docker login "$DOCKER_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
   script:
     - echo "Building Docker image for API..."
